@@ -1,0 +1,608 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-edit me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    تعديل بيانات المعلم: {{ teacher.first_name_ar }} {{ teacher.last_name_ar }}
+                {% else %}
+                    Edit Teacher: {{ teacher.first_name_en or teacher.first_name_ar }} {{ teacher.last_name_en or teacher.last_name_ar }}
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                <i class="fas fa-id-card me-1"></i> {{ teacher.teacher_number }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('teachers.view_teacher', teacher_id=teacher.teacher_id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs Navigation -->
+<ul class="nav nav-tabs mb-4" id="teacherTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">
+            <i class="fas fa-user me-2"></i>{% if lang.get_direction() == 'rtl' %}المعلومات الشخصية{% else %}Personal Info{% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="classes-tab" data-bs-toggle="tab" data-bs-target="#classes" type="button" role="tab">
+            <i class="fas fa-school me-2"></i>{% if lang.get_direction() == 'rtl' %}الفصول{% else %}Classes{% endif %}
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="subjects-tab" data-bs-toggle="tab" data-bs-target="#subjects" type="button" role="tab">
+            <i class="fas fa-book-open me-2"></i>{% if lang.get_direction() == 'rtl' %}المواد{% else %}Subjects{% endif %}
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="teacherTabsContent">
+    <!-- Personal Information Tab -->
+    <div class="tab-pane fade show active" id="info" role="tabpanel">
+        <div class="modern-card">
+            <div class="card-header-modern" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+                <i class="fas fa-user-edit me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}تعديل بيانات المعلم{% else %}Edit Teacher Information{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('teachers.edit_teacher', teacher_id=teacher.teacher_id) }}" id="editTeacherForm">
+                    <!-- Personal Information -->
+                    <h6 class="mb-3">
+                        <i class="fas fa-user-circle me-2" style="color: var(--primary-color);"></i>
+                        {% if lang.get_direction() == 'rtl' %}المعلومات الشخصية{% else %}Personal Information{% endif %}
+                    </h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم الأول (عربي) *{% else %}First Name (Arabic) *{% endif %}
+                            </label>
+                            <input type="text" name="first_name_ar" class="form-control modern-input" value="{{ teacher.first_name_ar }}" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم الأخير (عربي) *{% else %}Last Name (Arabic) *{% endif %}
+                            </label>
+                            <input type="text" name="last_name_ar" class="form-control modern-input" value="{{ teacher.last_name_ar }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم الأول (إنجليزي){% else %}First Name (English){% endif %}
+                            </label>
+                            <input type="text" name="first_name_en" class="form-control modern-input" value="{{ teacher.first_name_en or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم الأخير (إنجليزي){% else %}Last Name (English){% endif %}
+                            </label>
+                            <input type="text" name="last_name_en" class="form-control modern-input" value="{{ teacher.last_name_en or '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}تاريخ الميلاد{% else %}Date of Birth{% endif %}
+                            </label>
+                            <input type="date" name="birth_date" class="form-control modern-input" value="{{ teacher.birth_date }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-venus-mars me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الجنس{% else %}Gender{% endif %}
+                            </label>
+                            <select name="gender" class="form-select modern-select">
+                                <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر{% else %}Select{% endif %} --</option>
+                                <option value="male" {% if teacher.gender == 'male' %}selected{% endif %}>
+                                    {% if lang.get_direction() == 'rtl' %}ذكر{% else %}Male{% endif %}
+                                </option>
+                                <option value="female" {% if teacher.gender == 'female' %}selected{% endif %}>
+                                    {% if lang.get_direction() == 'rtl' %}أنثى{% else %}Female{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-id-card me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الرقم الوطني{% else %}National ID{% endif %}
+                            </label>
+                            <input type="text" name="national_id" class="form-control modern-input" value="{{ teacher.national_id or '' }}">
+                        </div>
+                    </div>
+                    
+                    <!-- Qualifications -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-graduation-cap me-2" style="color: var(--primary-color);"></i>
+                        {% if lang.get_direction() == 'rtl' %}المؤهلات{% else %}Qualifications{% endif %}
+                    </h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-university me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}المؤهل العلمي{% else %}Qualification{% endif %}
+                            </label>
+                            <input type="text" name="qualification" class="form-control modern-input" value="{{ teacher.qualification or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-book-open me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}التخصص{% else %}Specialization{% endif %}
+                            </label>
+                            <input type="text" name="specialization" class="form-control modern-input" value="{{ teacher.specialization or '' }}">
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-address-card me-2" style="color: var(--primary-color);"></i>
+                        {% if lang.get_direction() == 'rtl' %}معلومات الاتصال{% else %}Contact Information{% endif %}
+                    </h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-phone me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}رقم الهاتف{% else %}Phone Number{% endif %}
+                            </label>
+                            <input type="tel" name="phone" class="form-control modern-input" value="{{ teacher.phone or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-envelope me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}البريد الإلكتروني{% else %}Email{% endif %}
+                            </label>
+                            <input type="email" name="email" class="form-control modern-input" value="{{ teacher.email or '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}العنوان{% else %}Address{% endif %}
+                        </label>
+                        <textarea name="address" class="form-control modern-input" rows="2">{{ teacher.address or '' }}</textarea>
+                    </div>
+                    
+                    <!-- Employment Information -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-briefcase me-2" style="color: var(--primary-color);"></i>
+                        {% if lang.get_direction() == 'rtl' %}المعلومات الوظيفية{% else %}Employment Information{% endif %}
+                    </h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-plus me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}تاريخ التعيين{% else %}Hire Date{% endif %}
+                            </label>
+                            <input type="date" name="hire_date" class="form-control modern-input" value="{{ teacher.hire_date }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الراتب{% else %}Salary{% endif %}
+                            </label>
+                            <input type="number" name="salary" class="form-control modern-input" step="0.01" value="{{ teacher.salary or '' }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-university me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الحساب البنكي{% else %}Bank Account{% endif %}
+                            </label>
+                            <input type="text" name="bank_account" class="form-control modern-input" value="{{ teacher.bank_account or '' }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-toggle-on me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}
+                            </label>
+                            <select name="status" class="form-select modern-select">
+                                <option value="active" {% if teacher.status == 'active' %}selected{% endif %}>
+                                    {% if lang.get_direction() == 'rtl' %}نشط{% else %}Active{% endif %}
+                                </option>
+                                <option value="inactive" {% if teacher.status == 'inactive' %}selected{% endif %}>
+                                    {% if lang.get_direction() == 'rtl' %}غير نشط{% else %}Inactive{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-modern-primary px-5">
+                            <i class="fas fa-save me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}حفظ التغييرات{% else %}Save Changes{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Classes Tab -->
+    <div class="tab-pane fade" id="classes" role="tabpanel">
+        <div class="modern-card">
+            <div class="card-header-modern" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%); color: white;">
+                <i class="fas fa-school me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}إدارة الفصول{% else %}Manage Classes{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}
+                        اختر الفصول التي يدرسها هذا المعلم. يمكنك أيضاً تعيينه كمدرس فصل.
+                    {% else %}
+                        Select the classes this teacher teaches. You can also assign as class teacher.
+                    {% endif %}
+                </div>
+                
+                <form method="POST" action="{{ url_for('teachers.assign_classes', teacher_id=teacher.teacher_id) }}">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{% if lang.get_direction() == 'rtl' %}الفصل{% else %}Class{% endif %}</th>
+                                    <th class="text-center">{% if lang.get_direction() == 'rtl' %}مدرس الفصل{% else %}Class Teacher{% endif %}</th>
+                                    <th class="text-center">{% if lang.get_direction() == 'rtl' %}إزالة{% else %}Remove{% endif %}</th>
+                                </tr>
+                            </thead>
+                            <tbody id="classes-list">
+                                <!-- Classes will be loaded via AJAX -->
+                                <tr>
+                                    <td colspan="3" class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-8">
+                            <select id="available-classes" class="form-select modern-select">
+                                <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر فصلاً للإضافة{% else %}Select class to add{% endif %} --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-success w-100" onclick="addClass()">
+                                <i class="fas fa-plus me-2"></i>{% if lang.get_direction() == 'rtl' %}إضافة فصل{% else %}Add Class{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}حفظ التغييرات{% else %}Save Changes{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Subjects Tab -->
+    <div class="tab-pane fade" id="subjects" role="tabpanel">
+        <div class="modern-card">
+            <div class="card-header-modern" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%); color: white;">
+                <i class="fas fa-book-open me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}إدارة المواد{% else %}Manage Subjects{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}
+                        اختر المواد التي يدرسها هذا المعلم في كل فصل.
+                    {% else %}
+                        Select the subjects this teacher teaches in each class.
+                    {% endif %}
+                </div>
+                
+                <div id="subjects-management">
+                    <!-- Subjects will be loaded via AJAX -->
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modern-input, .modern-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus, .modern-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.btn-modern-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-modern-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(135, 90, 123, 0.3);
+}
+
+.nav-tabs .nav-link {
+    color: #495057;
+    font-weight: 500;
+    padding: 12px 20px;
+    border: none;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: transparent;
+    color: var(--primary-color);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary-color);
+    background: transparent;
+    border-bottom: 2px solid var(--primary-color);
+}
+</style>
+
+<script>
+let currentClasses = [];
+let currentSubjects = [];
+let allClasses = [];
+let allSubjects = [];
+
+// Load data when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadTeacherClasses();
+    loadTeacherSubjects();
+    loadAvailableClasses();
+});
+
+function loadTeacherClasses() {
+    fetch(`/api/teachers/{{ teacher.teacher_id }}/classes`)
+        .then(response => response.json())
+        .then(data => {
+            currentClasses = data;
+            renderClassesTable();
+        });
+}
+
+function loadTeacherSubjects() {
+    fetch(`/api/teachers/{{ teacher.teacher_id }}/subjects`)
+        .then(response => response.json())
+        .then(data => {
+            currentSubjects = data;
+            renderSubjectsManagement();
+        });
+}
+
+function loadAvailableClasses() {
+    fetch('/api/classes/available')
+        .then(response => response.json())
+        .then(data => {
+            allClasses = data;
+            populateClassDropdown();
+        });
+}
+
+function renderClassesTable() {
+    const tbody = document.getElementById('classes-list');
+    if (!tbody) return;
+    
+    let html = '';
+    currentClasses.forEach(cls => {
+        html += `
+            <tr>
+                <td>${cls.class_name_ar}</td>
+                <td class="text-center">
+                    <input type="checkbox" name="class_teacher[]" value="${cls.class_id}" ${cls.is_class_teacher ? 'checked' : ''}>
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeClass(${cls.class_id})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <input type="hidden" name="classes[]" value="${cls.class_id}">
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (currentClasses.length === 0) {
+        html = '<tr><td colspan="3" class="text-center py-3">{% if lang.get_direction() == "rtl" %}لا توجد فصول مخصصة{% else %}No classes assigned{% endif %}</td></tr>';
+    }
+    
+    tbody.innerHTML = html;
+}
+
+function populateClassDropdown() {
+    const select = document.getElementById('available-classes');
+    if (!select) return;
+    
+    const availableClasses = allClasses.filter(c => !currentClasses.some(cc => cc.class_id === c.class_id));
+    
+    let html = '<option value="">-- {% if lang.get_direction() == "rtl" %}اختر فصلاً{% else %}Select class{% endif %} --</option>';
+    availableClasses.forEach(cls => {
+        html += `<option value="${cls.class_id}">${cls.class_name_ar}</option>`;
+    });
+    
+    select.innerHTML = html;
+}
+
+function addClass() {
+    const select = document.getElementById('available-classes');
+    const classId = select.value;
+    if (!classId) return;
+    
+    const selectedClass = allClasses.find(c => c.class_id == classId);
+    if (!selectedClass) return;
+    
+    currentClasses.push({
+        class_id: selectedClass.class_id,
+        class_name_ar: selectedClass.class_name_ar,
+        is_class_teacher: false
+    });
+    
+    renderClassesTable();
+    populateClassDropdown();
+}
+
+function removeClass(classId) {
+    currentClasses = currentClasses.filter(c => c.class_id != classId);
+    renderClassesTable();
+    populateClassDropdown();
+}
+
+function renderSubjectsManagement() {
+    const container = document.getElementById('subjects-management');
+    if (!container) return;
+    
+    if (currentClasses.length === 0) {
+        container.innerHTML = '<div class="alert alert-warning">{% if lang.get_direction() == "rtl" %}الرجاء إضافة فصول أولاً{% else %}Please add classes first{% endif %}</div>';
+        return;
+    }
+    
+    let html = '';
+    currentClasses.forEach(cls => {
+        const classSubjects = currentSubjects.filter(s => s.class_id === cls.class_id);
+        
+        html += `
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">${cls.class_name_ar}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <select id="subject-select-${cls.class_id}" class="form-select modern-select mb-2">
+                                <option value="">-- {% if lang.get_direction() == "rtl" %}اختر مادة{% else %}Select subject{% endif %} --</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-success w-100" onclick="addSubject(${cls.class_id})">
+                                <i class="fas fa-plus"></i> {% if lang.get_direction() == "rtl" %}إضافة{% else %}Add{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <table class="table table-sm mt-3">
+                        <thead>
+                            <tr>
+                                <th>{% if lang.get_direction() == "rtl" %}المادة{% else %}Subject{% endif %}</th>
+                                <th class="text-center">{% if lang.get_direction() == "rtl" %}الإجراءات{% else %}Actions{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subjects-${cls.class_id}">
+        `;
+        
+        classSubjects.forEach(subj => {
+            html += `
+                <tr>
+                    <td>${subj.subject_name_ar}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeSubject(${cls.class_id}, ${subj.subject_id})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <input type="hidden" name="subjects[${cls.class_id}][]" value="${subj.subject_id}">
+                    </td>
+                </tr>
+            `;
+        });
+        
+        if (classSubjects.length === 0) {
+            html += `<tr><td colspan="2" class="text-center">{% if lang.get_direction() == "rtl" %}لا توجد مواد{% else %}No subjects{% endif %}</td></tr>`;
+        }
+        
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+    
+    // Load subjects for each class
+    currentClasses.forEach(cls => {
+        loadSubjectsForClass(cls.class_id);
+    });
+}
+
+function loadSubjectsForClass(classId) {
+    fetch(`/api/subjects/by-class/${classId}`)
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById(`subject-select-${classId}`);
+            if (!select) return;
+            
+            const currentClassSubjects = currentSubjects.filter(s => s.class_id === classId);
+            const availableSubjects = data.filter(s => !currentClassSubjects.some(cs => cs.subject_id === s.subject_id));
+            
+            let html = '<option value="">-- {% if lang.get_direction() == "rtl" %}اختر مادة{% else %}Select subject{% endif %} --</option>';
+            availableSubjects.forEach(subj => {
+                html += `<option value="${subj.subject_id}">${subj.subject_name_ar}</option>`;
+            });
+            
+            select.innerHTML = html;
+        });
+}
+
+function addSubject(classId) {
+    const select = document.getElementById(`subject-select-${classId}`);
+    const subjectId = select.value;
+    if (!subjectId) return;
+    
+    const subjectName = select.options[select.selectedIndex].text;
+    
+    currentSubjects.push({
+        class_id: classId,
+        subject_id: subjectId,
+        subject_name_ar: subjectName
+    });
+    
+    renderSubjectsManagement();
+}
+
+function removeSubject(classId, subjectId) {
+    currentSubjects = currentSubjects.filter(s => !(s.class_id === classId && s.subject_id === subjectId));
+    renderSubjectsManagement();
+}
+</script>
+{% endblock %}

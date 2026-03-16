@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-chart-pie me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}التقارير المالية{% else %}Financial Reports{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}تحليل الإيرادات والمصروفات{% else %}Income and expense analysis{% endif %}
+            </p>
+        </div>
+        <div>
+            <div class="btn-group">
+                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-download me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تصدير{% else %}Export{% endif %}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="exportReport('pdf')">
+                        <i class="fas fa-file-pdf text-danger me-2"></i> PDF
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportReport('excel')">
+                        <i class="fas fa-file-excel text-success me-2"></i> Excel
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Period Filter -->
+<div class="modern-card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">{% if lang.get_direction() == 'rtl' %}الفترة{% else %}Period{% endif %}</label>
+                <select name="period" class="form-select modern-select" onchange="this.form.submit()">
+                    <option value="today" {% if period == 'today' %}selected{% endif %}>
+                        {% if lang.get_direction() == 'rtl' %}اليوم{% else %}Today{% endif %}
+                    </option>
+                    <option value="week" {% if period == 'week' %}selected{% endif %}>
+                        {% if lang.get_direction() == 'rtl' %}هذا الأسبوع{% else %}This Week{% endif %}
+                    </option>
+                    <option value="month" {% if period == 'month' or not period %}selected{% endif %}>
+                        {% if lang.get_direction() == 'rtl' %}هذا الشهر{% else %}This Month{% endif %}
+                    </option>
+                    <option value="year" {% if period == 'year' %}selected{% endif %}>
+                        {% if lang.get_direction() == 'rtl' %}هذه السنة{% else %}This Year{% endif %}
+                    </option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% if lang.get_direction() == 'rtl' %}من{% else %}From{% endif %}</label>
+                <input type="date" name="start_date" class="form-control modern-input" value="{{ start_date }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% if lang.get_direction() == 'rtl' %}إلى{% else %}To{% endif %}</label>
+                <input type="date" name="end_date" class="form-control modern-input" value="{{ end_date }}">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تطبيق{% else %}Apply{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="summary-card income">
+            <div class="summary-icon">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}إجمالي الإيرادات{% else %}Total Income{% endif %}</span>
+                <h3 class="summary-value">{{ "%.2f"|format(total_income) }} SDG</h3>
+                <small>{{ income_count }} {% if lang.get_direction() == 'rtl' %}عملية{% else %}transactions{% endif %}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="summary-card expense">
+            <div class="summary-icon">
+                <i class="fas fa-arrow-up"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}إجمالي المصروفات{% else %}Total Expenses{% endif %}</span>
+                <h3 class="summary-value">{{ "%.2f"|format(total_expenses) }} SDG</h3>
+                <small>{{ expense_count }} {% if lang.get_direction() == 'rtl' %}عملية{% else %}transactions{% endif %}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="summary-card net">
+            <div class="summary-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}صافي الدخل{% else %}Net Income{% endif %}</span>
+                <h3 class="summary-value {% if net_income >= 0 %}text-success{% else %}text-danger{% endif %}">
+                    {{ "%.2f"|format(net_income) }} SDG
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-chart-line me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}الإيرادات vs المصروفات (آخر 7 أيام){% else %}Income vs Expenses (Last 7 days){% endif %}
+            </div>
+            <div class="card-body">
+                <canvas id="trendChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-chart-pie me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}توزيع الإيرادات{% else %}Income Distribution{% endif %}
+            </div>
+            <div class="card-body">
+                <canvas id="incomePieChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Category Breakdown -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-tags me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}الإيرادات حسب الفئة{% else %}Income by Category{% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>{% if lang.get_direction() == 'rtl' %}الفئة{% else %}Category{% endif %}</th>
+                                <th class="text-center">{% if lang.get_direction() == 'rtl' %}عدد العمليات{% else %}Count{% endif %}</th>
+                                <th class="text-end">{% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in income_by_category %}
+                            <tr>
+                                <td>{{ cat.category }}</td>
+                                <td class="text-center">{{ cat.count }}</td>
+                                <td class="text-end text-success">{{ "%.2f"|format(cat.total) }} SDG</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4">
+                                    {% if lang.get_direction() == 'rtl' %}لا توجد إيرادات في هذه الفترة{% else %}No income in this period{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-tags me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}المصروفات حسب الفئة{% else %}Expenses by Category{% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>{% if lang.get_direction() == 'rtl' %}الفئة{% else %}Category{% endif %}</th>
+                                <th class="text-center">{% if lang.get_direction() == 'rtl' %}عدد العمليات{% else %}Count{% endif %}</th>
+                                <th class="text-end">{% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in expenses_by_category %}
+                            <tr>
+                                <td>{{ cat.category }}</td>
+                                <td class="text-center">{{ cat.count }}</td>
+                                <td class="text-end text-danger">{{ "%.2f"|format(cat.total) }} SDG</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4">
+                                    {% if lang.get_direction() == 'rtl' %}لا توجد مصروفات في هذه الفترة{% else %}No expenses in this period{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions List -->
+<div class="modern-card">
+    <div class="card-header-modern">
+        <i class="fas fa-list me-2"></i>
+        {% if lang.get_direction() == 'rtl' %}آخر المعاملات{% else %}Recent Transactions{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>{% if lang.get_direction() == 'rtl' %}التاريخ{% else %}Date{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الوصف{% else %}Description{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الفئة{% else %}Category{% endif %}</th>
+                        <th class="text-end">{% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}المرجع{% else %}Reference{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in transactions %}
+                    <tr>
+                        <td>{{ t.date }}</td>
+                        <td>{{ t.description }}</td>
+                        <td>
+                            <span class="badge {% if t.type == 'income' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ t.category }}
+                            </span>
+                        </td>
+                        <td class="text-end {% if t.type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                            {{ "%.2f"|format(t.amount) }} SDG
+                        </td>
+                        <td>{{ t.reference or '---' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            {% if lang.get_direction() == 'rtl' %}لا توجد معاملات في هذه الفترة{% else %}No transactions in this period{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.summary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.summary-card.income { border-left: 4px solid #28A745; }
+.summary-card.expense { border-left: 4px solid #DC3545; }
+.summary-card.net { border-left: 4px solid #17A2B8; }
+
+[dir="rtl"] .summary-card.income { border-left: none; border-right: 4px solid #28A745; }
+[dir="rtl"] .summary-card.expense { border-left: none; border-right: 4px solid #DC3545; }
+[dir="rtl"] .summary-card.net { border-left: none; border-right: 4px solid #17A2B8; }
+
+.summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.summary-card.income .summary-icon { background: #28A745; }
+.summary-card.expense .summary-icon { background: #DC3545; }
+.summary-card.net .summary-icon { background: #17A2B8; }
+
+.summary-details {
+    flex: 1;
+}
+
+.summary-label {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.modern-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Trend Chart
+const ctx1 = document.getElementById('trendChart').getContext('2d');
+new Chart(ctx1, {
+    type: 'line',
+    data: {
+        labels: {{ chart_labels|tojson }},
+        datasets: [
+            {
+                label: '{% if lang.get_direction() == "rtl" %}الإيرادات{% else %}Income{% endif %}',
+                data: {{ income_chart_data|tojson }},
+                borderColor: '#28A745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.4,
+                fill: true
+            },
+            {
+                label: '{% if lang.get_direction() == "rtl" %}المصروفات{% else %}Expenses{% endif %}',
+                data: {{ expense_chart_data|tojson }},
+                borderColor: '#DC3545',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.4,
+                fill: true
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+
+// Income Pie Chart
+const ctx2 = document.getElementById('incomePieChart').getContext('2d');
+new Chart(ctx2, {
+    type: 'doughnut',
+    data: {
+        labels: [{% for cat in income_by_category %}'{{ cat.category }}',{% endfor %}],
+        datasets: [{
+            data: [{% for cat in income_by_category %}{{ cat.total }},{% endfor %}],
+            backgroundColor: ['#28A745', '#17A2B8', '#FFC107', '#875A7B', '#FD7E14', '#20C997'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' }
+        }
+    }
+});
+
+function exportReport(format) {
+    const period = document.querySelector('select[name="period"]')?.value || 'month';
+    const startDate = document.querySelector('input[name="start_date"]')?.value || '';
+    const endDate = document.querySelector('input[name="end_date"]')?.value || '';
+    
+    let url = `/finance/reports/export/${format}?period=${period}`;
+    if (startDate) url += `&start_date=${startDate}`;
+    if (endDate) url += `&end_date=${endDate}`;
+    
+    // Show loading indicator
+    const btn = event.target.closest('.dropdown-item');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري التصدير...';
+    btn.disabled = true;
+    
+    // Trigger download
+    window.location.href = url;
+    
+    // Reset button after a delay
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 2000);
+}
+</script>
+{% endblock %}

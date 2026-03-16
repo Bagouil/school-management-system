@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-palette me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}السمات{% else %}Themes{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}اختر السمة المناسبة لشاشتك{% else %}Choose your preferred theme{% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Current Theme Indicator -->
+<div class="modern-card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h5>
+                    <i class="fas fa-check-circle me-2" style="color: var(--success-color);"></i>
+                    {% if lang.get_direction() == 'rtl' %}السمة الحالية{% else %}Current Theme{% endif %}
+                </h5>
+                <div class="current-theme-display mt-3">
+                    <div class="theme-preview" style="background: linear-gradient(135deg, {{ current_theme.primary_color }} 0%, {{ current_theme.secondary_color }} 100%); padding: 20px; border-radius: 12px;">
+                        <h4 style="color: white;">{{ current_theme.theme_name_ar }}</h4>
+                        <p style="color: rgba(255,255,255,0.8);">{{ current_theme.theme_name_en }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="theme-preview-colors">
+                    <div class="color-swatch" style="background: {{ current_theme.primary_color }};">
+                        <span>{{ current_theme.primary_color }}</span>
+                    </div>
+                    <div class="color-swatch" style="background: {{ current_theme.secondary_color }};">
+                        <span>{{ current_theme.secondary_color }}</span>
+                    </div>
+                    <div class="color-swatch" style="background: {{ current_theme.accent_color }};">
+                        <span>{{ current_theme.accent_color }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Available Themes Grid -->
+<h5 class="mb-3">
+    <i class="fas fa-th me-2"></i>
+    {% if lang.get_direction() == 'rtl' %}السمات المتاحة{% else %}Available Themes{% endif %}
+</h5>
+
+<div class="row">
+    {% for theme in themes %}
+    <div class="col-md-4 mb-4">
+        <div class="theme-card {% if theme.theme_id == current_theme.theme_id %}active{% endif %}" 
+             data-theme-id="{{ theme.theme_id }}"
+             onclick="previewTheme({{ theme.theme_id }})">
+            <div class="theme-header" style="background: linear-gradient(135deg, {{ theme.primary_color }} 0%, {{ theme.secondary_color }} 100%);">
+                <div class="theme-name">
+                    <h5>{{ theme.theme_name_ar }}</h5>
+                    <small>{{ theme.theme_name_en }}</small>
+                </div>
+                {% if theme.theme_id == current_theme.theme_id %}
+                <div class="theme-active-badge">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                {% endif %}
+            </div>
+            <div class="theme-body">
+                <div class="theme-colors">
+                    <span class="color-dot" style="background: {{ theme.primary_color }};" title="Primary"></span>
+                    <span class="color-dot" style="background: {{ theme.secondary_color }};" title="Secondary"></span>
+                    <span class="color-dot" style="background: {{ theme.accent_color }};" title="Accent"></span>
+                    <span class="color-dot" style="background: {{ theme.success_color }};" title="Success"></span>
+                    <span class="color-dot" style="background: {{ theme.danger_color }};" title="Danger"></span>
+                    <span class="color-dot" style="background: {{ theme.warning_color }};" title="Warning"></span>
+                    <span class="color-dot" style="background: {{ theme.info_color }};" title="Info"></span>
+                </div>
+                <div class="theme-actions mt-3">
+                    <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); previewTheme({{ theme.theme_id }})">
+                        <i class="fas fa-eye me-1"></i> {% if lang.get_direction() == 'rtl' %}معاينة{% else %}Preview{% endif %}
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); applyTheme({{ theme.theme_id }})">
+                        <i class="fas fa-check me-1"></i> {% if lang.get_direction() == 'rtl' %}تطبيق{% else %}Apply{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    {% if session.role == 'admin' %}
+    <div class="col-md-4 mb-4">
+        <div class="theme-card custom-theme-card" onclick="location.href='{{ url_for('themes.customize') }}'">
+            <div class="theme-header" style="background: linear-gradient(135deg, #e0e0e0 0%, #b0b0b0 100%);">
+                <i class="fas fa-plus-circle fa-3x" style="color: #666;"></i>
+                <h5 class="mt-2">{% if lang.get_direction() == 'rtl' %}سمة مخصصة{% else %}Custom Theme{% endif %}</h5>
+            </div>
+            <div class="theme-body">
+                <p class="text-muted">{% if lang.get_direction() == 'rtl' %}أنشئ سمتك الخاصة{% else %}Create your own theme{% endif %}</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Theme Preview Modal -->
+<div class="modal fade" id="themePreviewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" id="previewModalHeader">
+                <h5 class="modal-title">
+                    <i class="fas fa-eye me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}معاينة السمة{% else %}Theme Preview{% endif %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="previewModalBody">
+                <!-- Preview content will be loaded dynamically -->
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    {% if lang.get_direction() == 'rtl' %}إغلاق{% else %}Close{% endif %}
+                </button>
+                <button type="button" class="btn btn-success" id="applyPreviewBtn" onclick="applyPreviewTheme()">
+                    <i class="fas fa-check me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تطبيق السمة{% else %}Apply Theme{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.theme-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    height: 100%;
+    border: 2px solid transparent;
+}
+
+.theme-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.theme-card.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 5px 20px rgba(135, 90, 123, 0.2);
+}
+
+.custom-theme-card {
+    border: 2px dashed #ccc;
+    background: #f8f9fa;
+}
+
+.custom-theme-card .theme-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+
+.theme-header {
+    padding: 20px;
+    color: white;
+    position: relative;
+    min-height: 120px;
+}
+
+.theme-name h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.theme-name small {
+    opacity: 0.9;
+    font-size: 0.8rem;
+}
+
+.theme-active-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.theme-body {
+    padding: 20px;
+}
+
+.theme-colors {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.color-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.color-dot:hover {
+    transform: scale(1.2);
+}
+
+.theme-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.theme-actions .btn {
+    flex: 1;
+}
+
+.theme-preview-colors {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.color-swatch {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 8px;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.current-theme-display {
+    max-width: 300px;
+}
+</style>
+
+<script>
+let previewThemeId = null;
+
+function previewTheme(themeId) {
+    previewThemeId = themeId;
+    const modal = new bootstrap.Modal(document.getElementById('themePreviewModal'));
+    
+    // Load preview content
+    fetch(`/themes/preview/${themeId}`)
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('previewModalBody').innerHTML = html;
+            
+            // Update modal header color
+            const theme = {{ themes|tojson }}.find(t => t.theme_id === themeId);
+            if (theme) {
+                document.getElementById('previewModalHeader').style.background = 
+                    `linear-gradient(135deg, ${theme.primary_color} 0%, ${theme.secondary_color} 100%)`;
+                document.getElementById('previewModalHeader').style.color = 'white';
+            }
+            
+            modal.show();
+        });
+}
+
+function applyTheme(themeId) {
+    fetch(`/themes/apply/${themeId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Reload page to apply new theme
+            location.reload();
+        } else {
+            alert('Error applying theme');
+        }
+    });
+}
+
+function applyPreviewTheme() {
+    if (previewThemeId) {
+        applyTheme(previewThemeId);
+    }
+}
+</script>
+{% endblock %}

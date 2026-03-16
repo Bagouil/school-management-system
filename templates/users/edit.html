@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-user-edit me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}تعديل المستخدم{% else %}Edit User{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}تعديل بيانات المستخدم والصلاحيات{% else %}Edit user information and permissions{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-user-cog me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}تعديل معلومات المستخدم{% else %}Edit User Information{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST" id="editUserForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-user me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}اسم المستخدم{% else %}Username{% endif %}
+                            </label>
+                            <input type="text" class="form-control modern-input" value="{{ user.username }}" readonly disabled>
+                            <small class="text-muted">{% if lang.get_direction() == 'rtl' %}لا يمكن تغيير اسم المستخدم{% else %}Username cannot be changed{% endif %}</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-envelope me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}البريد الإلكتروني *{% else %}Email *{% endif %}
+                            </label>
+                            <input type="email" name="email" class="form-control modern-input" value="{{ user.email }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم الكامل (عربي) *{% else %}Full Name (Arabic) *{% endif %}
+                            </label>
+                            <input type="text" name="full_name_ar" class="form-control modern-input" value="{{ user.full_name_ar }}" required>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم الكامل (إنجليزي){% else %}Full Name (English){% endif %}
+                            </label>
+                            <input type="text" name="full_name_en" class="form-control modern-input" value="{{ user.full_name_en }}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tag me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الدور *{% else %}Role *{% endif %}
+                            </label>
+                            <select name="role" class="form-select modern-select" required>
+                                <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>
+                                    {% if lang.get_direction() == 'rtl' %}مدير (صلاحية كاملة){% else %}Admin (Full Access){% endif %}
+                                </option>
+                                <option value="supervisor" {% if user.role == 'supervisor' %}selected{% endif %}>
+                                    {% if lang.get_direction() == 'rtl' %}مشرف تربوي{% else %}Supervisor{% endif %}
+                                </option>
+                                <option value="teacher" {% if user.role == 'teacher' %}selected{% endif %}>
+                                    {% if lang.get_direction() == 'rtl' %}معلم{% else %}Teacher{% endif %}
+                                </option>
+                                <option value="accountant" {% if user.role == 'accountant' %}selected{% endif %}>
+                                    {% if lang.get_direction() == 'rtl' %}محاسب{% else %}Accountant{% endif %}
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-toggle-on me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}
+                            </label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_active" id="is_active" {% if user.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    {% if lang.get_direction() == 'rtl' %}حساب نشط{% else %}Active Account{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="reset_password" id="reset_password">
+                                        <label class="form-check-label" for="reset_password">
+                                            <strong>{% if lang.get_direction() == 'rtl' %}إعادة تعيين كلمة المرور{% else %}Reset Password{% endif %}</strong>
+                                            <span class="d-block small text-muted">
+                                                {% if lang.get_direction() == 'rtl' %}
+                                                    سيتم إنشاء كلمة مرور جديدة عشوائية وإظهارها بعد الحفظ
+                                                {% else %}
+                                                    A new random password will be generated and shown after saving
+                                                {% endif %}
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning modern-alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}
+                            <strong>تنبيه:</strong> تغيير دور المستخدم سيؤثر على صلاحياته في النظام مباشرة.
+                        {% else %}
+                            <strong>Warning:</strong> Changing user role will affect their permissions immediately.
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-modern-primary px-5">
+                            <i class="fas fa-save me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}حفظ التغييرات{% else %}Save Changes{% endif %}
+                        </button>
+                        <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-secondary px-5">
+                            {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- User Info Card -->
+        <div class="modern-card mt-4">
+            <div class="card-header-modern">
+                <i class="fas fa-info-circle me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}معلومات إضافية{% else %}Additional Information{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>{% if lang.get_direction() == 'rtl' %}تاريخ الإنشاء{% else %}Created{% endif %}:</strong> {{ user.created_at }}</p>
+                        <p><strong>{% if lang.get_direction() == 'rtl' %}آخر دخول{% else %}Last Login{% endif %}:</strong> {{ user.last_login or 'Never' }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>{% if lang.get_direction() == 'rtl' %}معلم مرتبط{% else %}Linked Teacher{% endif %}:</strong> 
+                            {% if user.teacher_name %}
+                                <a href="{{ url_for('teachers.view_teacher', teacher_id=user.teacher_id) }}">{{ user.teacher_name }}</a>
+                            {% else %}
+                                {% if lang.get_direction() == 'rtl' %}لا يوجد{% else %}None{% endif %}
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

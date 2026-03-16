@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-chart-pie me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    إحصائيات تحصيل: {{ category.category_name_ar }}
+                {% else %}
+                    Collection Statistics: {{ category.category_name_en }}
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                {{ category.description or '' }}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('finance.fee_categories') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Category Info Card -->
+<div class="modern-card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</small>
+                <h4>{{ "%.2f"|format(category.amount) }} SDG</h4>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}نوع الرسوم{% else %}Fee Type{% endif %}</small>
+                <h4>
+                    {% if category.is_annual %}
+                        {% if lang.get_direction() == 'rtl' %}سنوي{% else %}Annual{% endif %}
+                    {% else %}
+                        {% if lang.get_direction() == 'rtl' %}مرة واحدة{% else %}One-time{% endif %}
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}إلزامية{% else %}Mandatory{% endif %}</small>
+                <h4>
+                    {% if category.is_mandatory %}
+                        <span class="badge bg-success">✓</span>
+                    {% else %}
+                        <span class="badge bg-secondary">✗</span>
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}عدد الطلاب{% else %}Students{% endif %}</small>
+                <h4>{{ stats.total_students }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي الرسوم{% else %}Total Fees{% endif %}</span>
+                <h3 class="stat-value">{{ "%.2f"|format(stats.total_amount) }} SDG</h3>
+                <small>{{ stats.total_fees }} {% if lang.get_direction() == 'rtl' %}رسوم{% else %}fees{% endif %}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
+                <i class="fas fa-hand-holding-usd"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}المتحصل{% else %}Collected{% endif %}</span>
+                <h3 class="stat-value text-success">{{ "%.2f"|format(stats.total_collected) }} SDG</h3>
+                <small>{{ stats.collection_percentage }}%</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #DC3545 0%, #bd2130 100%);">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}المتبقي{% else %}Pending{% endif %}</span>
+                <h3 class="stat-value text-danger">{{ "%.2f"|format(stats.total_pending) }} SDG</h3>
+                <small>{{ (100 - stats.collection_percentage)|round(1) }}%</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Collection by Class -->
+<div class="modern-card mb-4">
+    <div class="card-header-modern">
+        <i class="fas fa-school me-2"></i>
+        {% if lang.get_direction() == 'rtl' %}التحصيل حسب الصف{% else %}Collection by Class{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الصف{% else %}Class{% endif %}</th>
+                        <th class="text-center">{% if lang.get_direction() == 'rtl' %}عدد الطلاب{% else %}Students{% endif %}</th>
+                        <th class="text-end">{% if lang.get_direction() == 'rtl' %}إجمالي الرسوم{% else %}Total Fees{% endif %}</th>
+                        <th class="text-end">{% if lang.get_direction() == 'rtl' %}الخصومات{% else %}Discounts{% endif %}</th>
+                        <th class="text-end">{% if lang.get_direction() == 'rtl' %}المتحصل{% else %}Collected{% endif %}</th>
+                        <th class="text-end">{% if lang.get_direction() == 'rtl' %}المتبقي{% else %}Pending{% endif %}</th>
+                        <th class="text-center">{% if lang.get_direction() == 'rtl' %}نسبة التحصيل{% else %}Collection %{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in class_collections %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ item.class_name_ar }}</td>
+                        <td class="text-center">{{ item.students }}</td>
+                        <td class="text-end">{{ "%.2f"|format(item.total_amount) }} SDG</td>
+                        <td class="text-end text-success">{{ "%.2f"|format(item.total_discounts) }} SDG</td>
+                        <td class="text-end text-success">{{ "%.2f"|format(item.total_collected) }} SDG</td>
+                        <td class="text-end text-danger">{{ "%.2f"|format(item.total_pending) }} SDG</td>
+                        <td class="text-center">
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar {% if item.collection_percentage >= 75 %}bg-success{% elif item.collection_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                     style="width: {{ item.collection_percentage }}%"></div>
+                            </div>
+                            <small>{{ item.collection_percentage }}%</small>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            {% if lang.get_direction() == 'rtl' %}لا توجد بيانات تحصيل{% else %}No collection data{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Payments -->
+<div class="modern-card">
+    <div class="card-header-modern">
+        <i class="fas fa-history me-2"></i>
+        {% if lang.get_direction() == 'rtl' %}آخر المدفوعات{% else %}Recent Payments{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}التاريخ{% else %}Date{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الطالب{% else %}Student{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الصف{% else %}Class{% endif %}</th>
+                        <th class="text-end">{% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}رقم الإيصال{% else %}Receipt{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in recent_payments %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ payment.payment_date }}</td>
+                        <td>
+                            <a href="{{ url_for('students.view_student_profile', student_id=payment.student_id) }}">
+                                {{ payment.student_name }}
+                            </a>
+                            <small class="d-block text-muted">{{ payment.student_number }}</small>
+                        </td>
+                        <td>{{ payment.class_name_ar }}</td>
+                        <td class="text-end text-success">{{ "%.2f"|format(payment.amount_paid) }} SDG</td>
+                        <td>
+                            <a href="{{ url_for('finance.download_receipt_pdf', payment_id=payment.payment_id) }}" target="_blank">
+                                {{ payment.receipt_number }}
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            {% if lang.get_direction() == 'rtl' %}لا توجد مدفوعات{% else %}No payments{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.stat-details {
+    flex: 1;
+}
+
+.stat-label {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+</style>
+{% endblock %}

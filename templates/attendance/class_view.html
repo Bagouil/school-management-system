@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-calendar-check me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    تسجيل حضور الصف: {{ class_obj.class_name_ar }}
+                {% else %}
+                    Class Attendance: {{ class_obj.class_name_en }}
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                <i class="fas fa-layer-group me-1"></i> {{ class_obj.grade_name_ar }} | 
+                <i class="fas fa-calendar-alt me-1 ms-2"></i> {{ selected_date }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('attendance.student_attendance') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Class Info Card -->
+<div class="modern-card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}الصف{% else %}Class{% endif %}</small>
+                <h5>{{ class_obj.class_name_ar }}</h5>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}المرحلة{% else %}Grade{% endif %}</small>
+                <h5>{{ class_obj.grade_name_ar }}</h5>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}عدد الطلاب{% else %}Students{% endif %}</small>
+                <h5>{{ attendance|length }}</h5>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}التاريخ{% else %}Date{% endif %}</small>
+                <h5>{{ selected_date }}</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Form -->
+<div class="modern-card">
+    <div class="card-header-modern d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+        <span>
+            <i class="fas fa-check-circle me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}تسجيل الحضور{% else %}Mark Attendance{% endif %}
+        </span>
+        <div class="btn-group">
+            <button type="button" class="btn btn-sm btn-light" onclick="markAll('present')">
+                <i class="fas fa-check-circle text-success me-1"></i> 
+                {% if lang.get_direction() == 'rtl' %}تحديد الكل حاضر{% else %}All Present{% endif %}
+            </button>
+            <button type="button" class="btn btn-sm btn-light" onclick="markAll('absent')">
+                <i class="fas fa-times-circle text-danger me-1"></i> 
+                {% if lang.get_direction() == 'rtl' %}تحديد الكل غائب{% else %}All Absent{% endif %}
+            </button>
+            <button type="button" class="btn btn-sm btn-light" onclick="exportAttendance()">
+                <i class="fas fa-download text-primary me-1"></i> 
+                {% if lang.get_direction() == 'rtl' %}تصدير{% else %}Export{% endif %}
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('attendance.mark_student_attendance') }}" id="attendanceForm">
+            <input type="hidden" name="class_id" value="{{ class_obj.class_id }}">
+            <input type="hidden" name="attendance_date" value="{{ selected_date }}">
+            
+            <div class="table-responsive">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>{% if lang.get_direction() == 'rtl' %}الرقم الدراسي{% else %}Student ID{% endif %}</th>
+                            <th>{% if lang.get_direction() == 'rtl' %}اسم الطالب{% else %}Student Name{% endif %}</th>
+                            <th style="width: 150px;">{% if lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}</th>
+                            <th>{% if lang.get_direction() == 'rtl' %}ملاحظات{% else %}Remarks{% endif %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in attendance %}
+                        <tr class="student-row" data-student-id="{{ record.student_id }}">
+                            <td>{{ loop.index }}</td>
+                            <td><span class="badge bg-light text-dark">{{ record.student_number }}</span></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="student-avatar me-2">
+                                        <div class="avatar-placeholder" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+                                            {{ record.first_name_ar[:1] }}{{ record.last_name_ar[:1] }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <strong>{{ record.first_name_ar }} {{ record.last_name_ar }}</strong>
+                                        {% if record.first_name_en %}
+                                        <small class="d-block text-muted">{{ record.first_name_en }} {{ record.last_name_en }}</small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <input type="hidden" name="student_ids[]" value="{{ record.student_id }}">
+                                <select name="statuses[]" class="form-select status-select" required>
+                                    <option value="present" {% if record.status == 'present' %}selected{% endif %} class="text-success">
+                                        ✅ {% if lang.get_direction() == 'rtl' %}حاضر{% else %}Present{% endif %}
+                                    </option>
+                                    <option value="absent" {% if record.status == 'absent' %}selected{% endif %} class="text-danger">
+                                        ❌ {% if lang.get_direction() == 'rtl' %}غائب{% else %}Absent{% endif %}
+                                    </option>
+                                    <option value="late" {% if record.status == 'late' %}selected{% endif %} class="text-warning">
+                                        ⏰ {% if lang.get_direction() == 'rtl' %}متأخر{% else %}Late{% endif %}
+                                    </option>
+                                    <option value="excused" {% if record.status == 'excused' %}selected{% endif %} class="text-info">
+                                        📝 {% if lang.get_direction() == 'rtl' %}معذور{% else %}Excused{% endif %}
+                                    </option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" name="remarks[]" class="form-control form-control-sm remark-input" 
+                                       placeholder="{% if lang.get_direction() == 'rtl' %}ملاحظات{% else %}Remarks{% endif %}"
+                                       value="{{ record.remarks or '' }}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="attendance-summary">
+                        <h6 class="mb-2">
+                            <i class="fas fa-chart-pie me-2" style="color: var(--primary-color);"></i>
+                            {% if lang.get_direction() == 'rtl' %}ملخص الحضور{% else %}Attendance Summary{% endif %}
+                        </h6>
+                        <div class="d-flex gap-3 flex-wrap">
+                            <span class="badge bg-success fs-6 p-2" id="presentCount">0</span>
+                            <span class="badge bg-danger fs-6 p-2" id="absentCount">0</span>
+                            <span class="badge bg-warning fs-6 p-2" id="lateCount">0</span>
+                            <span class="badge bg-info fs-6 p-2" id="excusedCount">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button type="submit" class="btn btn-lg" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; border: none; padding: 12px 40px; border-radius: 10px;">
+                        <i class="fas fa-save me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}حفظ الحضور{% else %}Save Attendance{% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.student-avatar {
+    width: 40px;
+    height: 40px;
+}
+
+.avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.status-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 8px;
+    transition: all 0.3s ease;
+}
+
+.status-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.remark-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 8px;
+    transition: all 0.3s ease;
+}
+
+.remark-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.badge {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+    border-radius: 30px;
+}
+
+.badge.fs-6 {
+    font-size: 1rem;
+}
+</style>
+
+<script>
+// Update summary counts
+function updateSummary() {
+    let present = 0, absent = 0, late = 0, excused = 0;
+    
+    document.querySelectorAll('.status-select').forEach(select => {
+        const value = select.value;
+        if (value === 'present') present++;
+        else if (value === 'absent') absent++;
+        else if (value === 'late') late++;
+        else if (value === 'excused') excused++;
+    });
+    
+    document.getElementById('presentCount').textContent = present;
+    document.getElementById('absentCount').textContent = absent;
+    document.getElementById('lateCount').textContent = late;
+    document.getElementById('excusedCount').textContent = excused;
+}
+
+// Mark all students with same status
+function markAll(status) {
+    document.querySelectorAll('.status-select').forEach(select => {
+        select.value = status;
+    });
+    updateSummary();
+}
+
+// Export attendance data
+function exportAttendance() {
+    const classId = {{ class_obj.class_id }};
+    const date = '{{ selected_date }}';
+    const format = confirm('{% if lang.get_direction() == "rtl" %}تصدير بصيغة Excel؟\n(OK = Excel, Cancel = CSV){% else %}Export as Excel?\n(OK = Excel, Cancel = CSV){% endif %}') ? 'excel' : 'csv';
+    
+    window.open(`/attendance/export-report/${format}?class_id=${classId}&date=${date}`, '_blank');
+}
+
+// Initialize summary on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateSummary();
+    
+    // Update summary when status changes
+    document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', updateSummary);
+    });
+});
+</script>
+{% endblock %}

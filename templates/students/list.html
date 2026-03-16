@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-users me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}قائمة الطلاب{% else %}Students List{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}عرض وإدارة جميع الطلاب المسجلين{% else %}View and manage all registered students{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('students.register') }}" class="btn btn-modern-primary">
+                <i class="fas fa-user-plus me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}تسجيل طالب جديد{% else %}Register Student{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_students }}</h3>
+                <p>{% if lang.get_direction() == 'rtl' %}إجمالي الطلاب{% else %}Total Students{% endif %}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
+            <div class="stat-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ active_students }}</h3>
+                <p>{% if lang.get_direction() == 'rtl' %}طلاب نشطون{% else %}Active Students{% endif %}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">
+            <div class="stat-icon">
+                <i class="fas fa-mars"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ male_students }}</h3>
+                <p>{% if lang.get_direction() == 'rtl' %}ذكور{% else %}Male{% endif %}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #e83e8c 0%, #c2185b 100%);">
+            <div class="stat-icon">
+                <i class="fas fa-venus"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ female_students }}</h3>
+                <p>{% if lang.get_direction() == 'rtl' %}إناث{% else %}Female{% endif %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="modern-card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <select class="form-select modern-select" id="classFilter">
+                    <option value="">{% if lang.get_direction() == 'rtl' %}جميع الفصول{% else %}All Classes{% endif %}</option>
+                    {% for class in classes %}
+                    <option value="{{ class.class_id }}">{{ class.class_name_ar }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select modern-select" id="genderFilter">
+                    <option value="">{% if lang.get_direction() == 'rtl' %}جميع الجنسين{% else %}All Genders{% endif %}</option>
+                    <option value="male">{% if lang.get_direction() == 'rtl' %}ذكور{% else %}Male{% endif %}</option>
+                    <option value="female">{% if lang.get_direction() == 'rtl' %}إناث{% else %}Female{% endif %}</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control modern-input border-start-0" id="searchInput" 
+                           placeholder="{% if lang.get_direction() == 'rtl' %}بحث بالاسم أو الرقم الدراسي...{% else %}Search by name or ID...{% endif %}">
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+			<div class="col-md-12 text-end">
+				<div class="btn-group">
+					<button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+						<i class="fas fa-download me-2"></i>
+						{% if lang.get_direction() == 'rtl' %}تصدير{% else %}Export{% endif %}
+					</button>
+					<ul class="dropdown-menu">
+						<li><a class="dropdown-item" href="#" onclick="exportStudents('csv')">
+							<i class="fas fa-file-csv me-2 text-info"></i> CSV
+						</a></li>
+						<li><a class="dropdown-item" href="#" onclick="exportStudents('excel')">
+							<i class="fas fa-file-excel me-2 text-success"></i> Excel
+						</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+    </div>
+</div>
+
+<!-- Students Table -->
+<div class="modern-card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table" id="studentsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الرقم الدراسي{% else %}Student ID{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}اسم الطالب{% else %}Student Name{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الصف{% else %}Class{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الجنس{% else %}Gender{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}تاريخ الميلاد{% else %}Birth Date{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الهاتف{% else %}Phone{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الإجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr class="student-row" data-class="{{ student.class_id }}" data-gender="{{ student.gender }}" data-name="{{ student.first_name_ar }} {{ student.last_name_ar }}" data-id="{{ student.student_number }}">
+                        <td>{{ loop.index }}</td>
+                        <td><span class="badge bg-light text-dark">{{ student.student_number }}</span></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="student-avatar me-2">
+                                    {% if student.student_image %}
+                                    <img src="{{ url_for('static', filename=student.student_image) }}" alt="{{ student.first_name_ar }}" class="avatar-img">
+                                    {% else %}
+                                    <div class="avatar-placeholder" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+                                        {{ student.first_name_ar[:1] }}{{ student.last_name_ar[:1] }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <strong>{{ student.first_name_ar }} {{ student.last_name_ar }}</strong>
+                                    <small class="d-block text-muted">{{ student.first_name_en }} {{ student.last_name_en }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ student.class_name_ar }}</td>
+                        <td>
+                            {% if student.gender == 'male' %}
+                            <i class="fas fa-mars text-primary"></i> {% if lang.get_direction() == 'rtl' %}ذكر{% else %}Male{% endif %}
+                            {% else %}
+                            <i class="fas fa-venus text-danger"></i> {% if lang.get_direction() == 'rtl' %}أنثى{% else %}Female{% endif %}
+                            {% endif %}
+                        </td>
+                        <td>{{ student.birth_date }}</td>
+                        <td>{{ student.phone }}</td>
+                        <td>
+                            {% if student.status == 'active' %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>
+                                {% if lang.get_direction() == 'rtl' %}نشط{% else %}Active{% endif %}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-pause-circle me-1"></i>
+                                {% if lang.get_direction() == 'rtl' %}غير نشط{% else %}Inactive{% endif %}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <a href="{{ url_for('students.view_student_profile', student_id=student.student_id) }}" class="btn btn-sm btn-outline-primary" title="{% if lang.get_direction() == 'rtl' %}عرض الملف{% else %}View Profile{% endif %}">
+                                    <i class="fas fa-id-card"></i>
+                                </a>
+                                <a href="{{ url_for('students.edit_student', student_id=student.student_id) }}" class="btn btn-sm btn-outline-warning" title="{% if lang.get_direction() == 'rtl' %}تعديل{% else %}Edit{% endif %}">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('finance.student_fees_detail', student_id=student.student_id) }}" class="btn btn-sm btn-outline-success" title="{% if lang.get_direction() == 'rtl' %}الرسوم{% else %}Fees{% endif %}">
+                                    <i class="fas fa-coins"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card-modern {
+    border-radius: 16px;
+    padding: 20px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.stat-card-modern:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.stat-card-modern .stat-icon {
+    font-size: 2rem;
+    opacity: 0.9;
+}
+
+.stat-card-modern .stat-details h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.stat-card-modern .stat-details p {
+    margin: 5px 0 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+.student-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.modern-select, .modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-select:focus, .modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.action-buttons .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+</style>
+
+<script>
+// Filter functionality
+document.getElementById('classFilter').addEventListener('change', filterTable);
+document.getElementById('genderFilter').addEventListener('change', filterTable);
+document.getElementById('searchInput').addEventListener('keyup', filterTable);
+
+function filterTable() {
+    const classFilter = document.getElementById('classFilter').value;
+    const genderFilter = document.getElementById('genderFilter').value;
+    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    
+    const rows = document.querySelectorAll('.student-row');
+    
+    rows.forEach(row => {
+        const rowClass = row.dataset.class;
+        const rowGender = row.dataset.gender;
+        const rowName = row.dataset.name?.toLowerCase() || '';
+        const rowId = row.dataset.id?.toLowerCase() || '';
+        
+        const classMatch = !classFilter || rowClass == classFilter;
+        const genderMatch = !genderFilter || rowGender == genderFilter;
+        const searchMatch = !searchText || rowName.includes(searchText) || rowId.includes(searchText);
+        
+        if (classMatch && genderMatch && searchMatch) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Filter functionality
+document.getElementById('classFilter').addEventListener('change', filterTable);
+document.getElementById('genderFilter').addEventListener('change', filterTable);
+document.getElementById('searchInput').addEventListener('keyup', filterTable);
+
+function filterTable() {
+    const classFilter = document.getElementById('classFilter').value;
+    const genderFilter = document.getElementById('genderFilter').value;
+    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    
+    const rows = document.querySelectorAll('.student-row');
+    
+    rows.forEach(row => {
+        const rowClass = row.dataset.class;
+        const rowGender = row.dataset.gender;
+        const rowName = row.dataset.name?.toLowerCase() || '';
+        const rowId = row.dataset.id?.toLowerCase() || '';
+        
+        const classMatch = !classFilter || rowClass == classFilter;
+        const genderMatch = !genderFilter || rowGender == genderFilter;
+        const searchMatch = !searchText || rowName.includes(searchText) || rowId.includes(searchText);
+        
+        if (classMatch && genderMatch && searchMatch) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Export function
+function exportStudents(format) {
+    const classFilter = document.getElementById('classFilter').value;
+    const genderFilter = document.getElementById('genderFilter').value;
+    
+    let url;
+    if (format === 'excel') {
+        url = "{{ url_for('students.export_students_excel') }}";
+    } else {
+        url = "{{ url_for('students.export_students_csv') }}";
+    }
+    
+    const params = new URLSearchParams();
+    
+    if (classFilter) params.append('class_id', classFilter);
+    if (genderFilter) params.append('gender', genderFilter);
+    
+    if (params.toString()) {
+        url += '?' + params.toString();
+    }
+    
+    // Show loading indicator (optional)
+    const btn = event.target.closest('.dropdown-item');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري التصدير...';
+    btn.disabled = true;
+    
+    // Trigger download
+    window.location.href = url;
+    
+    // Reset button after a delay
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 2000);
+}
+
+// Update the dropdown menu in the export button
+document.addEventListener('DOMContentLoaded', function() {
+    // The export button dropdown is already in the HTML
+    // Make sure it has the correct onclick handlers
+});
+</script>
+{% endblock %}

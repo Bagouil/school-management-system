@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <h2>
+            {% if lang.get_direction() == 'rtl' %}
+                {{ class_obj.class_name_ar }}
+            {% else %}
+                {{ class_obj.class_name_en }}
+            {% endif %}
+        </h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <a href="{{ url_for('classes.list_classes') }}" class="btn btn-secondary">
+            {% if lang.get_direction() == 'rtl' %}رجوع{% else %}Back{% endif %}
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            {% if lang.get_direction() == 'rtl' %}
+                معلومات الصف
+            {% else %}
+                Class Information
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>{% if lang.get_direction() == 'rtl' %}الاسم (عربي){% else %}Name (Arabic){% endif %}:</strong> {{ class_obj.class_name_ar }}</p>
+                <p><strong>{% if lang.get_direction() == 'rtl' %}الاسم (إنجليزي){% else %}Name (English){% endif %}:</strong> {{ class_obj.class_name_en }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>{% if lang.get_direction() == 'rtl' %}المرحلة{% else %}Grade{% endif %}:</strong> {{ class_obj.grade_name_ar }}</p>
+                <p><strong>{% if lang.get_direction() == 'rtl' %}السعة{% else %}Capacity{% endif %}:</strong> {{ class_obj.capacity }}</p>
+                <p><strong>{% if lang.get_direction() == 'rtl' %}عدد الطلاب{% else %}Students{% endif %}:</strong> {{ students|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            {% if lang.get_direction() == 'rtl' %}
+                قائمة الطلاب
+            {% else %}
+                Students List
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الرقم الدراسي{% else %}Student ID{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}اسم الطالب{% else %}Student Name{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ student.student_number }}</td>
+                        <td>
+                            <a href="{{ url_for('students.view_student', student_id=student.student_id) }}">
+                                {{ student.first_name_ar }} {{ student.last_name_ar }}
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

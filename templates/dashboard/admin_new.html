@@ -1,0 +1,738 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Welcome Section with Sliding Stats -->
+<div class="welcome-section mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1 class="display-6 mb-2">
+                {% if lang.get_direction() == 'rtl' %}
+                مرحباً، {{ session.full_name }}
+                {% else %}
+                Welcome, {{ session.full_name }}
+                {% endif %}
+            </h1>
+            <p class="text-muted">
+                <i class="far fa-calendar-alt me-2"></i>{{ today }}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="quick-actions">
+                <button class="btn btn-modern-primary" onclick="location.href='{{ url_for('students.register') }}'">
+                    <i class="fas fa-user-plus me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تسجيل طالب{% else %}Add Student{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sliding Stats Cards -->
+<div class="stats-slider mb-4">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="stat-card-slide" style="--delay: 0s;">
+                <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ stats.total_students }}</h3>
+                    <p class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي الطلاب{% else %}Total Students{% endif %}</p>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> +12%
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card-slide" style="--delay: 0.1s;">
+                <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ stats.total_teachers }}</h3>
+                    <p class="stat-label">{% if lang.get_direction() == 'rtl' %}المعلمين{% else %}Teachers{% endif %}</p>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> +5%
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card-slide" style="--delay: 0.2s;">
+                <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #5fa8d3 0%, #1b4965 100%);">
+                    <i class="fas fa-school"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ stats.total_classes }}</h3>
+                    <p class="stat-label">{% if lang.get_direction() == 'rtl' %}الفصول{% else %}Classes{% endif %}</p>
+                    <div class="stat-trend neutral">
+                        <i class="fas fa-minus"></i> 0%
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="stat-card-slide" style="--delay: 0.3s;">
+                <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #ffd93d 0%, #ff9a3d 100%);">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-number">{{ stats.total_revenue }} SDG</h3>
+                    <p class="stat-label">{% if lang.get_direction() == 'rtl' %}الإيرادات{% else %}Revenue{% endif %}</p>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> +25%
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Action Tiles -->
+<div class="quick-action-tiles mb-4">
+    <h4 class="mb-3">
+        <i class="fas fa-bolt me-2" style="color: var(--primary-color);"></i>
+        {% if lang.get_direction() == 'rtl' %}إجراءات سريعة{% else %}Quick Actions{% endif %}
+    </h4>
+    <div class="row g-3">
+        <div class="col-md-2 col-6">
+            <div class="action-tile" onclick="location.href='{{ url_for('students.register') }}'">
+                <i class="fas fa-user-plus"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}تسجيل طالب{% else %}Add Student{% endif %}</span>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="action-tile" onclick="location.href='{{ url_for('teachers.add_teacher') }}'">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}إضافة معلم{% else %}Add Teacher{% endif %}</span>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="action-tile" onclick="location.href='{{ url_for('users.add_user') }}'">
+                <i class="fas fa-user-lock"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}مستخدم جديد{% else %}New User{% endif %}</span>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="action-tile" onclick="location.href='{{ url_for('attendance.student_attendance') }}'">
+                <i class="fas fa-calendar-check"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}تسجيل حضور{% else %}Attendance{% endif %}</span>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="action-tile" onclick="location.href='{{ url_for('finance.student_fees') }}'">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}الرسوم{% else %}Fees{% endif %}</span>
+            </div>
+        </div>
+                <div class="col-md-2 col-6">
+            <div class="action-tile" onclick="location.href='{{ url_for('reports.index') }}'">
+                <i class="fas fa-chart-bar"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}التقارير{% else %}Reports{% endif %}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Dashboard Panels -->
+<div class="row">
+    <!-- Left Panel - Charts -->
+    <div class="col-md-8">
+        <!-- Performance Analytics with Real Data -->
+			<div class="modern-card mb-4">
+				<div class="card-header-modern d-flex justify-content-between align-items-center">
+					<span>
+						<i class="fas fa-chart-pie me-2"></i>
+						{% if lang.get_direction() == 'rtl' %}تحليلات الأداء{% else %}Performance Analytics{% endif %}
+					</span>
+					<div class="btn-group">
+						<button class="btn btn-sm btn-outline-primary active" onclick="loadChartData('week')">{% if lang.get_direction() == 'rtl' %}أسبوع{% else %}Week{% endif %}</button>
+						<button class="btn btn-sm btn-outline-primary" onclick="loadChartData('month')">{% if lang.get_direction() == 'rtl' %}شهر{% else %}Month{% endif %}</button>
+						<button class="btn btn-sm btn-outline-primary" onclick="loadChartData('year')">{% if lang.get_direction() == 'rtl' %}سنة{% else %}Year{% endif %}</button>
+					</div>
+				</div>
+				<div class="card-body">
+					<canvas id="performanceChart" height="300"></canvas>
+				</div>
+			</div>
+
+			<!-- Real Recent Activities -->
+			<div class="modern-card">
+				<div class="card-header-modern">
+					<i class="fas fa-history me-2"></i>
+					{% if lang.get_direction() == 'rtl' %}النشاطات الأخيرة{% else %}Recent Activities{% endif %}
+				</div>
+				<div class="card-body p-0">
+					<div class="timeline">
+						{% for activity in recent_activities %}
+						<div class="timeline-item">
+							<div class="timeline-icon" style="background: {{ activity.color }}">
+								<i class="fas {{ activity.icon }}"></i>
+							</div>
+							<div class="timeline-content">
+								<div class="timeline-header">
+									<h6>{{ activity.title }}</h6>
+									<span class="timeline-time">{{ activity.time }}</span>
+								</div>
+								<p>{{ activity.description }}</p>
+							</div>
+						</div>
+						{% else %}
+						<div class="text-center py-4">
+							<i class="fas fa-history fa-3x mb-3 text-muted"></i>
+							<p>{% if lang.get_direction() == 'rtl' %}لا توجد نشاطات حديثة{% else %}No recent activities{% endif %}</p>
+						</div>
+						{% endfor %}
+					</div>
+				</div>
+			</div>
+    </div>
+    
+    <!-- Right Panel - Stats & Alerts -->
+    <div class="col-md-4">
+        <!-- Attendance Overview -->
+        <div class="modern-card mb-4">
+            <div class="card-header-modern">
+                <i class="fas fa-calendar-check me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}نسبة الحضور اليوم{% else %}Today's Attendance{% endif %}
+            </div>
+            <div class="card-body text-center">
+                <div class="attendance-circle">
+                    <div class="circle-progress" data-percent="{{ stats.today_attendance }}">
+                        <span class="percent">{{ stats.today_attendance }}%</span>
+                    </div>
+                </div>
+                <div class="attendance-stats mt-3">
+                    <div class="row">
+                        <div class="col-4">
+                            <div class="stat-mini">
+                                <span class="label">{% if lang.get_direction() == 'rtl' %}حاضر{% else %}Present{% endif %}</span>
+                                <span class="value text-success">{{ stats.present_today }}</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-mini">
+                                <span class="label">{% if lang.get_direction() == 'rtl' %}غائب{% else %}Absent{% endif %}</span>
+                                <span class="value text-danger">{{ stats.absent_today }}</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-mini">
+                                <span class="label">{% if lang.get_direction() == 'rtl' %}متأخر{% else %}Late{% endif %}</span>
+                                <span class="value text-warning">{{ stats.late_today }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Financial Summary -->
+        <div class="modern-card mb-4">
+            <div class="card-header-modern">
+                <i class="fas fa-wallet me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}ملخص مالي{% else %}Financial Summary{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="financial-stats">
+                    <div class="stat-row">
+                        <span>{% if lang.get_direction() == 'rtl' %}إجمالي التحصيل{% else %}Total Collection{% endif %}</span>
+                        <strong class="text-success">{{ stats.total_collected }} SDG</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>{% if lang.get_direction() == 'rtl' %}إجمالي المصروفات{% else %}Total Expenses{% endif %}</span>
+                        <strong class="text-danger">{{ stats.total_expenses }} SDG</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>{% if lang.get_direction() == 'rtl' %}الرصيد الحالي{% else %}Current Balance{% endif %}</span>
+                        <strong class="text-primary">{{ stats.current_balance }} SDG</strong>
+                    </div>
+                    <div class="stat-row">
+                        <span>{% if lang.get_direction() == 'rtl' %}الرسوم المستحقة{% else %}Pending Fees{% endif %}</span>
+                        <strong class="text-warning">{{ stats.pending_fees }} SDG</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- System Alerts -->
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-bell me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}تنبيهات النظام{% else %}System Alerts{% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="alerts-list">
+                    {% for alert in alerts %}
+                    <div class="alert-item alert-{{ alert.type }}">
+                        <i class="fas {{ alert.icon }} me-3"></i>
+                        <div class="alert-content">
+                            <strong>{{ alert.title }}</strong>
+                            <p>{{ alert.message }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Sliding Stats Cards */
+.stat-card-slide {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    animation: slideIn 0.5s ease forwards;
+    animation-delay: var(--delay);
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.stat-label {
+    color: #6c757d;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.stat-trend {
+    font-size: 0.8rem;
+    margin-top: 5px;
+}
+
+.stat-trend.positive { color: #28a745; }
+.stat-trend.negative { color: #dc3545; }
+.stat-trend.neutral { color: #6c757d; }
+
+/* Quick Action Tiles */
+.action-tile {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f0;
+}
+
+.action-tile:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
+}
+
+.action-tile i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.action-tile span {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding: 20px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 30px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #f0f0f0;
+}
+
+[dir="rtl"] .timeline::before {
+    left: auto;
+    right: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 60px;
+    margin-bottom: 25px;
+}
+
+[dir="rtl"] .timeline-item {
+    padding-left: 0;
+    padding-right: 60px;
+}
+
+.timeline-icon {
+    position: absolute;
+    left: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+}
+
+[dir="rtl"] .timeline-icon {
+    left: auto;
+    right: 20px;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.timeline-header h6 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.timeline-time {
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.timeline-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Attendance Circle */
+.attendance-circle {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    position: relative;
+}
+
+.circle-progress {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: conic-gradient(var(--primary-color) 0deg, #f0f0f0 0deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.circle-progress::before {
+    content: '';
+    position: absolute;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: white;
+}
+
+.percent {
+    position: relative;
+    z-index: 1;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* Financial Stats */
+.financial-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.stat-row:last-child {
+    border-bottom: none;
+}
+
+.stat-mini {
+    text-align: center;
+}
+
+.stat-mini .label {
+    display: block;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+.stat-mini .value {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* Alerts */
+.alerts-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.alert-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.3s ease;
+}
+
+.alert-item:hover {
+    background: #f8f9fa;
+}
+
+.alert-item.alert-warning { background: #fff3cd; }
+.alert-item.alert-info { background: #d1ecf1; }
+.alert-item.alert-danger { background: #f8d7da; }
+
+.alert-content {
+    flex: 1;
+}
+
+.alert-content strong {
+    display: block;
+    font-size: 0.9rem;
+}
+
+.alert-content p {
+    margin: 5px 0 0;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Declare performanceChart in global scope
+let performanceChart;
+
+// Define loadChartData FIRST before it's used
+function loadChartData(period) {
+    // Update active button state
+    document.querySelectorAll('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    // Find the clicked button and make it active
+    const buttons = document.querySelectorAll('.btn-group .btn');
+    for (let btn of buttons) {
+        if (btn.textContent.toLowerCase().includes(period) || 
+            (period === 'week' && btn.textContent.toLowerCase().includes('week')) ||
+            (period === 'month' && btn.textContent.toLowerCase().includes('month')) ||
+            (period === 'year' && btn.textContent.toLowerCase().includes('year'))) {
+            btn.classList.add('active');
+            break;
+        }
+    }
+    
+    // Fetch real data from server
+    fetch(`/api/analytics/chart-data/${period}`)
+        .then(response => response.json())
+        .then(data => {
+            updateChart(data.labels, data.attendance, data.fees);
+        })
+        .catch(error => {
+            console.error('Error loading chart data:', error);
+            // Fallback to empty data or use server-rendered data
+            const labels = {{ chart_labels|tojson }};
+            const attendance = {{ chart_attendance|tojson }};
+            const fees = {{ chart_fees|tojson }};
+            updateChart(labels, attendance, fees);
+        });
+}
+
+function updateChart(labels, attendanceData, feesData) {
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    
+    // Destroy existing chart if it exists
+    if (performanceChart) {
+        performanceChart.destroy();
+    }
+    
+    // Create new chart with real data
+    performanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '{% if lang.get_direction() == "rtl" %}الحضور{% else %}Attendance{% endif %}',
+                    data: attendanceData,
+                    borderColor: '#875A7B',
+                    backgroundColor: 'rgba(135, 90, 123, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: 'y-attendance'
+                },
+                {
+                    label: '{% if lang.get_direction() == "rtl" %}الرسوم (SDG){% else %}Fees (SDG){% endif %}',
+                    data: feesData,
+                    borderColor: '#28A745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: 'y-fees'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.dataset.yAxisID === 'y-fees') {
+                                label += context.parsed.y.toFixed(2) + ' SDG';
+                            } else {
+                                label += context.parsed.y.toFixed(1) + '%';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    id: 'y-attendance',
+                    title: {
+                        display: true,
+                        text: '{% if lang.get_direction() == "rtl" %}نسبة الحضور (%){% else %}Attendance Rate (%){% endif %}'
+                    },
+                    min: 0,
+                    max: 100,
+                    grid: {
+                        color: '#f0f0f0'
+                    }
+                },
+                'y-fees': {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    id: 'y-fees',
+                    title: {
+                        display: true,
+                        text: '{% if lang.get_direction() == "rtl" %}المبلغ (SDG){% else %}Amount (SDG){% endif %}'
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Initialize everything when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initial chart with week data (or use server-rendered data)
+    const initialLabels = {{ chart_labels|tojson }};
+    const initialAttendance = {{ chart_attendance|tojson }};
+    const initialFees = {{ chart_fees|tojson }};
+    
+    // If we have server data, use it, otherwise load week data
+    if (initialLabels && initialLabels.length > 0) {
+        updateChart(initialLabels, initialAttendance, initialFees);
+    } else {
+        loadChartData('week');
+    }
+    
+    // Update circle progress
+    document.querySelectorAll('.circle-progress').forEach(function(el) {
+        var percent = el.getAttribute('data-percent');
+        var angle = (percent / 100) * 360;
+        el.style.background = `conic-gradient(var(--primary-color) ${angle}deg, #f0f0f0 ${angle}deg)`;
+    });
+});
+
+// Optional: Add function to refresh data periodically
+setInterval(function() {
+    // Refresh data every 5 minutes
+    const activeButton = document.querySelector('.btn-group .btn.active');
+    if (activeButton) {
+        const period = activeButton.textContent.toLowerCase().includes('week') ? 'week' : 
+                      activeButton.textContent.toLowerCase().includes('month') ? 'month' : 'year';
+        loadChartData(period);
+    }
+}, 300000); // 5 minutes
+</script>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2>
+            {% if lang.get_direction() == 'rtl' %}
+                لوحة تحكم المشرف التربوي
+            {% else %}
+                Supervisor Dashboard
+            {% endif %}
+        </h2>
+        <p class="text-muted">
+            {% if lang.get_direction() == 'rtl' %}
+                مرحباً بعودتك! يمكنك إدارة الفصول والمقررات الدراسية من هنا.
+            {% else %}
+                Welcome back! You can manage your classes and subjects from here.
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<!-- My Classes -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    {% if lang.get_direction() == 'rtl' %}
+                        فصولي الدراسية
+                    {% else %}
+                        My Classes
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if classes %}
+                <div class="row">
+                    {% for class in classes %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header {% if class.is_class_teacher %}bg-success{% else %}bg-info{% endif %} text-white">
+                                <h6 class="mb-0">
+                                    {% if lang.get_direction() == 'rtl' %}
+                                        {{ class.class_name_ar }}
+                                        {% if class.is_class_teacher %}
+                                            <span class="badge bg-light text-dark">مدرس الفصل</span>
+                                        {% endif %}
+                                    {% else %}
+                                        {{ class.class_name_en }}
+                                        {% if class.is_class_teacher %}
+                                            <span class="badge bg-light text-dark">Class Teacher</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="card-text">
+                                    <strong>{% if lang.get_direction() == 'rtl' %}المرحلة{% else %}Grade{% endif %}:</strong> 
+                                    {{ class.grade_name_ar if lang.get_direction() == 'rtl' else class.grade_name_en }}
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('supervisor.class_attendance', class_id=class.class_id) }}" class="btn btn-primary btn-sm">
+                                        {% if lang.get_direction() == 'rtl' %}تسجيل الحضور{% else %}Mark Attendance{% endif %}
+                                    </a>
+                                    <a href="{{ url_for('supervisor.view_class', class_id=class.class_id) }}" class="btn btn-info btn-sm">
+                                        {% if lang.get_direction() == 'rtl' %}عرض الطلاب{% else %}View Students{% endif %}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    {% if lang.get_direction() == 'rtl' %}
+                        لم يتم تعيين أي فصول لك بعد.
+                    {% else %}
+                        No classes have been assigned to you yet.
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Subjects -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    {% if lang.get_direction() == 'rtl' %}
+                        المواد التي أدرسها
+                    {% else %}
+                        Subjects I Teach
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if subjects %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}المادة{% else %}Subject{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الصف{% else %}Class{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}المرحلة{% else %}Grade{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الإجراءات{% else %}Actions{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for subject in subjects %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    {% if lang.get_direction() == 'rtl' %}
+                                        {{ subject.subject_name_ar }}
+                                    {% else %}
+                                        {{ subject.subject_name_en }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if lang.get_direction() == 'rtl' %}
+                                        {{ subject.class_name_ar }}
+                                    {% else %}
+                                        {{ subject.class_name_en }}
+                                    {% endif %}
+                                </td>
+                                <td>{{ subject.grade_name_ar }}</td>
+                                <td>
+                                    <a href="{{ url_for('supervisor.class_attendance', class_id=subject.class_id) }}" class="btn btn-sm btn-primary">
+                                        {% if lang.get_direction() == 'rtl' %}حضور{% else %}Attendance{% endif %}
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    {% if lang.get_direction() == 'rtl' %}
+                        لم يتم تعيين أي مواد لك بعد.
+                    {% else %}
+                        No subjects have been assigned to you yet.
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    {% if lang.get_direction() == 'rtl' %}
+                        إجراءات سريعة
+                    {% else %}
+                        Quick Actions
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('attendance.student_report') }}" class="btn btn-outline-primary w-100 mb-2">
+                            {% if lang.get_direction() == 'rtl' %}تقارير الحضور{% else %}Attendance Reports{% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('students.list_students') }}" class="btn btn-outline-success w-100 mb-2">
+                            {% if lang.get_direction() == 'rtl' %}قائمة الطلاب{% else %}Student List{% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('supervisor.my_subjects') }}" class="btn btn-outline-info w-100 mb-2">
+                            {% if lang.get_direction() == 'rtl' %}موادي{% else %}My Subjects{% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

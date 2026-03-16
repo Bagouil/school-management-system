@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="access-denied-container">
+    <div class="modern-card text-center py-5">
+        <div class="access-denied-icon mb-4">
+            <i class="fas fa-shield-alt fa-5x" style="color: #dc3545;"></i>
+        </div>
+        
+        <h1 class="display-4 mb-3" style="color: #dc3545;">
+            {% if lang.get_direction() == 'rtl' %}
+                ⛔ وصول مرفوض
+            {% else %}
+                ⛔ Access Denied
+            {% endif %}
+        </h1>
+        
+        <div class="access-message mb-4">
+            <p class="lead">
+                {% if lang.get_direction() == 'rtl' %}
+                    عذراً، ليس لديك الصلاحية للوصول إلى هذه الصفحة.
+                {% else %}
+                    Sorry, you don't have permission to access this page.
+                {% endif %}
+            </p>
+            
+            <div class="alert alert-info d-inline-block mt-3" style="border-radius: 50px;">
+                <i class="fas fa-info-circle me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    دورك الحالي: <strong>{{ session.role }}</strong>
+                {% else %}
+                    Your current role: <strong>{{ session.role }}</strong>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="required-roles mb-4">
+            <h5 class="mb-3">
+                {% if lang.get_direction() == 'rtl' %}
+                    <i class="fas fa-key me-2"></i>الصلاحيات المطلوبة:
+                {% else %}
+                    <i class="fas fa-key me-2"></i>Required permissions:
+                {% endif %}
+            </h5>
+            <div class="role-badges">
+                {% for role in required_roles %}
+                <span class="role-badge {{ role }}">
+                    <i class="fas {% if role == 'admin' %}fa-crown
+                                 {% elif role == 'supervisor' %}fa-chalkboard-teacher
+                                 {% elif role == 'teacher' %}fa-user-graduate
+                                 {% elif role == 'accountant' %}fa-coins
+                                 {% endif %} me-1"></i>
+                    {% if role == 'admin' %}
+                        {% if lang.get_direction() == 'rtl' %}مدير{% else %}Admin{% endif %}
+                    {% elif role == 'supervisor' %}
+                        {% if lang.get_direction() == 'rtl' %}مشرف{% else %}Supervisor{% endif %}
+                    {% elif role == 'teacher' %}
+                        {% if lang.get_direction() == 'rtl' %}معلم{% else %}Teacher{% endif %}
+                    {% elif role == 'accountant' %}
+                        {% if lang.get_direction() == 'rtl' %}محاسب{% else %}Accountant{% endif %}
+                    {% endif %}
+                </span>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="action-buttons mt-4">
+            <a href="javascript:history.back()" class="btn btn-lg btn-outline-primary mx-2">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}العودة للصفحة السابقة{% else %}Go Back{% endif %}
+            </a>
+            <a href="{{ url_for('index') }}" class="btn btn-lg btn-primary mx-2">
+                <i class="fas fa-home me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}الرئيسية{% else %}Home{% endif %}
+            </a>
+        </div>
+        
+        {% if session.role != 'admin' %}
+        <div class="contact-admin mt-5 p-4 bg-light rounded">
+            <i class="fas fa-envelope fa-2x mb-3" style="color: var(--primary-color);"></i>
+            <h5>
+                {% if lang.get_direction() == 'rtl' %}
+                    تحتاج صلاحية أعلى؟
+                {% else %}
+                    Need higher permissions?
+                {% endif %}
+            </h5>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}
+                    يمكنك التواصل مع مدير النظام لطلب صلاحيات إضافية.
+                {% else %}
+                    You can contact the system administrator to request additional permissions.
+                {% endif %}
+            </p>
+            <button class="btn btn-outline-primary" onclick="showContactModal()">
+                <i class="fas fa-headset me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}تواصل مع المدير{% else %}Contact Admin{% endif %}
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Contact Admin Modal -->
+<div class="modal fade" id="contactAdminModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+                <h5 class="modal-title">
+                    <i class="fas fa-headset me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}طلب صلاحيات إضافية{% else %}Request Additional Permissions{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    {% if lang.get_direction() == 'rtl' %}
+                        سيتم إرسال طلب إلى مدير النظام لمراجعة صلاحياتك.
+                    {% else %}
+                        A request will be sent to the system administrator to review your permissions.
+                    {% endif %}
+                </p>
+                <div class="mb-3">
+                    <label class="form-label">
+                        {% if lang.get_direction() == 'rtl' %}الرسالة{% else %}Message{% endif %}
+                    </label>
+                    <textarea class="form-control" id="requestMessage" rows="3" 
+                              placeholder="{% if lang.get_direction() == 'rtl' %}أذكر الصفحات التي تحتاج الوصول إليها...{% else %}Mention which pages you need access to...{% endif %}"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="sendAccessRequest()">
+                    <i class="fas fa-paper-plane me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}إرسال الطلب{% else %}Send Request{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.access-denied-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+.role-badges {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+}
+
+.role-badge.admin {
+    background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);
+}
+
+.role-badge.supervisor {
+    background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%);
+}
+
+.role-badge.teacher {
+    background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);
+}
+
+.role-badge.accountant {
+    background: linear-gradient(135deg, #FFB347 0%, #ff9900 100%);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(135, 90, 123, 0.3);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border: none;
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(135, 90, 123, 0.3);
+}
+
+.alert-info {
+    background: #e7f5ff;
+    border: none;
+    color: #0b5e8c;
+    padding: 12px 25px;
+    border-radius: 50px;
+}
+</style>
+
+<script>
+function showContactModal() {
+    new bootstrap.Modal(document.getElementById('contactAdminModal')).show();
+}
+
+function sendAccessRequest() {
+    const message = document.getElementById('requestMessage').value;
+    
+    // Here you would send an AJAX request to your backend
+    fetch('/api/access-request', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            message: message,
+            current_role: '{{ session.role }}',
+            requested_page: window.location.pathname
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('{% if lang.get_direction() == "rtl" %}تم إرسال الطلب بنجاح{% else %}Request sent successfully{% endif %}');
+            bootstrap.Modal.getInstance(document.getElementById('contactAdminModal')).hide();
+        } else {
+            alert('{% if lang.get_direction() == "rtl" %}حدث خطأ في إرسال الطلب{% else %}Error sending request{% endif %}');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('{% if lang.get_direction() == "rtl" %}حدث خطأ في إرسال الطلب{% else %}Error sending request{% endif %}');
+    });
+}
+</script>
+{% endblock %}

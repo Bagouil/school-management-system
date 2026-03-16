@@ -1,0 +1,441 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-chalkboard-teacher me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}إضافة معلم جديد{% else %}Add New Teacher{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}إضافة معلم جديد إلى النظام{% else %}Add a new teacher to the system{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('teachers.list_teachers') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Steps -->
+<div class="registration-progress mb-4">
+    <div class="progress-steps">
+        <div class="step active" id="step1">
+            <div class="step-icon"><i class="fas fa-user"></i></div>
+            <div class="step-label">{% if lang.get_direction() == 'rtl' %}المعلومات الشخصية{% else %}Personal Info{% endif %}</div>
+        </div>
+        <div class="step" id="step2">
+            <div class="step-icon"><i class="fas fa-graduation-cap"></i></div>
+            <div class="step-label">{% if lang.get_direction() == 'rtl' %}المؤهلات{% else %}Qualifications{% endif %}</div>
+        </div>
+        <div class="step" id="step3">
+            <div class="step-icon"><i class="fas fa-phone"></i></div>
+            <div class="step-label">{% if lang.get_direction() == 'rtl' %}معلومات الاتصال{% else %}Contact{% endif %}</div>
+        </div>
+        <div class="step" id="step4">
+            <div class="step-icon"><i class="fas fa-briefcase"></i></div>
+            <div class="step-label">{% if lang.get_direction() == 'rtl' %}المعلومات الوظيفية{% else %}Employment{% endif %}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-user-plus me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}نموذج إضافة معلم{% else %}Add Teacher Form{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('teachers.add_teacher') }}" id="teacherForm">
+                    <!-- Step 1: Personal Information -->
+                    <div class="form-step" id="form-step-1">
+                        <h5 class="mb-3">
+                            <i class="fas fa-user-circle me-2" style="color: var(--primary-color);"></i>
+                            {% if lang.get_direction() == 'rtl' %}المعلومات الشخصية{% else %}Personal Information{% endif %}
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-signature me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}الاسم الأول (عربي) *{% else %}First Name (Arabic) *{% endif %}
+                                </label>
+                                <input type="text" name="first_name_ar" class="form-control modern-input" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-signature me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}الاسم الأخير (عربي) *{% else %}Last Name (Arabic) *{% endif %}
+                                </label>
+                                <input type="text" name="last_name_ar" class="form-control modern-input" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-signature me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}الاسم الأول (إنجليزي){% else %}First Name (English){% endif %}
+                                </label>
+                                <input type="text" name="first_name_en" class="form-control modern-input">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-signature me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}الاسم الأخير (إنجليزي){% else %}Last Name (English){% endif %}
+                                </label>
+                                <input type="text" name="last_name_en" class="form-control modern-input">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}تاريخ الميلاد *{% else %}Date of Birth *{% endif %}
+                                </label>
+                                <input type="date" name="birth_date" class="form-control modern-input" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-venus-mars me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}الجنس *{% else %}Gender *{% endif %}
+                                </label>
+                                <select name="gender" class="form-select modern-select" required>
+                                    <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر{% else %}Select{% endif %} --</option>
+                                    <option value="male">{% if lang.get_direction() == 'rtl' %}ذكر{% else %}Male{% endif %}</option>
+                                    <option value="female">{% if lang.get_direction() == 'rtl' %}أنثى{% else %}Female{% endif %}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-id-card me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}الرقم الوطني{% else %}National ID{% endif %}
+                                </label>
+                                <input type="text" name="national_id" class="form-control modern-input">
+                            </div>
+                        </div>
+                        
+                        <div class="text-end mt-3">
+                            <button type="button" class="btn btn-modern-primary" onclick="nextStep(2)">
+                                {% if lang.get_direction() == 'rtl' %}التالي{% else %}Next{% endif %} 
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Qualifications -->
+                    <div class="form-step d-none" id="form-step-2">
+                        <h5 class="mb-3">
+                            <i class="fas fa-graduation-cap me-2" style="color: var(--primary-color);"></i>
+                            {% if lang.get_direction() == 'rtl' %}المؤهلات الأكاديمية{% else %}Academic Qualifications{% endif %}
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-university me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}المؤهل العلمي *{% else %}Qualification *{% endif %}
+                                </label>
+                                <input type="text" name="qualification" class="form-control modern-input" required 
+                                       placeholder="{% if lang.get_direction() == 'rtl' %}بكالوريوس{% else %}Bachelor Degree{% endif %}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-book-open me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}التخصص *{% else %}Specialization *{% endif %}
+                                </label>
+                                <input type="text" name="specialization" class="form-control modern-input" required 
+                                       placeholder="{% if lang.get_direction() == 'rtl' %}رياضيات{% else %}Mathematics{% endif %}">
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="button" class="btn btn-outline-secondary" onclick="prevStep(1)">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}السابق{% else %}Previous{% endif %}
+                            </button>
+                            <button type="button" class="btn btn-modern-primary" onclick="nextStep(3)">
+                                {% if lang.get_direction() == 'rtl' %}التالي{% else %}Next{% endif %} 
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3: Contact Information -->
+                    <div class="form-step d-none" id="form-step-3">
+                        <h5 class="mb-3">
+                            <i class="fas fa-address-card me-2" style="color: var(--primary-color);"></i>
+                            {% if lang.get_direction() == 'rtl' %}معلومات الاتصال{% else %}Contact Information{% endif %}
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-phone me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}رقم الهاتف *{% else %}Phone Number *{% endif %}
+                                </label>
+                                <input type="tel" name="phone" class="form-control modern-input" required 
+                                       placeholder="{% if lang.get_direction() == 'rtl' %}٠٩١٢٣٤٥٦٧٨{% else %}0912345678{% endif %}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-envelope me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}البريد الإلكتروني *{% else %}Email *{% endif %}
+                                </label>
+                                <input type="email" name="email" class="form-control modern-input" required 
+                                       placeholder="teacher@school.edu">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-map-marker-alt me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}العنوان{% else %}Address{% endif %}
+                            </label>
+                            <textarea name="address" class="form-control modern-input" rows="2" 
+                                      placeholder="{% if lang.get_direction() == 'rtl' %}الخرطوم، السودان{% else %}Khartoum, Sudan{% endif %}"></textarea>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}السابق{% else %}Previous{% endif %}
+                            </button>
+                            <button type="button" class="btn btn-modern-primary" onclick="nextStep(4)">
+                                {% if lang.get_direction() == 'rtl' %}التالي{% else %}Next{% endif %} 
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 4: Employment Information -->
+                    <div class="form-step d-none" id="form-step-4">
+                        <h5 class="mb-3">
+                            <i class="fas fa-briefcase me-2" style="color: var(--primary-color);"></i>
+                            {% if lang.get_direction() == 'rtl' %}المعلومات الوظيفية{% else %}Employment Information{% endif %}
+                        </h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-plus me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}تاريخ التعيين *{% else %}Hire Date *{% endif %}
+                                </label>
+                                <input type="date" name="hire_date" class="form-control modern-input" required value="{{ today }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-money-bill-wave me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}الراتب *{% else %}Salary *{% endif %}
+                                </label>
+                                <input type="number" name="salary" class="form-control modern-input" required step="0.01" min="0"
+                                       placeholder="{% if lang.get_direction() == 'rtl' %}٥٠٠٠{% else %}5000{% endif %}">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-university me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}الحساب البنكي{% else %}Bank Account{% endif %}
+                                </label>
+                                <input type="text" name="bank_account" class="form-control modern-input">
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info modern-alert mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}
+                                <strong>ملاحظة:</strong> سيتم إنشاء حساب مستخدم للمعلم تلقائياً باستخدام البريد الإلكتروني وكلمة مرور افتراضية.
+                            {% else %}
+                                <strong>Note:</strong> A user account will be automatically created for the teacher using their email and a default password.
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="button" class="btn btn-outline-secondary" onclick="prevStep(3)">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}السابق{% else %}Previous{% endif %}
+                            </button>
+                            <button type="submit" class="btn btn-modern-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}حفظ المعلم{% else %}Save Teacher{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Progress Steps */
+.registration-progress {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 30px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e0e0e0;
+    z-index: 1;
+}
+
+.step {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+}
+
+.step.active .step-icon {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.step.completed .step-icon {
+    background: #28A745;
+    color: white;
+    border-color: #28A745;
+}
+
+.step-icon {
+    width: 60px;
+    height: 60px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-size: 1.5rem;
+    color: #999;
+    transition: all 0.3s ease;
+}
+
+.step-label {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.step.active .step-label {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Form Steps */
+.form-step {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+.modern-input, .modern-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus, .modern-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.modern-alert {
+    border-radius: 10px;
+    border: none;
+    background: #f8f9fa;
+    border-right: 4px solid var(--primary-color);
+}
+
+[dir="rtl"] .modern-alert {
+    border-right: none;
+    border-left: 4px solid var(--primary-color);
+}
+
+.btn-modern-primary {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-modern-primary:hover {
+    background: #6a4b5f;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(135, 90, 123, 0.3);
+}
+</style>
+
+<script>
+let currentStep = 1;
+
+function showStep(step) {
+    for (let i = 1; i <= 4; i++) {
+        document.getElementById(`form-step-${i}`).classList.add('d-none');
+        document.getElementById(`step${i}`).classList.remove('active', 'completed');
+    }
+    
+    document.getElementById(`form-step-${step}`).classList.remove('d-none');
+    
+    for (let i = 1; i <= step; i++) {
+        if (i < step) {
+            document.getElementById(`step${i}`).classList.add('completed');
+        } else {
+            document.getElementById(`step${i}`).classList.add('active');
+        }
+    }
+}
+
+function nextStep(step) {
+    if (validateStep(currentStep)) {
+        currentStep = step;
+        showStep(currentStep);
+    }
+}
+
+function prevStep(step) {
+    currentStep = step;
+    showStep(currentStep);
+}
+
+function validateStep(step) {
+    // Add validation if needed
+    return true;
+}
+
+// Initialize
+showStep(1);
+</script>
+{% endblock %}

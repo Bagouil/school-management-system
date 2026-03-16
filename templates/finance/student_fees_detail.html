@@ -1,0 +1,844 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-coins me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    رسوم الطالب: {{ student.first_name_ar }} {{ student.last_name_ar }}
+                {% else %}
+                    Student Fees: {{ student.first_name_en or student.first_name_ar }} {{ student.last_name_en or student.last_name_ar }}
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                <i class="fas fa-id-card me-1"></i> {{ student.student_number }} | 
+                <i class="fas fa-school me-1 ms-2"></i> {{ student.class_name_ar }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('students.view_student_profile', student_id=student.student_id) }}" class="btn btn-outline-info">
+                <i class="fas fa-user-graduate me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}ملف الطالب{% else %}Student Profile{% endif %}
+            </a>
+            <a href="{{ url_for('finance.student_fees') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="summary-card total-fees">
+            <div class="summary-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}إجمالي الرسوم{% else %}Total Fees{% endif %}</span>
+                <h3 class="summary-value">{{ "%.2f"|format(fees|sum(attribute='amount')) }} SDG</h3>
+                <small class="summary-trend">{{ fees|length }} {% if lang.get_direction() == 'rtl' %}مستحقة{% else %}items{% endif %}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="summary-card paid-fees">
+            <div class="summary-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}المدفوع{% else %}Paid{% endif %}</span>
+                <h3 class="summary-value text-success">{{ "%.2f"|format(fees|sum(attribute='total_paid')) }} SDG</h3>
+                <small class="summary-trend">
+                    {% set total_payments = fees|sum(attribute='payment_count') %}
+                    {{ total_payments }} {% if lang.get_direction() == 'rtl' %}دفعة{% else %}payments{% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="summary-card discount-fees">
+            <div class="summary-icon">
+                <i class="fas fa-percent"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}الخصومات{% else %}Discounts{% endif %}</span>
+                <h3 class="summary-value text-info">{{ "%.2f"|format(fees|sum(attribute='discount_amount')) }} SDG</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="summary-card balance-fees">
+            <div class="summary-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}المتبقي{% else %}Balance{% endif %}</span>
+                <h3 class="summary-value {% if fees|sum(attribute='balance') > 0 %}text-danger{% else %}text-success{% endif %}">
+                    {{ "%.2f"|format(fees|sum(attribute='balance')) }} SDG
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add New Fee Form with Installments -->
+{% if session.role in ['admin', 'accountant'] %}
+<div class="modern-card mb-4">
+    <div class="card-header-modern bg-success text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-plus-circle me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}إضافة رسوم جديدة{% else %}Add New Fee{% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('finance.add_fee_to_student', student_id=student.student_id) }}" class="row g-3" id="addFeeForm">
+            <div class="col-md-3">
+                <label class="form-label">
+                    <i class="fas fa-tag me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}نوع الرسوم{% else %}Fee Type{% endif %}
+                </label>
+                <select name="fee_category_id" class="form-select modern-select" required id="feeCategorySelect">
+                    <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر{% else %}Select{% endif %} --</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.fee_category_id }}" data-amount="{{ cat.amount }}">
+                        {% if lang.get_direction() == 'rtl' %}{{ cat.category_name_ar }}{% else %}{{ cat.category_name_en }}{% endif %} - {{ cat.amount }} SDG
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">
+                    <i class="fas fa-money-bill-wave me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}
+                </label>
+                <input type="number" name="amount" id="feeAmount" class="form-control modern-input" step="0.01" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">
+                    <i class="fas fa-percent me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}الخصم{% else %}Discount{% endif %}
+                </label>
+                <input type="number" name="discount_amount" class="form-control modern-input" step="0.01" value="0" id="discountAmount">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تاريخ الاستحقاق{% else %}Due Date{% endif %}
+                </label>
+                <input type="date" name="due_date" class="form-control modern-input" required value="{{ today }}" id="dueDate">
+            </div>
+            
+            <!-- Installment Plan Selection -->
+            <div class="col-md-3">
+                <label class="form-label">
+                    <i class="fas fa-calendar-week me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}طريقة السداد{% else %}Payment Plan{% endif %}
+                </label>
+                <select name="installment_plan_id" class="form-select modern-select" id="installmentPlan">
+                    <option value="1">{% if lang.get_direction() == 'rtl' %}دفعة واحدة{% else %}One Payment{% endif %}</option>
+                    <option value="2">{% if lang.get_direction() == 'rtl' %}قسطان (كل 30 يوم){% else %}Two Installments{% endif %}</option>
+                    <option value="3">{% if lang.get_direction() == 'rtl' %}ثلاثة أقساط (كل 30 يوم){% else %}Three Installments{% endif %}</option>
+                    <option value="4">{% if lang.get_direction() == 'rtl' %}أربعة أقساط (كل 30 يوم){% else %}Four Installments{% endif %}</option>
+                </select>
+            </div>
+            
+            <div class="col-md-12">
+                <label class="form-label">
+                    <i class="fas fa-sticky-note me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}ملاحظات{% else %}Notes{% endif %}
+                </label>
+                <input type="text" name="notes" class="form-control modern-input" placeholder="{% if lang.get_direction() == 'rtl' %}اختياري{% else %}Optional{% endif %}">
+            </div>
+            
+            <div class="col-12 text-end">
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-save me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}إضافة الرسوم{% else %}Add Fee{% endif %}
+                </button>
+            </div>
+        </form>
+        
+        <!-- Installment Preview -->
+        <div class="preview-card mt-3" id="installmentPreview" style="display: none;">
+            <div class="preview-header">
+                <i class="fas fa-calendar-alt me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}معاينة الأقساط{% else %}Installment Preview{% endif %}
+            </div>
+            <div class="preview-body">
+                <div id="installmentPreviewContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Fees List -->
+<div class="modern-card">
+    <div class="card-header-modern d-flex justify-content-between align-items-center">
+        <span>
+            <i class="fas fa-list me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}قائمة الرسوم{% else %}Fees List{% endif %}
+        </span>
+        <span class="badge bg-primary">{{ fees|length }} {% if lang.get_direction() == 'rtl' %}رسوم{% else %}fees{% endif %}</span>
+    </div>
+    <div class="card-body p-0">
+        {% for fee in fees %}
+        <div class="fee-item {% if fee.status == 'paid' %}paid{% elif fee.status == 'partial' %}partial{% else %}pending{% endif %}" id="fee-{{ fee.student_fee_id }}">
+            <div class="fee-header">
+                <div class="fee-title">
+                    <h5>
+                        {% if lang.get_direction() == 'rtl' %}{{ fee.category_name_ar }}{% else %}{{ fee.category_name_en }}{% endif %}
+                    </h5>
+                    <span class="fee-status status-{{ fee.status }}">
+                        {% if fee.status == 'paid' %}
+                            <i class="fas fa-check-circle"></i> {% if lang.get_direction() == 'rtl' %}مدفوع{% else %}Paid{% endif %}
+                        {% elif fee.status == 'partial' %}
+                            <i class="fas fa-clock"></i> {% if lang.get_direction() == 'rtl' %}مدفوع جزئياً{% else %}Partial{% endif %}
+                        {% elif fee.status == 'overdue' %}
+                            <i class="fas fa-exclamation-triangle"></i> {% if lang.get_direction() == 'rtl' %}متأخر{% else %}Overdue{% endif %}
+                        {% else %}
+                            <i class="fas fa-hourglass"></i> {% if lang.get_direction() == 'rtl' %}غير مدفوع{% else %}Pending{% endif %}
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="fee-amounts">
+                    <div class="amount-item">
+                        <span class="amount-label">{% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</span>
+                        <span class="amount-value">{{ "%.2f"|format(fee.amount) }}</span>
+                    </div>
+                    <div class="amount-item">
+                        <span class="amount-label">{% if lang.get_direction() == 'rtl' %}الخصم{% else %}Discount{% endif %}</span>
+                        <span class="amount-value text-success">-{{ "%.2f"|format(fee.discount_amount) }}</span>
+                    </div>
+                    <div class="amount-item">
+                        <span class="amount-label">{% if lang.get_direction() == 'rtl' %}المدفوع{% else %}Paid{% endif %}</span>
+                        <span class="amount-value text-info">{{ "%.2f"|format(fee.total_paid) }}</span>
+                    </div>
+                    <div class="amount-item">
+                        <span class="amount-label">{% if lang.get_direction() == 'rtl' %}المتبقي{% else %}Balance{% endif %}</span>
+                        <span class="amount-value {% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %} fw-bold">
+                            {{ "%.2f"|format(fee.balance) }}
+                        </span>
+                    </div>
+                </div>
+                <div class="fee-due">
+                    <i class="fas fa-calendar-alt me-1"></i>
+                    {{ fee.due_date }}
+                    {% if fee.is_overdue %}
+                        <span class="badge bg-danger ms-2">{% if lang.get_direction() == 'rtl' %}متأخر{% else %}Overdue{% endif %}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Installment Details -->
+            {% if fee.installment_plan_id and fee.installments %}
+            <div class="installment-details mt-3">
+                <div class="installment-header">
+                    <h6>
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}خطة التقسيط{% else %}Installment Plan{% endif %}
+                        <span class="badge bg-info ms-2">
+                            {% if lang.get_direction() == 'rtl' %}{{ fee.installments|length }} أقساط{% else %}{{ fee.installments|length }} installments{% endif %}
+                        </span>
+                    </h6>
+                    
+                    <!-- Installment Progress -->
+                    {% set paid_installments = fee.installments|selectattr('status', 'equalto', 'paid')|list|length %}
+                    {% set progress = (paid_installments / fee.installments|length * 100)|int %}
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: {{ progress }}%"></div>
+                    </div>
+                </div>
+                
+                <div class="installments-list">
+                    {% for installment in fee.installments %}
+                    <div class="installment-item {% if installment.status == 'paid' %}paid{% elif installment.is_overdue %}overdue{% endif %}">
+                        <div class="installment-number">
+                            <span class="badge {% if installment.status == 'paid' %}bg-success{% elif installment.is_overdue %}bg-danger{% else %}bg-secondary{% endif %}">
+                                {% if lang.get_direction() == 'rtl' %}قسط {% else %}Inst. {% endif %}{{ installment.installment_number }}
+                            </span>
+                        </div>
+                        <div class="installment-info">
+                            <div class="installment-due">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                {{ installment.due_date }}
+                                {% if installment.is_overdue %}
+                                <span class="badge bg-danger ms-2">{% if lang.get_direction() == 'rtl' %}متأخر{% else %}Overdue{% endif %}</span>
+                                {% endif %}
+                            </div>
+                            <div class="installment-amounts">
+                                <span class="amount">{{ "%.2f"|format(installment.amount) }} SDG</span>
+                                {% if installment.paid_amount > 0 %}
+                                <span class="paid-amount text-success ms-2">
+                                    <i class="fas fa-check-circle"></i> {{ "%.2f"|format(installment.paid_amount) }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="installment-status">
+                            {% if installment.status == 'paid' %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle"></i> {% if lang.get_direction() == 'rtl' %}مدفوع{% else %}Paid{% endif %}
+                            </span>
+                            {% elif installment.status == 'partial' %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-clock"></i> {% if lang.get_direction() == 'rtl' %}جزئي{% else %}Partial{% endif %}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">
+                                <i class="fas fa-hourglass"></i> {% if lang.get_direction() == 'rtl' %}معلق{% else %}Pending{% endif %}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="installment-action">
+                            {% if installment.status != 'paid' and session.role in ['admin', 'accountant'] %}
+                            <button class="btn btn-sm btn-success" onclick="payInstallment({{ installment.installment_id }}, {{ installment.remaining }})">
+                                <i class="fas fa-credit-card"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Payment History -->
+            {% if fee.payments %}
+            <div class="payment-history mt-3">
+                <h6>
+                    <i class="fas fa-history me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}سجل المدفوعات{% else %}Payment History{% endif %}
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>{% if lang.get_direction() == 'rtl' %}التاريخ{% else %}Date{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}طريقة الدفع{% else %}Method{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}رقم الإيصال{% else %}Receipt{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الإجراء{% else %}Action{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in fee.payments %}
+                            <tr>
+                                <td>{{ payment.payment_date }}</td>
+                                <td class="text-success fw-bold">{{ "%.2f"|format(payment.amount_paid) }} SDG</td>
+                                <td>
+                                    {% if payment.payment_method == 'cash' %}
+                                        <span class="badge bg-success">{% if lang.get_direction() == 'rtl' %}نقداً{% else %}Cash{% endif %}</span>
+                                    {% elif payment.payment_method == 'bank_transfer' %}
+                                        <span class="badge bg-info">{% if lang.get_direction() == 'rtl' %}تحويل بنكي{% else %}Bank Transfer{% endif %}</span>
+                                    {% elif payment.payment_method == 'check' %}
+                                        <span class="badge bg-warning">{% if lang.get_direction() == 'rtl' %}شيك{% else %}Check{% endif %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+								<div class="btn-group" role="group">
+									<a href="{{ url_for('finance.download_receipt_pdf', payment_id=payment.payment_id) }}" 
+									   class="btn btn-sm btn-outline-primary" 
+									   target="_blank"
+									   title="{% if lang.get_direction() == 'rtl' %}تحميل PDF{% else %}Download PDF{% endif %}">
+										<i class="fas fa-download"></i>
+									</a>
+									<a href="{{ url_for('finance.print_receipt', payment_id=payment.payment_id) }}" 
+									   class="btn btn-sm btn-outline-success" 
+									   target="_blank"
+									   title="{% if lang.get_direction() == 'rtl' %}طباعة{% else %}Print{% endif %}">
+										<i class="fas fa-print"></i>
+									</a>
+								</div>
+							</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- ========== PAYMENT FORM FOR REGULAR FEES ========== -->
+            {% if fee.balance > 0 and session.role in ['admin', 'accountant'] and not fee.installment_plan_id %}
+            <div class="payment-form mt-3">
+                <button class="btn btn-sm btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#paymentForm{{ fee.student_fee_id }}">
+                    <i class="fas fa-credit-card me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تسجيل دفعة{% else %}Record Payment{% endif %}
+                </button>
+                
+                <div class="collapse mt-3" id="paymentForm{{ fee.student_fee_id }}">
+                    <div class="card card-body bg-light">
+                        <form method="POST" action="{{ url_for('finance.make_payment', fee_id=fee.student_fee_id) }}" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">{% if lang.get_direction() == 'rtl' %}التاريخ{% else %}Date{% endif %}</label>
+                                <input type="date" name="payment_date" class="form-control" value="{{ today }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">{% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</label>
+                                <input type="number" name="amount_paid" class="form-control" step="0.01" max="{{ fee.balance }}" value="{{ fee.balance }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">{% if lang.get_direction() == 'rtl' %}طريقة الدفع{% else %}Method{% endif %}</label>
+                                <select name="payment_method" class="form-select" required>
+                                    <option value="cash">{% if lang.get_direction() == 'rtl' %}نقداً{% else %}Cash{% endif %}</option>
+                                    <option value="bank_transfer">{% if lang.get_direction() == 'rtl' %}تحويل بنكي{% else %}Bank Transfer{% endif %}</option>
+                                    <option value="check">{% if lang.get_direction() == 'rtl' %}شيك{% else %}Check{% endif %}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">{% if lang.get_direction() == 'rtl' %}ملاحظات{% else %}Notes{% endif %}</label>
+                                <input type="text" name="notes" class="form-control" placeholder="{% if lang.get_direction() == 'rtl' %}اختياري{% else %}Optional{% endif %}">
+                            </div>
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}تسجيل الدفعة{% else %}Record Payment{% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if fee.notes %}
+            <div class="fee-notes mt-2">
+                <small class="text-muted">
+                    <i class="fas fa-sticky-note me-1"></i>
+                    {{ fee.notes }}
+                </small>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-coins fa-4x mb-3 text-muted"></i>
+            <h5>{% if lang.get_direction() == 'rtl' %}لا توجد رسوم لهذا الطالب{% else %}No fees for this student{% endif %}</h5>
+            {% if session.role in ['admin', 'accountant'] %}
+            <p class="text-muted">{% if lang.get_direction() == 'rtl' %}استخدم النموذج أعلاه لإضافة رسوم جديدة{% else %}Use the form above to add new fees{% endif %}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Installment Payment Modal -->
+<div class="modal fade" id="installmentPaymentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-credit-card me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}دفع قسط{% else %}Pay Installment{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('finance.pay_installment') }}" id="installmentPaymentForm">
+                <div class="modal-body">
+                    <input type="hidden" name="installment_id" id="installment_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-money-bill-wave me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}المبلغ المستحق{% else %}Amount Due{% endif %}
+                        </label>
+                        <input type="text" class="form-control" id="installment_amount_due" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-money-bill-wave me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}المبلغ المدفوع{% else %}Amount Paid{% endif %}
+                        </label>
+                        <input type="number" name="amount_paid" class="form-control" step="0.01" id="payment_amount" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}تاريخ الدفع{% else %}Payment Date{% endif %}
+                        </label>
+                        <input type="date" name="payment_date" class="form-control" value="{{ today }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-credit-card me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}طريقة الدفع{% else %}Payment Method{% endif %}
+                        </label>
+                        <select name="payment_method" class="form-select" required>
+                            <option value="cash">{% if lang.get_direction() == 'rtl' %}نقداً{% else %}Cash{% endif %}</option>
+                            <option value="bank_transfer">{% if lang.get_direction() == 'rtl' %}تحويل بنكي{% else %}Bank Transfer{% endif %}</option>
+                            <option value="check">{% if lang.get_direction() == 'rtl' %}شيك{% else %}Check{% endif %}</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-sticky-note me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}ملاحظات{% else %}Notes{% endif %}
+                        </label>
+                        <textarea name="notes" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}تسجيل الدفعة{% else %}Record Payment{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.summary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.summary-card.total-fees { border-left: 4px solid var(--primary-color); }
+.summary-card.paid-fees { border-left: 4px solid #28A745; }
+.summary-card.discount-fees { border-left: 4px solid #17A2B8; }
+.summary-card.balance-fees { border-left: 4px solid #DC3545; }
+
+[dir="rtl"] .summary-card.total-fees { border-left: none; border-right: 4px solid var(--primary-color); }
+[dir="rtl"] .summary-card.paid-fees { border-left: none; border-right: 4px solid #28A745; }
+[dir="rtl"] .summary-card.discount-fees { border-left: none; border-right: 4px solid #17A2B8; }
+[dir="rtl"] .summary-card.balance-fees { border-left: none; border-right: 4px solid #DC3545; }
+
+.summary-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.total-fees .summary-icon { background: #f0e9ef; color: var(--primary-color); }
+.paid-fees .summary-icon { background: #d4edda; color: #28A745; }
+.discount-fees .summary-icon { background: #d1ecf1; color: #17A2B8; }
+.balance-fees .summary-icon { background: #f8d7da; color: #DC3545; }
+
+.summary-details {
+    flex: 1;
+}
+
+.summary-label {
+    display: block;
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.summary-trend {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.fee-item {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: all 0.3s ease;
+}
+
+.fee-item:hover {
+    background: #f8f9fa;
+}
+
+.fee-item.paid { background: #f8fff9; }
+.fee-item.partial { background: #fffaf0; }
+.fee-item.pending { background: #fff; }
+
+.fee-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.fee-title {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.fee-title h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.fee-status {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.fee-status.status-paid {
+    background: #d4edda;
+    color: #155724;
+}
+
+.fee-status.status-partial {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.fee-status.status-pending {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.fee-status.status-overdue {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.fee-amounts {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.amount-item {
+    text-align: center;
+    min-width: 80px;
+}
+
+.amount-label {
+    display: block;
+    font-size: 0.7rem;
+    color: #999;
+    margin-bottom: 3px;
+}
+
+.amount-value {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.fee-due {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.payment-history {
+    margin-top: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+}
+
+.payment-history h6 {
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+/* Installment Styles */
+.installment-details {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 15px;
+}
+
+.installments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.installment-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
+    gap: 15px;
+}
+
+.installment-item.paid {
+    background: #f0fff4;
+    border-color: #28A745;
+}
+
+.installment-item.overdue {
+    background: #fff0f0;
+    border-color: #DC3545;
+}
+
+.installment-number {
+    min-width: 60px;
+}
+
+.installment-info {
+    flex: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.installment-due {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.installment-amounts {
+    font-weight: 600;
+}
+
+.installment-amounts .paid-amount {
+    font-size: 0.9rem;
+}
+
+.installment-status {
+    min-width: 80px;
+    text-align: center;
+}
+
+.installment-action {
+    min-width: 40px;
+}
+
+.preview-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid var(--primary-color);
+}
+
+.preview-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 8px 15px;
+    font-weight: 600;
+}
+
+.preview-body {
+    padding: 15px;
+}
+
+.preview-body table {
+    margin-bottom: 0;
+}
+
+.modern-select, .modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-select:focus, .modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+</style>
+
+<script>
+// Installment preview
+document.getElementById('installmentPlan')?.addEventListener('change', updateInstallmentPreview);
+document.getElementById('feeAmount')?.addEventListener('input', updateInstallmentPreview);
+document.getElementById('discountAmount')?.addEventListener('input', updateInstallmentPreview);
+document.getElementById('dueDate')?.addEventListener('change', updateInstallmentPreview);
+
+function updateInstallmentPreview() {
+    const plan = document.getElementById('installmentPlan')?.value;
+    const amount = parseFloat(document.getElementById('feeAmount')?.value) || 0;
+    const discount = parseFloat(document.getElementById('discountAmount')?.value) || 0;
+    const dueDate = document.getElementById('dueDate')?.value;
+    
+    if (plan && amount > 0 && dueDate) {
+        const netAmount = amount - discount;
+        const numInstallments = parseInt(plan);
+        const installmentAmount = netAmount / numInstallments;
+        
+        let html = '<div class="table-responsive"><table class="table table-sm">';
+        html += '<thead><tr><th>#</th><th>تاريخ الاستحقاق</th><th>المبلغ</th></tr></thead><tbody>';
+        
+        const startDate = new Date(dueDate);
+        for (let i = 1; i <= numInstallments; i++) {
+            const dueDate = new Date(startDate);
+            dueDate.setMonth(dueDate.getMonth() + i);
+            const year = dueDate.getFullYear();
+            const month = String(dueDate.getMonth() + 1).padStart(2, '0');
+            const day = String(dueDate.getDate()).padStart(2, '0');
+            const formattedDate = `${year}-${month}-${day}`;
+            
+            html += `<tr>
+                <td>${i}</td>
+                <td>${formattedDate}</td>
+                <td>${installmentAmount.toFixed(2)} SDG</td>
+            </tr>`;
+        }
+        
+        html += '</tbody></table></div>';
+        document.getElementById('installmentPreviewContent').innerHTML = html;
+        document.getElementById('installmentPreview').style.display = 'block';
+    } else {
+        document.getElementById('installmentPreview').style.display = 'none';
+    }
+}
+
+// Pay installment function
+function payInstallment(installmentId, remaining) {
+    document.getElementById('installment_id').value = installmentId;
+    document.getElementById('installment_amount_due').value = remaining.toFixed(2) + ' SDG';
+    document.getElementById('payment_amount').value = remaining.toFixed(2);
+    new bootstrap.Modal(document.getElementById('installmentPaymentModal')).show();
+}
+
+// Auto-fill amount when fee category is selected
+document.getElementById('feeCategorySelect')?.addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    const amount = selected.getAttribute('data-amount');
+    if (amount) {
+        document.getElementById('feeAmount').value = amount;
+    }
+    updateInstallmentPreview();
+});
+
+// Initialize preview on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateInstallmentPreview();
+});
+</script>
+{% endblock %}

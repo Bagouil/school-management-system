@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-users-cog me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}إدارة المستخدمين{% else %}User Management{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}إضافة وتعديل صلاحيات المستخدمين{% else %}Add and manage user permissions{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('users.add_user') }}" class="btn btn-modern-primary">
+                <i class="fas fa-user-plus me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}مستخدم جديد{% else %}New User{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="modern-card">
+            <div class="card-header-modern d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-list me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}قائمة المستخدمين{% else %}Users List{% endif %}
+                </span>
+                <span class="badge bg-primary">{{ users|length }} {% if lang.get_direction() == 'rtl' %}مستخدم{% else %}users{% endif %}</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}اسم المستخدم{% else %}Username{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الاسم{% else %}Full Name{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}البريد الإلكتروني{% else %}Email{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الدور{% else %}Role{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}آخر دخول{% else %}Last Login{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الإجراءات{% else %}Actions{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <strong>{{ user.username }}</strong>
+                                    {% if user.user_id == session.user_id %}
+                                    <span class="badge bg-info ms-2">{% if lang.get_direction() == 'rtl' %}أنت{% else %}You{% endif %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.full_name_ar or user.full_name_en }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="role-badge role-{{ user.role }}">
+                                        {% if lang.get_direction() == 'rtl' %}
+                                            {% if user.role == 'admin' %}مدير
+                                            {% elif user.role == 'supervisor' %}مشرف
+                                            {% elif user.role == 'teacher' %}معلم
+                                            {% elif user.role == 'accountant' %}محاسب
+                                            {% endif %}
+                                        {% else %}
+                                            {{ user.role|capitalize }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if user.is_active %}
+                                    <span class="badge-modern badge-success">
+                                        <i class="fas fa-check-circle me-1"></i>
+                                        {% if lang.get_direction() == 'rtl' %}نشط{% else %}Active{% endif %}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge-modern badge-danger">
+                                        <i class="fas fa-times-circle me-1"></i>
+                                        {% if lang.get_direction() == 'rtl' %}غير نشط{% else %}Inactive{% endif %}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ user.last_login or '---' }}</td>
+								<td>
+									<div class="btn-group" role="group">
+										<!-- Permissions Button - Add this first -->
+										<a href="{{ url_for('users.manage_permissions', user_id=user.user_id) }}" 
+										   class="btn btn-sm btn-outline-info" 
+										   title="{% if lang.get_direction() == 'rtl' %}إدارة الصلاحيات{% else %}Manage Permissions{% endif %}">
+											<i class="fas fa-shield-alt"></i>
+										</a>
+										
+										<!-- Edit Button -->
+										<a href="{{ url_for('users.edit_user', user_id=user.user_id) }}" 
+										   class="btn btn-sm btn-outline-warning" 
+										   title="{% if lang.get_direction() == 'rtl' %}تعديل{% else %}Edit{% endif %}">
+											<i class="fas fa-edit"></i>
+										</a>
+										
+										<!-- Delete Button (only if not current user) -->
+										{% if user.user_id != session.user_id %}
+										<button type="button" class="btn btn-sm btn-outline-danger" 
+												onclick="confirmDelete({{ user.user_id }})" 
+												title="{% if lang.get_direction() == 'rtl' %}حذف{% else %}Delete{% endif %}">
+											<i class="fas fa-trash"></i>
+										</button>
+										{% endif %}
+									</div>
+									<form id="delete-form-{{ user.user_id }}" method="POST" 
+										  action="{{ url_for('users.delete_user', user_id=user.user_id) }}" 
+										  style="display: none;"></form>
+								</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Management Card -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-shield-alt me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}الصلاحيات والأدوار{% else %}Roles & Permissions{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="role-card">
+                            <div class="role-icon admin">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <h6>{% if lang.get_direction() == 'rtl' %}مدير{% else %}Admin{% endif %}</h6>
+                            <p class="small text-muted">
+                                {% if lang.get_direction() == 'rtl' %}صلاحية كاملة للنظام{% else %}Full system access{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="role-card">
+                            <div class="role-icon supervisor">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <h6>{% if lang.get_direction() == 'rtl' %}مشرف{% else %}Supervisor{% endif %}</h6>
+                            <p class="small text-muted">
+                                {% if lang.get_direction() == 'rtl' %}إدارة الفصول والطلاب{% else %}Manage classes and students{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="role-card">
+                            <div class="role-icon teacher">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <h6>{% if lang.get_direction() == 'rtl' %}معلم{% else %}Teacher{% endif %}</h6>
+                            <p class="small text-muted">
+                                {% if lang.get_direction() == 'rtl' %}تسجيل الحضور والدرجات{% else %}Mark attendance and grades{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="role-card">
+                            <div class="role-icon accountant">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <h6>{% if lang.get_direction() == 'rtl' %}محاسب{% else %}Accountant{% endif %}</h6>
+                            <p class="small text-muted">
+                                {% if lang.get_direction() == 'rtl' %}إدارة الرسوم والمصروفات{% else %}Manage fees and expenses{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.role-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+.role-admin { background: #875A7B; color: white; }
+.role-supervisor { background: #17A2B8; color: white; }
+.role-teacher { background: #28A745; color: white; }
+.role-accountant { background: #FFB347; color: white; }
+
+.role-card {
+    text-align: center;
+    padding: 20px;
+    border-radius: 12px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+.role-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.role-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 1.5rem;
+    color: white;
+}
+.role-icon.admin { background: #875A7B; }
+.role-icon.supervisor { background: #17A2B8; }
+.role-icon.teacher { background: #28A745; }
+.role-icon.accountant { background: #FFB347; }
+</style>
+
+<script>
+function confirmDelete(userId) {
+    if(confirm('{% if lang.get_direction() == "rtl" %}هل أنت متأكد من حذف هذا المستخدم؟{% else %}Are you sure you want to delete this user?{% endif %}')) {
+        document.getElementById('delete-form-' + userId).submit();
+    }
+}
+</script>
+{% endblock %}

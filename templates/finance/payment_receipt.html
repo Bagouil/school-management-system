@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="{{ language }}" dir="{{ direction }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if language == 'ar' %}إيصال استلام رسوم{% else %}Payment Receipt{% endif %}</title>
+    <style>
+        /* Print styles */
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        /* Base styles */
+        body {
+            font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: white;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .receipt-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+        }
+        
+        /* Watermark */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            font-weight: bold;
+            color: rgba(135, 90, 123, 0.1);
+            white-space: nowrap;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        /* Header Section */
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #875A7B;
+            padding-bottom: 20px;
+        }
+        
+        .logo {
+            flex: 0 0 100px;
+            height: 100px;
+            {% if direction == 'rtl' %}
+            margin-left: 20px;
+            {% else %}
+            margin-right: 20px;
+            {% endif %}
+        }
+        
+        .logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .school-info {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .school-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #875A7B;
+            margin: 0 0 5px 0;
+        }
+        
+        .school-address {
+            font-size: 12px;
+            color: #666;
+            margin: 2px 0;
+        }
+        
+        .school-contact {
+            font-size: 11px;
+            color: #888;
+            margin: 2px 0;
+        }
+        
+        /* Receipt Title */
+        .receipt-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin: 30px 0;
+            padding: 10px 0;
+            border-top: 1px solid #ddd;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .info-item {
+            display: flex;
+            {% if direction == 'rtl' %}
+            flex-direction: row;
+            {% endif %}
+            align-items: baseline;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            min-width: 100px;
+            {% if direction == 'rtl' %}
+            margin-left: 10px;
+            {% else %}
+            margin-right: 10px;
+            {% endif %}
+        }
+        
+        .info-value {
+            color: #333;
+            font-weight: 500;
+        }
+        
+        /* Table Styles */
+        .payment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        
+        .payment-table th {
+            background: #875A7B;
+            color: white;
+            font-weight: bold;
+            padding: 12px;
+            text-align: {% if direction == 'rtl' %}right{% else %}left{% endif %};
+        }
+        
+        .payment-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .payment-table tfoot tr {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+        
+        .payment-table tfoot td {
+            padding: 12px;
+            border-top: 2px solid #875A7B;
+        }
+        
+        .amount-column {
+            text-align: right;
+            font-weight: 500;
+        }
+        
+        .total-amount {
+            font-size: 16px;
+            color: #875A7B;
+        }
+        
+        /* Payment Method */
+        .payment-method-box {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .method-label {
+            font-weight: bold;
+            color: #555;
+            {% if direction == 'rtl' %}
+            margin-left: 15px;
+            {% else %}
+            margin-right: 15px;
+            {% endif %}
+        }
+        
+        .method-value {
+            padding: 5px 15px;
+            background: #e8f5e9;
+            border-radius: 20px;
+            color: #2e7d32;
+            font-weight: 500;
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        /* Footer Signatures */
+        .signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px dashed #ccc;
+        }
+        
+        .signature-box {
+            flex: 1;
+            max-width: 200px;
+        }
+        
+        .signature-line {
+            border-bottom: 1px solid #333;
+            margin: 10px 0 5px 0;
+            height: 30px;
+        }
+        
+        .signature-label {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        /* QR Code */
+        .qr-code {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        .qr-code img {
+            width: 100px;
+            height: 100px;
+        }
+        
+        /* RTL Specific */
+        [dir="rtl"] .info-item {
+            text-align: right;
+        }
+        
+        [dir="rtl"] .amount-column {
+            text-align: left;
+        }
+        
+        [dir="rtl"] .payment-table th {
+            text-align: right;
+        }
+        
+        [dir="rtl"] .payment-table td:last-child {
+            text-align: left;
+        }
+        
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .receipt-container {
+                box-shadow: none;
+                padding: 0;
+            }
+            
+            .watermark {
+                color: rgba(135, 90, 123, 0.1);
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .payment-table th {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        /* Barcode */
+        .barcode {
+            text-align: center;
+            margin-top: 20px;
+            font-family: 'Libre Barcode 39', cursive;
+            font-size: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <!-- Watermark -->
+        <div class="watermark">
+            {% if payment_status == 'paid' %}
+                {% if language == 'ar' %}مدفوع{% else %}PAID{% endif %}
+            {% endif %}
+        </div>
+        
+        <!-- Header Section -->
+        <div class="header">
+            <div class="logo">
+                {% if school_logo %}
+                <img src="{{ school_logo }}" alt="School Logo">
+                {% else %}
+                <div style="width: 100px; height: 100px; background: #f0f0f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #875A7B; font-size: 40px;">
+                    🏫
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="school-info">
+                <div class="school-name">{{ school_name }}</div>
+                <div class="school-address">{{ school_address }}</div>
+                <div class="school-contact">
+                    {{ school_phone }} | {{ school_email }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Receipt Title -->
+        <div class="receipt-title">
+            {% if language == 'ar' %}
+                إيصال استلام رسوم
+            {% else %}
+                PAYMENT RECEIPT
+            {% endif %}
+        </div>
+        
+        <!-- Receipt Information Grid -->
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">{% if language == 'ar' %}رقم الإيصال:{% else %}Receipt No.:{% endif %}</span>
+                <span class="info-value">{{ receipt_number }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">{% if language == 'ar' %}التاريخ:{% else %}Date:{% endif %}</span>
+                <span class="info-value">{{ payment_date }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">{% if language == 'ar' %}اسم الطالب:{% else %}Student Name:{% endif %}</span>
+                <span class="info-value">{{ student_name }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">{% if language == 'ar' %}الرقم الدراسي:{% else %}Student ID:{% endif %}</span>
+                <span class="info-value">{{ student_id }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">{% if language == 'ar' %}الصف:{% else %}Class:{% endif %}</span>
+                <span class="info-value">{{ class_name }}</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">{% if language == 'ar' %}العام الدراسي:{% else %}Academic Year:{% endif %}</span>
+                <span class="info-value">{{ academic_year }}</span>
+            </div>
+        </div>
+        
+        <!-- Payment Method -->
+        <div class="payment-method-box">
+            <span class="method-label">{% if language == 'ar' %}طريقة الدفع:{% else %}Payment Method:{% endif %}</span>
+            <span class="method-value">
+                {% if payment_method == 'cash' %}
+                    {% if language == 'ar' %}نقداً{% else %}Cash{% endif %}
+                {% elif payment_method == 'bank_transfer' %}
+                    {% if language == 'ar' %}تحويل بنكي{% else %}Bank Transfer{% endif %}
+                {% elif payment_method == 'check' %}
+                    {% if language == 'ar' %}شيك{% else %}Check{% endif %}
+                {% else %}
+                    {{ payment_method }}
+                {% endif %}
+            </span>
+            
+            {% if payment_status %}
+            <span style="flex: 1; text-align: {% if direction == 'rtl' %}left{% else %}right{% endif %};">
+                <span class="status-badge">
+                    {% if payment_status == 'paid' %}
+                        {% if language == 'ar' %}مدفوع{% else %}PAID{% endif %}
+                    {% elif payment_status == 'partial' %}
+                        {% if language == 'ar' %}مدفوع جزئياً{% else %}PARTIAL{% endif %}
+                    {% endif %}
+                </span>
+            </span>
+            {% endif %}
+        </div>
+        
+        <!-- Payment Details Table -->
+        <table class="payment-table">
+            <thead>
+                <tr>
+                    <th>{% if language == 'ar' %}بيان الرسوم{% else %}Description{% endif %}</th>
+                    <th style="text-align: {% if direction == 'rtl' %}left{% else %}right{% endif %};">
+                        {% if language == 'ar' %}المبلغ{% else %}Amount{% endif %}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in fee_items %}
+                <tr>
+                    <td>{{ item.description }}</td>
+                    <td class="amount-column">{{ item.amount|number_format(2) }} {{ currency }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>{% if language == 'ar' %}الإجمالي{% else %}TOTAL{% endif %}</td>
+                    <td class="amount-column total-amount">{{ total_amount|number_format(2) }} {{ currency }}</td>
+                </tr>
+            </tfoot>
+        </table>
+        
+        <!-- Additional Notes if any -->
+        {% if notes %}
+        <div style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px;">
+            <strong>{% if language == 'ar' %}ملاحظات:{% else %}Notes:{% endif %}</strong> {{ notes }}
+        </div>
+        {% endif %}
+        
+        <!-- Signatures Section -->
+        <div class="signatures">
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">{% if language == 'ar' %}توقيع المحاسب{% else %}Accountant Signature{% endif %}</div>
+                <div class="signature-name">{{ accountant_name }}</div>
+            </div>
+            
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">{% if language == 'ar' %}توقيع ولي الأمر{% else %}Parent/Guardian Signature{% endif %}</div>
+            </div>
+            
+            <div class="signature-box">
+                <div class="signature-line"></div>
+                <div class="signature-label">{% if language == 'ar' %}ختم المدرسة{% else %}School Stamp{% endif %}</div>
+            </div>
+        </div>
+        
+        <!-- Barcode / QR Code -->
+        <div class="qr-code">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data={{ receipt_number }}" alt="QR Code">
+        </div>
+        
+        <!-- Barcode Text -->
+        <div class="barcode">
+            *{{ receipt_number }}*
+        </div>
+        
+        <!-- Footer Note -->
+        <div style="text-align: center; margin-top: 30px; font-size: 10px; color: #999;">
+            {% if language == 'ar' %}
+                هذا إيصال رسمي - جميع الحقوق محفوظة © {{ current_year }}
+            {% else %}
+                This is an official receipt - All rights reserved © {{ current_year }}
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

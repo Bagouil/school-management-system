@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-plus-circle me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}إضافة مصروف جديد{% else %}Add New Expense{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}تسجيل مصروف جديد في النظام{% else %}Record a new expense in the system{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('finance.expenses') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-receipt me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}نموذج إضافة مصروف{% else %}Expense Form{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('finance.add_expense') }}" id="expenseForm">
+                    <!-- Date and Category Row -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}التاريخ *{% else %}Date *{% endif %}
+                            </label>
+                            <input type="date" name="expense_date" class="form-control modern-input" value="{{ today }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="fas fa-tag me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}فئة المصروف *{% else %}Expense Category *{% endif %}
+                            </label>
+                            <select name="expense_category" class="form-select modern-select" required id="categorySelect">
+                                <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر الفئة{% else %}Select Category{% endif %} --</option>
+                                <option value="رواتب">{% if lang.get_direction() == 'rtl' %}رواتب{% else %}Salaries{% endif %}</option>
+                                <option value="كهرباء">{% if lang.get_direction() == 'rtl' %}كهرباء{% else %}Electricity{% endif %}</option>
+                                <option value="مياه">{% if lang.get_direction() == 'rtl' %}مياه{% else %}Water{% endif %}</option>
+                                <option value="هاتف وانترنت">{% if lang.get_direction() == 'rtl' %}هاتف وانترنت{% else %}Phone & Internet{% endif %}</option>
+                                <option value="صيانة">{% if lang.get_direction() == 'rtl' %}صيانة{% else %}Maintenance{% endif %}</option>
+                                <option value="قرطاسية">{% if lang.get_direction() == 'rtl' %}قرطاسية{% else %}Stationery{% endif %}</option>
+                                <option value="تنظيف">{% if lang.get_direction() == 'rtl' %}تنظيف{% else %}Cleaning{% endif %}</option>
+                                <option value="أخرى">{% if lang.get_direction() == 'rtl' %}أخرى{% else %}Other{% endif %}</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-align-left me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}الوصف *{% else %}Description *{% endif %}
+                        </label>
+                        <textarea name="description" class="form-control modern-input" rows="3" required 
+                                  placeholder="{% if lang.get_direction() == 'rtl' %}أدخل وصفاً تفصيلياً للمصروف{% else %}Enter a detailed description of the expense{% endif %}"></textarea>
+                    </div>
+                    
+                    <!-- Amount and Payment Method -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}المبلغ (SDG) *{% else %}Amount (SDG) *{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <input type="number" name="amount" class="form-control modern-input" step="0.01" min="0" required 
+                                       placeholder="0.00" id="amount">
+                                <span class="input-group-text bg-light">SDG</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">
+                                <i class="fas fa-credit-card me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}طريقة الدفع *{% else %}Payment Method *{% endif %}
+                            </label>
+                            <select name="payment_method" class="form-select modern-select" required id="paymentMethod">
+                                <option value="cash">{% if lang.get_direction() == 'rtl' %}نقداً{% else %}Cash{% endif %}</option>
+                                <option value="bank_transfer">{% if lang.get_direction() == 'rtl' %}تحويل بنكي{% else %}Bank Transfer{% endif %}</option>
+                                <option value="check">{% if lang.get_direction() == 'rtl' %}شيك{% else %}Check{% endif %}</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Reference Number (conditional) -->
+                    <div class="mb-3" id="referenceField">
+                        <label class="form-label">
+                            <i class="fas fa-hashtag me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}رقم المرجع (اختياري){% else %}Reference Number (Optional){% endif %}
+                        </label>
+                        <input type="text" name="reference_number" class="form-control modern-input" 
+                               placeholder="{% if lang.get_direction() == 'rtl' %}رقم الشيك أو رقم العملية{% else %}Check number or transaction ID{% endif %}"
+                               id="referenceNumber">
+                        <small class="text-muted reference-hint" id="referenceHint">
+                            {% if lang.get_direction() == 'rtl' %}أدخل رقم الشيك للدفع بشيك{% else %}Enter check number for check payments{% endif %}
+                        </small>
+                    </div>
+                    
+                    <!-- Notes -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-sticky-note me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}ملاحظات إضافية{% else %}Additional Notes{% endif %}
+                        </label>
+                        <textarea name="notes" class="form-control modern-input" rows="2" 
+                                  placeholder="{% if lang.get_direction() == 'rtl' %}أي ملاحظات إضافية (اختياري){% else %}Any additional notes (optional){% endif %}"></textarea>
+                    </div>
+                    
+                    <!-- Preview Card -->
+                    <div class="preview-card mb-4" id="previewCard" style="display: none;">
+                        <div class="preview-header">
+                            <i class="fas fa-eye me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}معاينة المصروف{% else %}Expense Preview{% endif %}
+                        </div>
+                        <div class="preview-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}التاريخ:{% else %}Date:{% endif %}</strong> <span id="previewDate"></span></p>
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}الفئة:{% else %}Category:{% endif %}</strong> <span id="previewCategory"></span></p>
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}الوصف:{% else %}Description:{% endif %}</strong> <span id="previewDescription"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}المبلغ:{% else %}Amount:{% endif %}</strong> <span id="previewAmount" class="text-danger fw-bold"></span> SDG</p>
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}طريقة الدفع:{% else %}Payment Method:{% endif %}</strong> <span id="previewMethod"></span></p>
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}رقم المرجع:{% else %}Reference:{% endif %}</strong> <span id="previewReference"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Buttons -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-modern-primary btn-lg px-5">
+                            <i class="fas fa-save me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}حفظ المصروف{% else %}Save Expense{% endif %}
+                        </button>
+                        <a href="{{ url_for('finance.expenses') }}" class="btn btn-outline-secondary btn-lg px-5">
+                            <i class="fas fa-times me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Quick Tips Card -->
+        <div class="modern-card mt-4">
+            <div class="card-body">
+                <h6>
+                    <i class="fas fa-lightbulb me-2" style="color: var(--primary-color);"></i>
+                    {% if lang.get_direction() == 'rtl' %}نصائح سريعة{% else %}Quick Tips{% endif %}
+                </h6>
+                <ul class="mt-3">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}تأكد من إدخال التاريخ الصحيح للمصروف{% else %}Make sure to enter the correct expense date{% endif %}
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}أضف وصفاً واضحاً للمصروف ليسهل تتبعه لاحقاً{% else %}Add a clear description for easy tracking later{% endif %}
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}احتفظ برقم المرجع للمدفوعات البنكية والشيكات{% else %}Keep reference numbers for bank transfers and checks{% endif %}
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}يمكنك إضافة ملاحظات إضافية لأي تفاصيل مهمة{% else %}Add additional notes for any important details{% endif %}
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modern-input, .modern-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus, .modern-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.input-group-text {
+    border: 2px solid #e0e0e0;
+    border-left: none;
+    background: white;
+    border-radius: 0 10px 10px 0;
+}
+
+[dir="rtl"] .input-group-text {
+    border-left: 2px solid #e0e0e0;
+    border-right: none;
+    border-radius: 10px 0 0 10px;
+}
+
+.preview-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid var(--primary-color);
+}
+
+.preview-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 10px 15px;
+    font-weight: 600;
+}
+
+.preview-body {
+    padding: 15px;
+}
+
+.preview-body p {
+    margin: 8px 0;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    display: flex;
+    align-items: center;
+}
+</style>
+
+<script>
+// Show/hide reference field based on payment method
+document.getElementById('paymentMethod').addEventListener('change', function() {
+    const method = this.value;
+    const referenceField = document.getElementById('referenceField');
+    const referenceHint = document.getElementById('referenceHint');
+    
+    if (method === 'check') {
+        referenceField.style.display = 'block';
+        referenceHint.innerHTML = '{% if lang.get_direction() == "rtl" %}أدخل رقم الشيك{% else %}Enter check number{% endif %}';
+    } else if (method === 'bank_transfer') {
+        referenceField.style.display = 'block';
+        referenceHint.innerHTML = '{% if lang.get_direction() == "rtl" %}أدخل رقم العملية{% else %}Enter transaction ID{% endif %}';
+    } else {
+        referenceField.style.display = 'none';
+    }
+});
+
+// Live preview
+function updatePreview() {
+    const date = document.querySelector('input[name="expense_date"]').value;
+    const category = document.querySelector('select[name="expense_category"]');
+    const categoryText = category.options[category.selectedIndex]?.text || '';
+    const description = document.querySelector('textarea[name="description"]').value;
+    const amount = document.getElementById('amount').value;
+    const method = document.getElementById('paymentMethod');
+    const methodText = method.options[method.selectedIndex]?.text || '';
+    const reference = document.getElementById('referenceNumber').value;
+    
+    if (date && category.value && description && amount) {
+        document.getElementById('previewCard').style.display = 'block';
+        document.getElementById('previewDate').textContent = date;
+        document.getElementById('previewCategory').textContent = categoryText;
+        document.getElementById('previewDescription').textContent = description.substring(0, 50) + (description.length > 50 ? '...' : '');
+        document.getElementById('previewAmount').textContent = parseFloat(amount).toFixed(2);
+        document.getElementById('previewMethod').textContent = methodText;
+        document.getElementById('previewReference').textContent = reference || '---';
+    } else {
+        document.getElementById('previewCard').style.display = 'none';
+    }
+}
+
+// Add event listeners for preview
+document.querySelector('input[name="expense_date"]').addEventListener('change', updatePreview);
+document.querySelector('select[name="expense_category"]').addEventListener('change', updatePreview);
+document.querySelector('textarea[name="description"]').addEventListener('keyup', updatePreview);
+document.getElementById('amount').addEventListener('keyup', updatePreview);
+document.getElementById('paymentMethod').addEventListener('change', updatePreview);
+document.getElementById('referenceNumber').addEventListener('keyup', updatePreview);
+
+// Initialize preview on page load
+updatePreview();
+</script>
+{% endblock %}

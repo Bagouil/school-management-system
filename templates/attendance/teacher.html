@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-6">
+        <h2>
+            {% if lang.get_direction() == 'rtl' %}
+                تسجيل حضور المعلمين
+            {% else %}
+                Teacher Attendance
+            {% endif %}
+        </h2>
+    </div>
+    <div class="col-md-6 text-end">
+        <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary">
+            {% if lang.get_direction() == 'rtl' %}رجوع{% else %}Back{% endif %}
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            {% if lang.get_direction() == 'rtl' %}
+                اختر التاريخ
+            {% else %}
+                Select Date
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('attendance.view_teacher_attendance') }}">
+            <div class="row">
+                <div class="col-md-10">
+                    <label class="form-label">
+                        {% if lang.get_direction() == 'rtl' %}
+                            التاريخ *
+                        {% else %}
+                            Date *
+                        {% endif %}
+                    </label>
+                    <input type="date" name="date" class="form-control" value="{{ today }}" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success w-100">
+                        {% if lang.get_direction() == 'rtl' %}
+                            عرض
+                        {% else %}
+                            View
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

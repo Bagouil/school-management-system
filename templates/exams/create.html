@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-plus-circle me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}إنشاء امتحان جديد{% else %}Create New Exam{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}أدخل معلومات الامتحان الجديد{% else %}Enter new exam information{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('exams.list_exams') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="modern-card">
+            <div class="card-header-modern" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+                <i class="fas fa-edit me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}نموذج إنشاء الامتحان{% else %}Exam Creation Form{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST" id="examForm">
+                    <!-- Basic Information -->
+                    <h6 class="mb-3">
+                        <i class="fas fa-info-circle me-2" style="color: var(--primary-color);"></i>
+                        {% if lang.get_direction() == 'rtl' %}المعلومات الأساسية{% else %}Basic Information{% endif %}
+                    </h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}اسم الامتحان (عربي) *{% else %}Exam Name (Arabic) *{% endif %}
+                            </label>
+                            <input type="text" name="exam_name_ar" class="form-control modern-input" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}اسم الامتحان (إنجليزي){% else %}Exam Name (English){% endif %}
+                            </label>
+                            <input type="text" name="exam_name_en" class="form-control modern-input">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tag me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}نوع الامتحان *{% else %}Exam Type *{% endif %}
+                            </label>
+                            <select name="exam_type_id" class="form-select modern-select" required>
+                                <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر{% else %}Select{% endif %} --</option>
+                                {% for type in exam_types %}
+                                <option value="{{ type.exam_type_id }}">
+                                    {% if lang.get_direction() == 'rtl' %}{{ type.type_name_ar }}{% else %}{{ type.type_name_en }}{% endif %}
+                                    ({{ "%.0f"|format(type.weight_percentage) }}%)
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-book-open me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}المادة *{% else %}Subject *{% endif %}
+                            </label>
+                            <select name="subject_id" class="form-select modern-select" required>
+                                <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر{% else %}Select{% endif %} --</option>
+                                {% for subject in subjects %}
+                                <option value="{{ subject.subject_id }}">
+                                    {% if lang.get_direction() == 'rtl' %}{{ subject.subject_name_ar }}{% else %}{{ subject.subject_name_en }}{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-school me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الصف *{% else %}Class *{% endif %}
+                            </label>
+                            <select name="class_id" class="form-select modern-select" required>
+                                <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر{% else %}Select{% endif %} --</option>
+                                {% for class in classes %}
+                                <option value="{{ class.class_id }}">
+                                    {{ class.class_name_ar }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-layer-group me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الفصل الدراسي{% else %}Term{% endif %}
+                            </label>
+                            <select name="term" class="form-select modern-select">
+                                <option value="1">{% if lang.get_direction() == 'rtl' %}الأول{% else %}First Term{% endif %}</option>
+                                <option value="2">{% if lang.get_direction() == 'rtl' %}الثاني{% else %}Second Term{% endif %}</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Exam Schedule -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-clock me-2" style="color: var(--primary-color);"></i>
+                        {% if lang.get_direction() == 'rtl' %}موعد الامتحان{% else %}Exam Schedule{% endif %}
+                    </h6>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-calendar-alt me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}التاريخ *{% else %}Date *{% endif %}
+                            </label>
+                            <input type="date" name="exam_date" class="form-control modern-input" value="{{ today }}" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-clock me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}وقت البدء{% else %}Start Time{% endif %}
+                            </label>
+                            <input type="time" name="start_time" class="form-control modern-input">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-clock me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}وقت الانتهاء{% else %}End Time{% endif %}
+                            </label>
+                            <input type="time" name="end_time" class="form-control modern-input">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-hourglass-half me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}المدة (دقائق){% else %}Duration (minutes){% endif %}
+                            </label>
+                            <input type="number" name="duration_minutes" class="form-control modern-input" min="0" step="5">
+                        </div>
+                    </div>
+                    
+                    <!-- Marks Information -->
+                    <h6 class="mb-3 mt-4">
+                        <i class="fas fa-chart-line me-2" style="color: var(--primary-color);"></i>
+                        {% if lang.get_direction() == 'rtl' %}الدرجات{% else %}Marks{% endif %}
+                    </h6>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-star me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الدرجة النهائية *{% else %}Total Marks *{% endif %}
+                            </label>
+                            <input type="number" name="total_marks" class="form-control modern-input" step="0.01" min="0" required id="totalMarks">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-check-circle me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}درجة النجاح *{% else %}Passing Marks *{% endif %}
+                            </label>
+                            <input type="number" name="passing_marks" class="form-control modern-input" step="0.01" min="0" required id="passingMarks">
+                        </div>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-align-left me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}وصف الامتحان{% else %}Exam Description{% endif %}
+                        </label>
+                        <textarea name="description" class="form-control modern-input" rows="3"></textarea>
+                    </div>
+                    
+                    <!-- Preview Card -->
+                    <div class="preview-card mt-4" id="previewCard" style="display: none;">
+                        <div class="preview-header" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+                            <i class="fas fa-eye me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}معاينة الامتحان{% else %}Exam Preview{% endif %}
+                        </div>
+                        <div class="preview-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}الاسم:{% else %}Name:{% endif %}</strong> <span id="previewName"></span></p>
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}النوع:{% else %}Type:{% endif %}</strong> <span id="previewType"></span></p>
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}المادة:{% else %}Subject:{% endif %}</strong> <span id="previewSubject"></span></p>
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}الصف:{% else %}Class:{% endif %}</strong> <span id="previewClass"></span></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}التاريخ:{% else %}Date:{% endif %}</strong> <span id="previewDate"></span></p>
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}الدرجة النهائية:{% else %}Total Marks:{% endif %}</strong> <span id="previewTotal"></span></p>
+                                    <p><strong>{% if lang.get_direction() == 'rtl' %}درجة النجاح:{% else %}Passing Marks:{% endif %}</strong> <span id="previewPassing"></span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-modern-primary btn-lg px-5">
+                            <i class="fas fa-save me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}إنشاء الامتحان{% else %}Create Exam{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modern-input, .modern-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus, .modern-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.preview-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid var(--primary-color);
+}
+
+.preview-header {
+    padding: 10px 15px;
+    font-weight: 600;
+}
+
+.preview-body {
+    padding: 15px;
+}
+
+.preview-body p {
+    margin: 8px 0;
+}
+</style>
+
+<script>
+// Live preview
+document.querySelector('input[name="exam_name_ar"]').addEventListener('input', updatePreview);
+document.querySelector('select[name="exam_type_id"]').addEventListener('change', updatePreview);
+document.querySelector('select[name="subject_id"]').addEventListener('change', updatePreview);
+document.querySelector('select[name="class_id"]').addEventListener('change', updatePreview);
+document.querySelector('input[name="exam_date"]').addEventListener('change', updatePreview);
+document.getElementById('totalMarks').addEventListener('input', updatePreview);
+document.getElementById('passingMarks').addEventListener('input', updatePreview);
+
+function updatePreview() {
+    const name = document.querySelector('input[name="exam_name_ar"]').value;
+    const typeSelect = document.querySelector('select[name="exam_type_id"]');
+    const subjectSelect = document.querySelector('select[name="subject_id"]');
+    const classSelect = document.querySelector('select[name="class_id"]');
+    const date = document.querySelector('input[name="exam_date"]').value;
+    const total = document.getElementById('totalMarks').value;
+    const passing = document.getElementById('passingMarks').value;
+    
+    if (name && typeSelect.value && subjectSelect.value && classSelect.value && date && total) {
+        const typeText = typeSelect.options[typeSelect.selectedIndex]?.text.split('(')[0] || '';
+        const subjectText = subjectSelect.options[subjectSelect.selectedIndex]?.text || '';
+        const classText = classSelect.options[classSelect.selectedIndex]?.text || '';
+        
+        document.getElementById('previewName').textContent = name;
+        document.getElementById('previewType').textContent = typeText;
+        document.getElementById('previewSubject').textContent = subjectText;
+        document.getElementById('previewClass').textContent = classText;
+        document.getElementById('previewDate').textContent = date;
+        document.getElementById('previewTotal').textContent = total;
+        document.getElementById('previewPassing').textContent = passing || '0';
+        
+        document.getElementById('previewCard').style.display = 'block';
+    } else {
+        document.getElementById('previewCard').style.display = 'none';
+    }
+}
+
+// Validate passing marks not greater than total marks
+document.getElementById('examForm').addEventListener('submit', function(e) {
+    const total = parseFloat(document.getElementById('totalMarks').value);
+    const passing = parseFloat(document.getElementById('passingMarks').value);
+    
+    if (passing > total) {
+        e.preventDefault();
+        alert('{% if lang.get_direction() == "rtl" %}درجة النجاح لا يمكن أن تكون أكبر من الدرجة النهائية{% else %}Passing marks cannot be greater than total marks{% endif %}');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,517 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-file-alt me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    {{ exam.exam_name_ar }}
+                {% else %}
+                    {{ exam.exam_name_en }}
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                <i class="fas fa-book-open me-1"></i> {{ exam.subject_name_ar }} | 
+                <i class="fas fa-school me-1 ms-2"></i> {{ exam.class_name_ar }} |
+                <i class="fas fa-calendar-alt me-1 ms-2"></i> {{ exam.exam_date }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('exams.list_exams') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+            {% if not exam.is_published and session.role in ['admin', 'supervisor', 'teacher'] %}
+            <a href="{{ url_for('exams.enter_results', exam_id=exam.exam_id) }}" class="btn btn-success">
+                <i class="fas fa-pen me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}إدخال الدرجات{% else %}Enter Marks{% endif %}
+            </a>
+            {% endif %}
+            {% if session.role == 'admin' %}
+            <div class="btn-group">
+                <button class="btn btn-warning dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-cog me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}إجراءات{% else %}Actions{% endif %}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('exams.edit_exam', exam_id=exam.exam_id) }}">
+                        <i class="fas fa-edit me-2 text-warning"></i> {% if lang.get_direction() == 'rtl' %}تعديل{% else %}Edit{% endif %}
+                    </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" href="#" onclick="deleteExam({{ exam.exam_id }})">
+                        <i class="fas fa-trash me-2 text-danger"></i> {% if lang.get_direction() == 'rtl' %}حذف{% else %}Delete{% endif %}
+                    </a></li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Exam Info Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="info-card">
+            <div class="info-icon" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="info-details">
+                <span class="info-label">{% if lang.get_direction() == 'rtl' %}الدرجة النهائية{% else %}Total Marks{% endif %}</span>
+                <h3>{{ "%.0f"|format(exam.total_marks) }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="info-card">
+            <div class="info-icon" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="info-details">
+                <span class="info-label">{% if lang.get_direction() == 'rtl' %}درجة النجاح{% else %}Passing Marks{% endif %}</span>
+                <h3>{{ "%.0f"|format(exam.passing_marks) }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="info-card">
+            <div class="info-icon" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%);">
+                <i class="fas fa-percent"></i>
+            </div>
+            <div class="info-details">
+                <span class="info-label">{% if lang.get_direction() == 'rtl' %}نسبة الوزن{% else %}Weight{% endif %}</span>
+                <h3>{{ "%.0f"|format(exam.weight_percentage|default(0)) }}%</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="info-card">
+            <div class="info-icon" style="background: linear-gradient(135deg, #FFC107 0%, #e0a800 100%);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="info-details">
+                <span class="info-label">{% if lang.get_direction() == 'rtl' %}عدد الطلاب{% else %}Students{% endif %}</span>
+                <h3>{{ stats.total }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}ناجح{% else %}Passed{% endif %}</span>
+                <h3>{{ stats.passed }}</h3>
+                <small class="text-success">{{ stats.pass_percentage }}%</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #DC3545 0%, #bd2130 100%);">
+                <i class="fas fa-user-times"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}راسب{% else %}Failed{% endif %}</span>
+                <h3>{{ stats.failed }}</h3>
+                <small class="text-danger">{{ (100 - stats.pass_percentage)|round(1) }}%</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%);">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}المتوسط{% else %}Average{% endif %}</span>
+                <h3>{{ "%.1f"|format(stats.average) }}</h3>
+                <small>{% if lang.get_direction() == 'rtl' %}من {{ "%.0f"|format(exam.total_marks) }}{% else %}out of {{ "%.0f"|format(exam.total_marks) }}{% endif %}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Table -->
+<div class="modern-card">
+    <div class="card-header-modern d-flex justify-content-between align-items-center">
+        <span>
+            <i class="fas fa-table me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}نتائج الطلاب{% else %}Student Results{% endif %}
+        </span>
+        <div class="d-flex gap-2">
+            <div class="input-group" style="width: 250px;">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control modern-input border-start-0" id="searchInput" 
+                       placeholder="{% if lang.get_direction() == 'rtl' %}بحث عن طالب...{% else %}Search student...{% endif %}">
+            </div>
+            {% if exam.is_published %}
+            <button class="btn btn-success" onclick="exportResults()">
+                <i class="fas fa-download me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}تصدير{% else %}Export{% endif %}
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table" id="resultsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الرقم الدراسي{% else %}Student ID{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}اسم الطالب{% else %}Student Name{% endif %}</th>
+                        <th class="text-center">{% if lang.get_direction() == 'rtl' %}الدرجة{% else %}Marks{% endif %}</th>
+                        <th class="text-center">{% if lang.get_direction() == 'rtl' %}النسبة{% else %}Percentage{% endif %}</th>
+                        <th class="text-center">{% if lang.get_direction() == 'rtl' %}التقدير{% else %}Grade{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}النتيجة{% else %}Result{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}ملاحظات{% else %}Remarks{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in results %}
+                    <tr class="result-row" data-name="{{ result.first_name_ar }} {{ result.last_name_ar }} {{ result.student_number }}">
+                        <td>{{ loop.index }}</td>
+                        <td><span class="badge bg-light text-dark">{{ result.student_number }}</span></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="student-avatar me-2">
+                                    <div class="avatar-placeholder" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+                                        {{ result.first_name_ar[:1] }}{{ result.last_name_ar[:1] }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <strong>{{ result.first_name_ar }} {{ result.last_name_ar }}</strong>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center fw-bold">{{ "%.1f"|format(result.marks_obtained) }}</td>
+                        <td class="text-center">
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar {% if result.percentage >= 75 %}bg-success{% elif result.percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                     style="width: {{ result.percentage }}%"></div>
+                            </div>
+                            <small>{{ "%.1f"|format(result.percentage) }}%</small>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge {% if result.grade_letter in ['A+', 'A', 'B+', 'B'] %}bg-success{% elif result.grade_letter in ['C+', 'C', 'D+', 'D'] %}bg-warning{% else %}bg-danger{% endif %}">
+                                {{ result.grade_letter }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if result.marks_obtained >= exam.passing_marks %}
+                            <span class="badge bg-success">{% if lang.get_direction() == 'rtl' %}ناجح{% else %}Pass{% endif %}</span>
+                            {% else %}
+                            <span class="badge bg-danger">{% if lang.get_direction() == 'rtl' %}راسب{% else %}Fail{% endif %}</span>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-muted">{{ result.remarks or '---' }}</small></td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="fas fa-file-alt fa-3x mb-3 text-muted"></i>
+                            <p>{% if lang.get_direction() == 'rtl' %}لا توجد نتائج بعد{% else %}No results yet{% endif %}</p>
+                            {% if not exam.is_published and session.role in ['admin', 'supervisor', 'teacher'] %}
+                            <a href="{{ url_for('exams.enter_results', exam_id=exam.exam_id) }}" class="btn btn-success">
+                                <i class="fas fa-pen me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}إدخال الدرجات{% else %}Enter Marks{% endif %}
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Grade Distribution Chart -->
+{% if results %}
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-chart-pie me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}توزيع الدرجات{% else %}Grade Distribution{% endif %}
+            </div>
+            <div class="card-body">
+                <canvas id="gradeChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Advanced Statistics Section - Find this part and replace it -->
+<div class="col-md-6">
+    <div class="modern-card">
+        <div class="card-header-modern">
+            <i class="fas fa-chart-line me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}إحصائيات متقدمة{% else %}Advanced Statistics{% endif %}
+        </div>
+        <div class="card-body">
+            <div class="stat-list">
+                <div class="stat-row d-flex justify-content-between mb-3">
+                    <span>{% if lang.get_direction() == 'rtl' %}أعلى درجة{% else %}Highest Mark{% endif %}</span>
+                    <span class="fw-bold text-success">{{ "%.1f"|format(stats.highest) }}</span>
+                </div>
+                <div class="stat-row d-flex justify-content-between mb-3">
+                    <span>{% if lang.get_direction() == 'rtl' %}أدنى درجة{% else %}Lowest Mark{% endif %}</span>
+                    <span class="fw-bold text-danger">{{ "%.1f"|format(stats.lowest) }}</span>
+                </div>
+                <div class="stat-row d-flex justify-content-between mb-3">
+                    <span>{% if lang.get_direction() == 'rtl' %}المتوسط{% else %}Average{% endif %}</span>
+                    <span class="fw-bold text-primary">{{ "%.1f"|format(stats.average) }}</span>
+                </div>
+                <div class="stat-row d-flex justify-content-between mb-3">
+                    <span>{% if lang.get_direction() == 'rtl' %}الوسيط{% else %}Median{% endif %}</span>
+                    <span class="fw-bold text-info">
+                        {% if results %}
+                            {% set marks = results|map(attribute='marks_obtained')|list|sort %}
+                            {% set mid = (marks|length / 2)|int %}
+                            {% if marks|length % 2 == 0 %}
+                                {{ "%.1f"|format((marks[mid-1] + marks[mid]) / 2) }}
+                            {% else %}
+                                {{ "%.1f"|format(marks[mid]) }}
+                            {% endif %}
+                        {% else %}
+                            0.0
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="stat-row d-flex justify-content-between">
+                    <span>{% if lang.get_direction() == 'rtl' %}الانحراف المعياري{% else %}Std Deviation{% endif %}</span>
+                    <span class="fw-bold text-warning">
+                        {% if results and results|length > 1 %}
+                            {% set mean = stats.average %}
+                            {% set squares = [] %}
+                            {% for result in results %}
+                                {% set diff = result.marks_obtained - mean %}
+                                {% set _ = squares.append(diff * diff) %}
+                            {% endfor %}
+                            {% set variance = squares|sum / results|length %}
+                            {{ "%.2f"|format(variance**0.5) }}
+                        {% else %}
+                            0.00
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endif %}
+
+<style>
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.info-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.info-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.info-details {
+    flex: 1;
+}
+
+.info-label {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+}
+
+.info-details h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stat-details {
+    flex: 1;
+}
+
+.stat-label {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+}
+
+.stat-details h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.stat-details small {
+    font-size: 0.8rem;
+}
+
+.student-avatar {
+    width: 35px;
+    height: 35px;
+}
+
+.avatar-placeholder {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.stat-row {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.stat-row:last-child {
+    border-bottom: none;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const searchText = this.value.toLowerCase();
+    const rows = document.querySelectorAll('.result-row');
+    
+    rows.forEach(row => {
+        const studentInfo = row.dataset.name?.toLowerCase() || '';
+        if (studentInfo.includes(searchText)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Grade distribution chart
+{% if results %}
+const ctx = document.getElementById('gradeChart').getContext('2d');
+    
+// Count grades
+const grades = {};
+{% for result in results %}
+    {% set grade = result.grade_letter %}
+    {% if grade %}
+        if (grades['{{ grade }}']) grades['{{ grade }}']++;
+        else grades['{{ grade }}'] = 1;
+    {% endif %}
+{% endfor %}
+
+new Chart(ctx, {
+    type: 'pie',
+    data: {
+        labels: Object.keys(grades),
+        datasets: [{
+            data: Object.values(grades),
+            backgroundColor: [
+                '#28A745', '#17A2B8', '#FFC107', '#DC3545',
+                '#875A7B', '#FD7E14', '#20C997', '#6F42C1'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    usePointStyle: true
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+function deleteExam(examId) {
+    if (confirm('{% if lang.get_direction() == "rtl" %}هل أنت متأكد من حذف هذا الامتحان؟{% else %}Are you sure you want to delete this exam?{% endif %}')) {
+        fetch(`/exams/${examId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }).then(response => {
+            if (response.ok) {
+                window.location.href = "{{ url_for('exams.list_exams') }}";
+            } else {
+                alert('{% if lang.get_direction() == "rtl" %}حدث خطأ أثناء الحذف{% else %}Error deleting exam{% endif %}');
+            }
+        });
+    }
+}
+
+function exportResults() {
+    window.location.href = "{{ url_for('exams.export_results', exam_id=exam.exam_id) }}";
+}
+</script>
+{% endblock %}

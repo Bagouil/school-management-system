@@ -1,0 +1,494 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-file-invoice me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}إدارة المصروفات{% else %}Expenses Management{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}تسجيل ومتابعة جميع المصروفات المدرسية{% else %}Track and manage all school expenses{% endif %}
+            </p>
+        </div>
+        <div>
+            <button class="btn btn-modern-primary" onclick="location.href='{{ url_for('finance.add_expense') }}'">
+                <i class="fas fa-plus-circle me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}إضافة مصروف جديد{% else %}Add New Expense{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="expense-stat-card total">
+            <div class="stat-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي المصروفات{% else %}Total Expenses{% endif %}</span>
+                <h3 class="stat-value">{{ total_amount }} SDG</h3>
+                <small class="stat-trend">{{ total_count }} {% if lang.get_direction() == 'rtl' %}عملية{% else %}transactions{% endif %}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="expense-stat-card month">
+            <div class="stat-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}هذا الشهر{% else %}This Month{% endif %}</span>
+                <h3 class="stat-value">{{ month_amount }} SDG</h3>
+                <small class="stat-trend">{{ month_count }} {% if lang.get_direction() == 'rtl' %}مصروف{% else %}expenses{% endif %}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="expense-stat-card week">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}هذا الأسبوع{% else %}This Week{% endif %}</span>
+                <h3 class="stat-value">{{ week_amount }} SDG</h3>
+                <small class="stat-trend">{{ week_count }} {% if lang.get_direction() == 'rtl' %}مصروف{% else %}expenses{% endif %}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="expense-stat-card today">
+            <div class="stat-icon">
+                <i class="fas fa-sun"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}اليوم{% else %}Today{% endif %}</span>
+                <h3 class="stat-value">{{ today_amount }} SDG</h3>
+                <small class="stat-trend">{{ today_count }} {% if lang.get_direction() == 'rtl' %}مصروف{% else %}expenses{% endif %}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters and Search -->
+<div class="modern-card mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <select class="form-select modern-select" id="categoryFilter">
+                    <option value="">{% if lang.get_direction() == 'rtl' %}جميع الفئات{% else %}All Categories{% endif %}</option>
+                    <option value="رواتب">{% if lang.get_direction() == 'rtl' %}رواتب{% else %}Salaries{% endif %}</option>
+                    <option value="كهرباء">{% if lang.get_direction() == 'rtl' %}كهرباء{% else %}Electricity{% endif %}</option>
+                    <option value="مياه">{% if lang.get_direction() == 'rtl' %}مياه{% else %}Water{% endif %}</option>
+                    <option value="هاتف وانترنت">{% if lang.get_direction() == 'rtl' %}هاتف وانترنت{% else %}Phone & Internet{% endif %}</option>
+                    <option value="صيانة">{% if lang.get_direction() == 'rtl' %}صيانة{% else %}Maintenance{% endif %}</option>
+                    <option value="قرطاسية">{% if lang.get_direction() == 'rtl' %}قرطاسية{% else %}Stationery{% endif %}</option>
+                    <option value="تنظيف">{% if lang.get_direction() == 'rtl' %}تنظيف{% else %}Cleaning{% endif %}</option>
+                    <option value="أخرى">{% if lang.get_direction() == 'rtl' %}أخرى{% else %}Other{% endif %}</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select modern-select" id="paymentMethodFilter">
+                    <option value="">{% if lang.get_direction() == 'rtl' %}جميع طرق الدفع{% else %}All Payment Methods{% endif %}</option>
+                    <option value="cash">{% if lang.get_direction() == 'rtl' %}نقداً{% else %}Cash{% endif %}</option>
+                    <option value="bank_transfer">{% if lang.get_direction() == 'rtl' %}تحويل بنكي{% else %}Bank Transfer{% endif %}</option>
+                    <option value="check">{% if lang.get_direction() == 'rtl' %}شيك{% else %}Check{% endif %}</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control modern-input border-start-0" id="searchInput" 
+                           placeholder="{% if lang.get_direction() == 'rtl' %}بحث بالوصف أو رقم المرجع...{% else %}Search by description or reference...{% endif %}">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-modern-primary w-100" onclick="applyFilters()">
+                    <i class="fas fa-filter me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تصفية{% else %}Filter{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expenses Table -->
+<div class="modern-card">
+    <div class="card-header-modern d-flex justify-content-between align-items-center">
+        <span>
+            <i class="fas fa-list me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}قائمة المصروفات{% else %}Expenses List{% endif %}
+        </span>
+        <span class="badge bg-primary">{{ expenses|length }} {% if lang.get_direction() == 'rtl' %}مصروف{% else %}expenses{% endif %}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table" id="expensesTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}التاريخ{% else %}Date{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الفئة{% else %}Category{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الوصف{% else %}Description{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}طريقة الدفع{% else %}Payment Method{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}رقم المرجع{% else %}Reference{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}تاريخ الإضافة{% else %}Added{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}بواسطة{% else %}By{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الإجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for expense in expenses %}
+                    <tr class="expense-row" data-category="{{ expense.expense_category }}" 
+                        data-method="{{ expense.payment_method }}" 
+                        data-description="{{ expense.description }}"
+                        data-reference="{{ expense.reference_number or '' }}">
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <span class="badge bg-light text-dark">{{ expense.expense_date }}</span>
+                        </td>
+                        <td>
+                            <span class="category-badge {{ expense.expense_category|replace(' ', '-')|lower }}">
+                                {{ expense.expense_category }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="expense-description">
+                                <strong>{{ expense.description }}</strong>
+                                {% if expense.notes %}
+                                <small class="d-block text-muted">{{ expense.notes }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="text-danger fw-bold">{{ "%.2f"|format(expense.amount) }} SDG</td>
+                        <td>
+                            <span class="payment-method method-{{ expense.payment_method }}">
+                                {% if expense.payment_method == 'cash' %}
+                                    <i class="fas fa-money-bill-wave me-1"></i>
+                                    {% if lang.get_direction() == 'rtl' %}نقداً{% else %}Cash{% endif %}
+                                {% elif expense.payment_method == 'bank_transfer' %}
+                                    <i class="fas fa-university me-1"></i>
+                                    {% if lang.get_direction() == 'rtl' %}تحويل بنكي{% else %}Bank Transfer{% endif %}
+                                {% elif expense.payment_method == 'check' %}
+                                    <i class="fas fa-money-check me-1"></i>
+                                    {% if lang.get_direction() == 'rtl' %}شيك{% else %}Check{% endif %}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if expense.reference_number %}
+                            <span class="badge bg-secondary">{{ expense.reference_number }}</span>
+                            {% else %}
+                            <span class="text-muted">---</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ expense.created_at.strftime('%Y-%m-%d') if expense.created_at else expense.expense_date }}</td>
+                        <td>{{ expense.entered_by_name or 'System' }}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-sm btn-outline-info" onclick="viewExpense({{ expense.expense_id }})" title="{% if lang.get_direction() == 'rtl' %}عرض{% else %}View{% endif %}">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                {% if session.role == 'admin' %}
+                                <button class="btn btn-sm btn-outline-warning" onclick="editExpense({{ expense.expense_id }})" title="{% if lang.get_direction() == 'rtl' %}تعديل{% else %}Edit{% endif %}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="deleteExpense({{ expense.expense_id }})" title="{% if lang.get_direction() == 'rtl' %}حذف{% else %}Delete{% endif %}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-primary">
+                        <th colspan="4" class="text-end">
+                            {% if lang.get_direction() == 'rtl' %}الإجمالي{% else %}Total{% endif %}:
+                        </th>
+                        <th colspan="6" class="text-start">{{ "%.2f"|format(expenses|sum(attribute='amount')) }} SDG</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Expense Details Modal -->
+<div class="modal fade" id="expenseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-file-invoice me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تفاصيل المصروف{% else %}Expense Details{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="expenseDetails">
+                <!-- Details will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if lang.get_direction() == 'rtl' %}إغلاق{% else %}Close{% endif %}
+                </button>
+                <button type="button" class="btn btn-primary" onclick="printExpense()">
+                    <i class="fas fa-print me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}طباعة{% else %}Print{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.expense-stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.expense-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.expense-stat-card.total { border-left: 4px solid var(--primary-color); }
+.expense-stat-card.month { border-left: 4px solid #17A2B8; }
+.expense-stat-card.week { border-left: 4px solid #FFC107; }
+.expense-stat-card.today { border-left: 4px solid #28A745; }
+
+[dir="rtl"] .expense-stat-card.total { border-left: none; border-right: 4px solid var(--primary-color); }
+[dir="rtl"] .expense-stat-card.month { border-left: none; border-right: 4px solid #17A2B8; }
+[dir="rtl"] .expense-stat-card.week { border-left: none; border-right: 4px solid #FFC107; }
+[dir="rtl"] .expense-stat-card.today { border-left: none; border-right: 4px solid #28A745; }
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.expense-stat-card.total .stat-icon { background: #f0e9ef; color: var(--primary-color); }
+.expense-stat-card.month .stat-icon { background: #d1ecf1; color: #17A2B8; }
+.expense-stat-card.week .stat-icon { background: #fff3cd; color: #FFC107; }
+.expense-stat-card.today .stat-icon { background: #d4edda; color: #28A745; }
+
+.stat-details {
+    flex: 1;
+}
+
+.stat-label {
+    display: block;
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.stat-trend {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.category-badge.رواتب { background: #e3f2fd; color: #0d47a1; }
+.category-badge.كهرباء { background: #fff3e0; color: #e65100; }
+.category-badge.مياه { background: #e0f2f1; color: #004d40; }
+.category-badge.هاتف-وانترنت { background: #f3e5f5; color: #4a148c; }
+.category-badge.صيانة { background: #ffebee; color: #b71c1c; }
+.category-badge.قرطاسية { background: #e8f5e9; color: #1b5e20; }
+.category-badge.تنظيف { background: #fff8e1; color: #ff6f00; }
+.category-badge.أخرى { background: #fafafa; color: #616161; }
+
+.payment-method {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.payment-method.method-cash { background: #d4edda; color: #155724; }
+.payment-method.method-bank_transfer { background: #d1ecf1; color: #0c5460; }
+.payment-method.method-check { background: #fff3cd; color: #856404; }
+
+.expense-description strong {
+    font-size: 0.95rem;
+}
+
+.expense-description small {
+    font-size: 0.7rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.action-buttons .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.modern-select, .modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-select:focus, .modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+</style>
+
+<script>
+function applyFilters() {
+    const category = document.getElementById('categoryFilter').value.toLowerCase();
+    const method = document.getElementById('paymentMethodFilter').value.toLowerCase();
+    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    
+    const rows = document.querySelectorAll('.expense-row');
+    
+    rows.forEach(row => {
+        const rowCategory = row.dataset.category?.toLowerCase() || '';
+        const rowMethod = row.dataset.method?.toLowerCase() || '';
+        const rowDescription = row.dataset.description?.toLowerCase() || '';
+        const rowReference = row.dataset.reference?.toLowerCase() || '';
+        
+        const matchesCategory = !category || rowCategory.includes(category);
+        const matchesMethod = !method || rowMethod.includes(method);
+        const matchesSearch = !searchText || 
+            rowDescription.includes(searchText) || 
+            rowReference.includes(searchText);
+        
+        if (matchesCategory && matchesMethod && matchesSearch) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function viewExpense(expenseId) {
+    // Fetch expense details via AJAX
+    fetch(`/finance/expenses/${expenseId}/data`)
+        .then(response => response.json())
+        .then(data => {
+            const detailsHtml = `
+                <div class="expense-detail-card">
+                    <div class="detail-row">
+                        <span class="detail-label">التاريخ:</span>
+                        <span class="detail-value">${data.expense_date}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">الفئة:</span>
+                        <span class="detail-value">${data.expense_category}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">الوصف:</span>
+                        <span class="detail-value">${data.description}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">المبلغ:</span>
+                        <span class="detail-value text-danger fw-bold">${data.amount} SDG</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">طريقة الدفع:</span>
+                        <span class="detail-value">${data.payment_method}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">رقم المرجع:</span>
+                        <span class="detail-value">${data.reference_number || '---'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">ملاحظات:</span>
+                        <span class="detail-value">${data.notes || '---'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">تم الإضافة بواسطة:</span>
+                        <span class="detail-value">${data.entered_by_name || 'System'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">تاريخ الإضافة:</span>
+                        <span class="detail-value">${data.created_at || data.expense_date}</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('expenseDetails').innerHTML = detailsHtml;
+            new bootstrap.Modal(document.getElementById('expenseModal')).show();
+        });
+}
+
+function editExpense(expenseId) {
+    window.location.href = `/finance/expenses/${expenseId}/edit`;
+}
+
+function deleteExpense(expenseId) {
+    if (confirm('{% if lang.get_direction() == "rtl" %}هل أنت متأكد من حذف هذا المصروف؟{% else %}Are you sure you want to delete this expense?{% endif %}')) {
+        fetch(`/finance/expenses/${expenseId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('{% if lang.get_direction() == "rtl" %}حدث خطأ أثناء الحذف{% else %}Error deleting expense{% endif %}');
+            }
+        });
+    }
+}
+
+function printExpense() {
+    window.print();
+}
+
+// Event listeners for filters
+document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+document.getElementById('paymentMethodFilter').addEventListener('change', applyFilters);
+document.getElementById('searchInput').addEventListener('keyup', applyFilters);
+</script>
+{% endblock %}

@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-user-graduate me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}تقرير الطلاب{% else %}Student Report{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}تحليل وإحصائيات الطلاب{% else %}Student analysis and statistics{% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+            <div class="btn-group">
+                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-download me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تصدير{% else %}Export{% endif %}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="exportReport('pdf')">
+                        <i class="fas fa-file-pdf text-danger me-2"></i> PDF
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportReport('excel')">
+                        <i class="fas fa-file-excel text-success me-2"></i> Excel
+                    </a></li>
+                    <li><a class="dropdown-item" href="#" onclick="exportReport('csv')">
+                        <i class="fas fa-file-csv text-info me-2"></i> CSV
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي الطلاب{% else %}Total Students{% endif %}</span>
+                <h3 class="stat-value">{{ students|length }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}نشط{% else %}Active{% endif %}</span>
+                <h3 class="stat-value">{{ students|selectattr('status', 'equalto', 'active')|list|length }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #0077b6 0%, #023e8a 100%);">
+                <i class="fas fa-mars"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}ذكور{% else %}Male{% endif %}</span>
+                <h3 class="stat-value">{{ students|selectattr('gender', 'equalto', 'male')|list|length }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #c44569 0%, #9b4d6e 100%);">
+                <i class="fas fa-venus"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}إناث{% else %}Female{% endif %}</span>
+                <h3 class="stat-value">{{ students|selectattr('gender', 'equalto', 'female')|list|length }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters Card -->
+<div class="modern-card mb-4">
+    <div class="card-header-modern" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+        <i class="fas fa-filter me-2"></i>
+        {% if lang.get_direction() == 'rtl' %}تصفية البيانات{% else %}Filter Data{% endif %}
+    </div>
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('reports.student_reports') }}" class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="fas fa-school me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}الصف الدراسي{% else %}Class{% endif %}
+                </label>
+                <select name="class_id" class="form-select modern-select">
+                    <option value="">{% if lang.get_direction() == 'rtl' %}جميع الصفوف{% else %}All Classes{% endif %}</option>
+                    {% for class in classes %}
+                    <option value="{{ class.class_id }}" {% if selected_class|int == class.class_id %}selected{% endif %}>
+                        {{ class.class_name_ar }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="fas fa-tag me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}
+                </label>
+                <select name="status" class="form-select modern-select">
+                    <option value="all" {% if selected_status == 'all' %}selected{% endif %}>{% if lang.get_direction() == 'rtl' %}الجميع{% else %}All{% endif %}</option>
+                    <option value="active" {% if selected_status == 'active' %}selected{% endif %}>{% if lang.get_direction() == 'rtl' %}نشط{% else %}Active{% endif %}</option>
+                    <option value="graduated" {% if selected_status == 'graduated' %}selected{% endif %}>{% if lang.get_direction() == 'rtl' %}متخرج{% else %}Graduated{% endif %}</option>
+                    <option value="withdrawn" {% if selected_status == 'withdrawn' %}selected{% endif %}>{% if lang.get_direction() == 'rtl' %}منسحب{% else %}Withdrawn{% endif %}</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn w-100" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; border: none;">
+                    <i class="fas fa-search me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تطبيق{% else %}Apply{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Students Table Card -->
+<div class="modern-card">
+    <div class="card-header-modern d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white;">
+        <span>
+            <i class="fas fa-list me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}قائمة الطلاب{% else %}Students List{% endif %}
+        </span>
+        <div class="d-flex gap-2">
+            <span class="badge bg-white text-dark">{{ students|length }} {% if lang.get_direction() == 'rtl' %}طالب{% else %}students{% endif %}</span>
+            <div class="input-group" style="width: 250px;">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control modern-input border-start-0" id="searchInput" 
+                       placeholder="{% if lang.get_direction() == 'rtl' %}بحث...{% else %}Search...{% endif %}">
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table" id="studentsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الرقم الدراسي{% else %}Student ID{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}اسم الطالب{% else %}Student Name{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الصف{% else %}Class{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الجنس{% else %}Gender{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}تاريخ الميلاد{% else %}Birth Date{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}تاريخ التسجيل{% else %}Enrollment{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}</th>
+                        <th style="width: 100px;">{% if lang.get_direction() == 'rtl' %}الإجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr class="student-row" data-name="{{ student.first_name_ar }} {{ student.last_name_ar }} {{ student.student_number }}">
+                        <td>{{ loop.index }}</td>
+                        <td><span class="badge bg-light text-dark">{{ student.student_number }}</span></td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="student-avatar me-2">
+                                    <div class="avatar-placeholder" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+                                        {{ student.first_name_ar[:1] }}{{ student.last_name_ar[:1] }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <strong>{{ student.first_name_ar }} {{ student.last_name_ar }}</strong>
+                                    {% if student.first_name_en %}
+                                    <small class="d-block text-muted">{{ student.first_name_en }} {{ student.last_name_en }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ student.class_name_ar or '---' }}</td>
+                        <td>
+                            {% if student.gender == 'male' %}
+                            <span class="badge" style="background: #0077b6; color: white;">
+                                <i class="fas fa-mars me-1"></i> {% if lang.get_direction() == 'rtl' %}ذكر{% else %}Male{% endif %}
+                            </span>
+                            {% else %}
+                            <span class="badge" style="background: #c44569; color: white;">
+                                <i class="fas fa-venus me-1"></i> {% if lang.get_direction() == 'rtl' %}أنثى{% else %}Female{% endif %}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>{{ student.birth_date }}</td>
+                        <td>{{ student.enrollment_date }}</td>
+                        <td>
+                            {% if student.status == 'active' %}
+                            <span class="badge bg-success">{% if lang.get_direction() == 'rtl' %}نشط{% else %}Active{% endif %}</span>
+                            {% elif student.status == 'graduated' %}
+                            <span class="badge bg-info">{% if lang.get_direction() == 'rtl' %}متخرج{% else %}Graduated{% endif %}</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{% if lang.get_direction() == 'rtl' %}منسحب{% else %}Withdrawn{% endif %}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('students.view_student_profile', student_id=student.student_id) }}" 
+                                   class="btn btn-sm" 
+                                   style="background: var(--primary-color); color: white; border: none;"
+                                   title="{% if lang.get_direction() == 'rtl' %}عرض{% else %}View{% endif %}">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('finance.student_fees_detail', student_id=student.student_id) }}" 
+                                   class="btn btn-sm btn-success"
+                                   title="{% if lang.get_direction() == 'rtl' %}الرسوم{% else %}Fees{% endif %}">
+                                    <i class="fas fa-coins"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.stat-details {
+    flex: 1;
+}
+
+.stat-label {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.student-avatar {
+    width: 40px;
+    height: 40px;
+}
+
+.avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.modern-select, .modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-select:focus, .modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.btn-group .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-group .btn i {
+    font-size: 1rem;
+}
+</style>
+
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const searchText = this.value.toLowerCase();
+    const rows = document.querySelectorAll('.student-row');
+    
+    rows.forEach(row => {
+        const studentName = row.dataset.name?.toLowerCase() || '';
+        if (studentName.includes(searchText)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Export functions
+function exportReport(format) {
+    const classId = document.querySelector('select[name="class_id"]')?.value || '';
+    const status = document.querySelector('select[name="status"]')?.value || 'all';
+    
+    let url = `/reports/export/students/${format}?`;
+    const params = [];
+    
+    if (classId) params.push(`class_id=${classId}`);
+    if (status && status !== 'all') params.push(`status=${status}`);
+    
+    url += params.join('&');
+    
+    // Show loading indicator
+    const btn = event.target.closest('.dropdown-item');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> جاري التصدير...';
+    btn.disabled = true;
+    
+    // Trigger download
+    window.location.href = url;
+    
+    // Reset button after delay
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }, 2000);
+}
+</script>
+{% endblock %}

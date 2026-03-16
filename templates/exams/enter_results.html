@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-pen me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    إدخال نتائج: {{ exam.exam_name_ar }}
+                {% else %}
+                    Enter Results: {{ exam.exam_name_en }}
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                <i class="fas fa-book-open me-1"></i> {{ exam.subject_name_ar }} | 
+                <i class="fas fa-school me-1 ms-2"></i> {{ exam.class_name_ar }}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('exams.view_exam', exam_id=exam.exam_id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Exam Info Card -->
+<div class="modern-card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}الدرجة النهائية{% else %}Total Marks{% endif %}</small>
+                <h4>{{ "%.0f"|format(exam.total_marks) }}</h4>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}درجة النجاح{% else %}Passing Marks{% endif %}</small>
+                <h4>{{ "%.0f"|format(exam.passing_marks) }}</h4>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}عدد الطلاب{% else %}Students{% endif %}</small>
+                <h4>{{ students|length }}</h4>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}تاريخ الامتحان{% else %}Exam Date{% endif %}</small>
+                <h4>{{ exam.exam_date }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Entry Form -->
+<div class="modern-card">
+    <div class="card-header-modern d-flex justify-content-between align-items-center">
+        <span>
+            <i class="fas fa-table me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}إدخال الدرجات{% else %}Marks Entry{% endif %}
+        </span>
+        <div>
+            <button class="btn btn-sm btn-success me-2" onclick="fillRandom()">
+                <i class="fas fa-random me-1"></i>
+                {% if lang.get_direction() == 'rtl' %}عشوائي{% else %}Random{% endif %}
+            </button>
+            <button class="btn btn-sm btn-info" onclick="fillPassing()">
+                <i class="fas fa-check-circle me-1"></i>
+                {% if lang.get_direction() == 'rtl' %}درجة النجاح{% else %}Passing{% endif %}
+            </button>
+        </div>
+    </div>
+    <div class="card-body">
+        <form method="POST" id="resultsForm">
+            <div class="table-responsive">
+                <table class="modern-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>{% if lang.get_direction() == 'rtl' %}الرقم الدراسي{% else %}Student ID{% endif %}</th>
+                            <th>{% if lang.get_direction() == 'rtl' %}اسم الطالب{% else %}Student Name{% endif %}</th>
+                            <th style="width: 150px;">{% if lang.get_direction() == 'rtl' %}الدرجة{% else %}Marks{% endif %}</th>
+                            <th style="width: 200px;">{% if lang.get_direction() == 'rtl' %}ملاحظات{% else %}Remarks{% endif %}</th>
+                            <th style="width: 100px;">{% if lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        {% set result = results_dict.get(student.student_id) %}
+                        <tr class="student-row" id="row-{{ student.student_id }}">
+                            <td>{{ loop.index }}</td>
+                            <td><span class="badge bg-light text-dark">{{ student.student_number }}</span></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="student-avatar me-2">
+                                        <div class="avatar-placeholder" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+                                            {{ student.first_name_ar[:1] }}{{ student.last_name_ar[:1] }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <strong>{{ student.first_name_ar }} {{ student.last_name_ar }}</strong>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <input type="hidden" name="student_id[]" value="{{ student.student_id }}">
+                                <input type="number" name="marks[]" class="form-control modern-input marks-input" 
+                                       step="0.01" min="0" max="{{ exam.total_marks }}" 
+                                       value="{{ result.marks_obtained if result else '' }}"
+                                       oninput="updateStatus(this, {{ exam.total_marks }}, {{ exam.passing_marks }})">
+                            </td>
+                            <td>
+                                <input type="text" name="remarks[]" class="form-control modern-input" 
+                                       value="{{ result.remarks if result else '' }}">
+                            </td>
+                            <td class="status-cell" id="status-{{ student.student_id }}">
+                                {% if result %}
+                                    {% if result.marks_obtained >= exam.passing_marks %}
+                                    <span class="badge bg-success">{% if lang.get_direction() == 'rtl' %}ناجح{% else %}Pass{% endif %}</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">{% if lang.get_direction() == 'rtl' %}راسب{% else %}Fail{% endif %}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-secondary">---</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-success btn-lg px-5">
+                    <i class="fas fa-save me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}حفظ النتائج{% else %}Save Results{% endif %}
+                </button>
+                <a href="{{ url_for('exams.view_exam', exam_id=exam.exam_id) }}" class="btn btn-outline-secondary btn-lg px-5">
+                    {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.student-avatar {
+    width: 35px;
+    height: 35px;
+}
+
+.avatar-placeholder {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.marks-input {
+    text-align: center;
+    font-weight: 600;
+}
+
+.modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.status-cell .badge {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+}
+</style>
+
+<script>
+function updateStatus(input, totalMarks, passingMarks) {
+    const row = input.closest('tr');
+    const statusCell = row.querySelector('.status-cell');
+    const value = parseFloat(input.value);
+    
+    if (!isNaN(value)) {
+        if (value >= passingMarks) {
+            statusCell.innerHTML = '<span class="badge bg-success">{% if lang.get_direction() == "rtl" %}ناجح{% else %}Pass{% endif %}</span>';
+        } else {
+            statusCell.innerHTML = '<span class="badge bg-danger">{% if lang.get_direction() == "rtl" %}راسب{% else %}Fail{% endif %}</span>';
+        }
+    } else {
+        statusCell.innerHTML = '<span class="badge bg-secondary">---</span>';
+    }
+}
+
+function fillRandom() {
+    const inputs = document.querySelectorAll('.marks-input');
+    const totalMarks = {{ exam.total_marks }};
+    
+    inputs.forEach(input => {
+        const randomMarks = (Math.random() * totalMarks).toFixed(2);
+        input.value = randomMarks;
+        updateStatus(input, totalMarks, {{ exam.passing_marks }});
+    });
+}
+
+function fillPassing() {
+    const inputs = document.querySelectorAll('.marks-input');
+    const passingMarks = {{ exam.passing_marks }};
+    const totalMarks = {{ exam.total_marks }};
+    
+    inputs.forEach(input => {
+        input.value = passingMarks;
+        updateStatus(input, totalMarks, passingMarks);
+    });
+}
+</script>
+{% endblock %}

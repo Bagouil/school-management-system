@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقرير الحضور - طباعة</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        body {
+            font-family: 'DejaVu Sans', 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+            padding: 20px;
+        }
+        
+        .print-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #875A7B;
+        }
+        
+        .school-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #875A7B;
+            margin-bottom: 5px;
+        }
+        
+        .report-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .report-date {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .summary-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .summary-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            border-right: 4px solid #875A7B;
+        }
+        
+        .summary-card .label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .summary-card .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 12px;
+        }
+        
+        th {
+            background: #875A7B;
+            color: white;
+            padding: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .status-present {
+            color: #28A745;
+            font-weight: bold;
+        }
+        
+        .status-absent {
+            color: #DC3545;
+            font-weight: bold;
+        }
+        
+        .status-late {
+            color: #FFC107;
+            font-weight: bold;
+        }
+        
+        .status-excused {
+            color: #17A2B8;
+            font-weight: bold;
+        }
+        
+        .print-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        @media print {
+            .no-print {
+                display: none;
+            }
+            
+            body {
+                padding: 0;
+            }
+        }
+        
+        .print-button {
+            background: #875A7B;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .print-button:hover {
+            background: #6a4b5f;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">طباعة / Print</button>
+    <button class="print-button no-print" onclick="window.close()" style="background: #6c757d;">إغلاق / Close</button>
+    
+    <div class="print-header">
+        <div class="school-name">{{ school_name }}</div>
+        <div class="report-title">{{ report_title }}</div>
+        <div class="report-date">تاريخ التقرير: {{ report_date }} | الفترة: {{ period }}</div>
+    </div>
+    
+    <div class="summary-section">
+        <h3>ملخص الحضور / Attendance Summary</h3>
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="label">إجمالي الطلاب</div>
+                <div class="value">{{ total_students }}</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">حاضر</div>
+                <div class="value" style="color: #28A745;">{{ present_count }}</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">غائب</div>
+                <div class="value" style="color: #DC3545;">{{ absent_count }}</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">نسبة الحضور</div>
+                <div class="value">{{ attendance_percentage }}%</div>
+            </div>
+        </div>
+    </div>
+    
+    {% if class_name %}
+    <h3>الصف: {{ class_name }}</h3>
+    {% endif %}
+    
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>الرقم الدراسي</th>
+                <th>اسم الطالب</th>
+                <th>الحالة</th>
+                <th>ملاحظات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in attendance_data %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ record.student_number }}</td>
+                <td>{{ record.student_name }}</td>
+                <td>
+                    {% if record.status == 'present' %}
+                    <span class="status-present">✅ حاضر</span>
+                    {% elif record.status == 'absent' %}
+                    <span class="status-absent">❌ غائب</span>
+                    {% elif record.status == 'late' %}
+                    <span class="status-late">⏰ متأخر</span>
+                    {% elif record.status == 'excused' %}
+                    <span class="status-excused">📝 معذور</span>
+                    {% endif %}
+                </td>
+                <td>{{ record.remarks or '' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="print-footer">
+        <p>تم إنشاء هذا التقرير بواسطة نظام إدارة المدرسة - {{ generation_time }}</p>
+        <p>This report was generated by the School Management System</p>
+    </div>
+</body>
+</html>

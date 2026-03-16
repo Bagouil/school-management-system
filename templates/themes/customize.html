@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-paint-brush me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}سمة مخصصة{% else %}Custom Theme{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}أنشئ سمتك الخاصة بألوانك المفضلة{% else %}Create your own theme with your favorite colors{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('themes.list_themes') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-7">
+        <div class="modern-card">
+            <div class="card-header-modern" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+                <i class="fas fa-sliders-h me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}تخصيص الألوان{% else %}Customize Colors{% endif %}
+            </div>
+            <div class="card-body">
+                <form id="customThemeForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}اسم السمة (عربي){% else %}Theme Name (Arabic){% endif %}
+                            </label>
+                            <input type="text" name="theme_name_ar" class="form-control modern-input" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}اسم السمة (إنجليزي){% else %}Theme Name (English){% endif %}
+                            </label>
+                            <input type="text" name="theme_name_en" class="form-control modern-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="color-picker-section mb-4">
+                        <h6 class="mb-3">{% if lang.get_direction() == 'rtl' %}الألوان الأساسية{% else %}Primary Colors{% endif %}</h6>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Primary Color</label>
+                                <input type="color" name="primary_color" class="form-control form-control-color" value="#875A7B" onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Secondary Color</label>
+                                <input type="color" name="secondary_color" class="form-control form-control-color" value="#6a4b5f" onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Accent Color</label>
+                                <input type="color" name="accent_color" class="form-control form-control-color" value="#9B6B8C" onchange="updatePreview()">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="color-picker-section mb-4">
+                        <h6 class="mb-3">{% if lang.get_direction() == 'rtl' %}ألوان الحالة{% else %}Status Colors{% endif %}</h6>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Success</label>
+                                <input type="color" name="success_color" class="form-control form-control-color" value="#28A745" onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Danger</label>
+                                <input type="color" name="danger_color" class="form-control form-control-color" value="#DC3545" onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Warning</label>
+                                <input type="color" name="warning_color" class="form-control form-control-color" value="#FFC107" onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Info</label>
+                                <input type="color" name="info_color" class="form-control form-control-color" value="#17A2B8" onchange="updatePreview()">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="color-picker-section mb-4">
+                        <h6 class="mb-3">{% if lang.get_direction() == 'rtl' %}ألوان إضافية{% else %}Additional Colors{% endif %}</h6>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Sidebar Background</label>
+                                <input type="color" name="sidebar_bg" class="form-control form-control-color" value="#875A7B" onchange="updatePreview()">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Header Background</label>
+                                <input type="color" name="header_bg" class="form-control form-control-color" value="#875A7B" onchange="updatePreview()">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+    <div class="modern-card sticky-top" style="top: 20px;">
+        <div class="card-header-modern" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
+            <i class="fas fa-eye me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}معاينة حية{% else %}Live Preview{% endif %}
+        </div>
+        <div class="card-body" id="livePreview">
+            <!-- Live preview will be updated via JavaScript -->
+            <div class="theme-preview-content">
+                {% include 'themes/preview_template.html' %}
+            </div>
+        </div>
+        <div class="card-footer">
+            <button class="btn btn-success w-100" onclick="saveCustomTheme()">
+                <i class="fas fa-save me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}حفظ السمة{% else %}Save Theme{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+</div>
+
+<style>
+.form-control-color {
+    width: 100%;
+    height: 45px;
+    padding: 5px;
+}
+
+.color-picker-section {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.sticky-top {
+    z-index: 100;
+}
+</style>
+
+<script>
+function updatePreview() {
+    const form = document.getElementById('customThemeForm');
+    
+    // Get color values
+    const primary = form.primary_color.value;
+    const secondary = form.secondary_color.value;
+    const accent = form.accent_color.value;
+    const success = form.success_color.value;
+    const danger = form.danger_color.value;
+    const warning = form.warning_color.value;
+    const info = form.info_color.value;
+    
+    // Update CSS variables in the preview
+    const preview = document.querySelector('.theme-preview-content');
+    if (preview) {
+        preview.style.setProperty('--preview-primary', primary);
+        preview.style.setProperty('--preview-secondary', secondary);
+        preview.style.setProperty('--preview-accent', accent);
+        preview.style.setProperty('--preview-success', success);
+        preview.style.setProperty('--preview-danger', danger);
+        preview.style.setProperty('--preview-warning', warning);
+        preview.style.setProperty('--preview-info', info);
+    }
+}
+
+// Add event listeners to all color inputs
+document.getElementById('customThemeForm').querySelectorAll('input[type="color"]').forEach(input => {
+    input.addEventListener('input', updatePreview);
+});
+
+// Initialize preview on page load
+document.addEventListener('DOMContentLoaded', updatePreview);
+
+function saveCustomTheme() {
+    const form = document.getElementById('customThemeForm');
+    const formData = new FormData(form);
+    
+    fetch('/themes/save-custom', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Theme saved successfully!');
+            window.location.href = '/themes';
+        } else {
+            alert('Error: ' + data.error);
+        }
+    });
+}
+</script>
+{% endblock %}

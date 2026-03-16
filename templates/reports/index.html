@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-chart-bar me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}التقارير{% else %}Reports{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}عرض وتصدير تقارير النظام{% else %}View and export system reports{% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="report-card" onclick="location.href='{{ url_for('reports.student_reports') }}'">
+            <div class="report-icon student">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <div class="report-info">
+                <h5>{% if lang.get_direction() == 'rtl' %}تقارير الطلاب{% else %}Student Reports{% endif %}</h5>
+                <p class="text-muted">
+                    {% if lang.get_direction() == 'rtl' %}تقارير الطلاب المسجلين وإحصائياتهم{% else %}Registered students reports and statistics{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="report-card" onclick="location.href='{{ url_for('reports.attendance_reports') }}'">
+            <div class="report-icon attendance">
+                <i class="fas fa-calendar-check"></i>
+            </div>
+            <div class="report-info">
+                <h5>{% if lang.get_direction() == 'rtl' %}تقارير الحضور{% else %}Attendance Reports{% endif %}</h5>
+                <p class="text-muted">
+                    {% if lang.get_direction() == 'rtl' %}تقارير حضور وغياب الطلاب{% else %}Student attendance and absence reports{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="report-card" onclick="location.href='{{ url_for('finance.reports') }}'">
+            <div class="report-icon financial">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="report-info">
+                <h5>{% if lang.get_direction() == 'rtl' %}التقارير المالية{% else %}Financial Reports{% endif %}</h5>
+                <p class="text-muted">
+                    {% if lang.get_direction() == 'rtl' %}تقارير الرسوم والمدفوعات والمصروفات{% else %}Fees, payments and expenses reports{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.report-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    height: 100%;
+}
+
+.report-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 2px solid var(--primary-color);
+}
+
+.report-icon {
+    width: 70px;
+    height: 70px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+}
+
+.report-icon.student { background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%); }
+.report-icon.attendance { background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%); }
+.report-icon.financial { background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%); }
+
+.report-info {
+    flex: 1;
+}
+
+.report-info h5 {
+    margin: 0 0 5px;
+    font-weight: 600;
+}
+
+.report-info p {
+    margin: 0;
+    font-size: 0.85rem;
+}
+</style>
+{% endblock %}

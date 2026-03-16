@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <h2>
+        <i class="fas fa-envelope-open-text me-2"></i>
+        {% if lang.get_direction() == 'rtl' %}طلبات الصلاحيات{% else %}Access Requests{% endif %}
+    </h2>
+</div>
+
+<div class="modern-card">
+    <div class="table-responsive">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>{% if lang.get_direction() == 'rtl' %}المستخدم{% else %}User{% endif %}</th>
+                    <th>{% if lang.get_direction() == 'rtl' %}الدور الحالي{% else %}Current Role{% endif %}</th>
+                    <th>{% if lang.get_direction() == 'rtl' %}الصفحة المطلوبة{% else %}Requested Page{% endif %}</th>
+                    <th>{% if lang.get_direction() == 'rtl' %}الرسالة{% else %}Message{% endif %}</th>
+                    <th>{% if lang.get_direction() == 'rtl' %}التاريخ{% else %}Date{% endif %}</th>
+                    <th>{% if lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}</th>
+                    <th>{% if lang.get_direction() == 'rtl' %}الإجراءات{% else %}Actions{% endif %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ req.username }}</td>
+                    <td>{{ req.current_role }}</td>
+                    <td>{{ req.requested_page }}</td>
+                    <td>{{ req.message }}</td>
+                    <td>{{ req.created_at }}</td>
+                    <td>
+                        <span class="badge bg-warning">{{ req.status }}</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="approveRequest({{ req.request_id }})">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="rejectRequest({{ req.request_id }})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

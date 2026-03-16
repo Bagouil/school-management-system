@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-calendar-check me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}تقرير الحضور{% else %}Attendance Report{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}تحليل حضور الطلاب{% else %}Student attendance analysis{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('reports.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="modern-card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">{% if lang.get_direction() == 'rtl' %}الصف{% else %}Class{% endif %}</label>
+                <select name="class_id" class="form-select modern-select" required>
+                    <option value="">{% if lang.get_direction() == 'rtl' %}اختر الصف{% else %}Select Class{% endif %}</option>
+                    {% for class in classes %}
+                    <option value="{{ class.class_id }}" {% if selected_class|int == class.class_id %}selected{% endif %}>
+                        {{ class.class_name_ar }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% if lang.get_direction() == 'rtl' %}من تاريخ{% else %}From Date{% endif %}</label>
+                <input type="date" name="start_date" class="form-control modern-input" value="{{ start_date }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">{% if lang.get_direction() == 'rtl' %}إلى تاريخ{% else %}To Date{% endif %}</label>
+                <input type="date" name="end_date" class="form-control modern-input" value="{{ end_date }}">
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}عرض{% else %}View{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if attendance_data %}
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="summary-card">
+            <div class="summary-icon" style="background: #28A745;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}إجمالي الحضور{% else %}Total Present{% endif %}</span>
+                <h3>{{ attendance_data|sum(attribute='present_days') }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="summary-card">
+            <div class="summary-icon" style="background: #DC3545;">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}إجمالي الغياب{% else %}Total Absent{% endif %}</span>
+                <h3>{{ attendance_data|sum(attribute='absent_days') }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="summary-card">
+            <div class="summary-icon" style="background: #FFC107;">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}متأخر{% else %}Late{% endif %}</span>
+                <h3>{{ attendance_data|sum(attribute='late_days') }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="summary-card">
+            <div class="summary-icon" style="background: #17A2B8;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}معذور{% else %}Excused{% endif %}</span>
+                <h3>{{ attendance_data|sum(attribute='excused_days') }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Table -->
+<div class="modern-card">
+    <div class="card-header-modern">
+        <i class="fas fa-table me-2"></i>
+        {% if lang.get_direction() == 'rtl' %}تفاصيل الحضور{% else %}Attendance Details{% endif %}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الرقم الدراسي{% else %}Student ID{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}اسم الطالب{% else %}Student Name{% endif %}</th>
+                        <th class="text-center">{% if lang.get_direction() == 'rtl' %}حضور{% else %}Present{% endif %}</th>
+                        <th class="text-center">{% if lang.get_direction() == 'rtl' %}غياب{% else %}Absent{% endif %}</th>
+                        <th class="text-center">{% if lang.get_direction() == 'rtl' %}متأخر{% else %}Late{% endif %}</th>
+                        <th class="text-center">{% if lang.get_direction() == 'rtl' %}معذور{% else %}Excused{% endif %}</th>
+                        <th class="text-center">{% if lang.get_direction() == 'rtl' %}إجمالي{% else %}Total{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}نسبة الحضور{% else %}Attendance %{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in attendance_data %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ record.student_number }}</td>
+                        <td>{{ record.student_name }}</td>
+                        <td class="text-center text-success">{{ record.present_days }}</td>
+                        <td class="text-center text-danger">{{ record.absent_days }}</td>
+                        <td class="text-center text-warning">{{ record.late_days }}</td>
+                        <td class="text-center text-info">{{ record.excused_days }}</td>
+                        <td class="text-center fw-bold">{{ record.total_days }}</td>
+                        <td>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar {% if record.attendance_percentage >= 75 %}bg-success{% elif record.attendance_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                     style="width: {{ record.attendance_percentage }}%"></div>
+                            </div>
+                            <small>{{ record.attendance_percentage }}%</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% elif selected_class %}
+<div class="alert alert-info text-center py-4">
+    <i class="fas fa-info-circle fa-3x mb-3"></i>
+    <h5>{% if lang.get_direction() == 'rtl' %}لا توجد بيانات حضور في هذه الفترة{% else %}No attendance data in this period{% endif %}</h5>
+</div>
+{% endif %}
+
+<style>
+.summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    height: 100%;
+}
+
+.summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.summary-details {
+    flex: 1;
+}
+
+.summary-label {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+}
+
+.summary-details h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+</style>
+{% endblock %}

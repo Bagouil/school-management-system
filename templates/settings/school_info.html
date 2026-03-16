@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-school me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}معلومات المدرسة{% else %}School Information{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}تحديث معلومات المدرسة الأساسية{% else %}Update basic school information{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('settings.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-edit me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}تعديل معلومات المدرسة{% else %}Edit School Information{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('settings.save_school_info') }}">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-signature me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}اسم المدرسة (عربي){% else %}School Name (Arabic){% endif %}
+                        </label>
+                        <input type="text" name="school_name_ar" class="form-control modern-input" value="{{ settings.school_name_ar }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-signature me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}اسم المدرسة (إنجليزي){% else %}School Name (English){% endif %}
+                        </label>
+                        <input type="text" name="school_name_en" class="form-control modern-input" value="{{ settings.school_name_en }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}العنوان{% else %}Address{% endif %}
+                        </label>
+                        <input type="text" name="school_address" class="form-control modern-input" value="{{ settings.school_address }}">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-phone me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}رقم الهاتف{% else %}Phone Number{% endif %}
+                            </label>
+                            <input type="text" name="school_phone" class="form-control modern-input" value="{{ settings.school_phone }}">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-envelope me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}البريد الإلكتروني{% else %}Email{% endif %}
+                            </label>
+                            <input type="email" name="school_email" class="form-control modern-input" value="{{ settings.school_email }}">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-globe me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}الموقع الإلكتروني{% else %}Website{% endif %}
+                        </label>
+                        <input type="url" name="school_website" class="form-control modern-input" value="{{ settings.school_website }}">
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-modern-primary px-5">
+                            <i class="fas fa-save me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}حفظ التغييرات{% else %}Save Changes{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+</style>
+{% endblock %}

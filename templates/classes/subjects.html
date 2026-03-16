@@ -1,0 +1,506 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-book-open me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    مواد الصف: {{ class_obj.class_name_ar }}
+                {% else %}
+                    Class Subjects: {{ class_obj.class_name_en }}
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                <i class="fas fa-layer-group me-1"></i> {{ class_obj.grade_name_ar }} | 
+                <i class="fas fa-users me-1 ms-2"></i> {{ student_count }} {% if lang.get_direction() == 'rtl' %}طالب{% else %}students{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('classes.view_class', class_id=class_obj.class_id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Class Info Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="info-card">
+            <div class="info-icon" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
+                <i class="fas fa-school"></i>
+            </div>
+            <div class="info-details">
+                <span class="info-label">{% if lang.get_direction() == 'rtl' %}اسم الصف{% else %}Class Name{% endif %}</span>
+                <h4>{{ class_obj.class_name_ar }}</h4>
+                <small>{{ class_obj.class_name_en }}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="info-card">
+            <div class="info-icon" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%);">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div class="info-details">
+                <span class="info-label">{% if lang.get_direction() == 'rtl' %}مشرف الصف{% else %}Class Teacher{% endif %}</span>
+                <h4>{{ class_obj.class_teacher_name or (lang.get_direction() == 'rtl' and 'غير معين' or 'Not Assigned') }}</h4>
+                {% if class_obj.class_teacher_name %}
+                <small>مدرس الفصل</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="info-card">
+            <div class="info-icon" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="info-details">
+                <span class="info-label">{% if lang.get_direction() == 'rtl' %}المواد{% else %}Subjects{% endif %}</span>
+                <h4>{{ subjects|length }}</h4>
+                <small>{% if lang.get_direction() == 'rtl' %}مادة دراسية{% else %}subjects{% endif %}</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Subject Card -->
+<div class="modern-card mb-4">
+    <div class="card-header-modern" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%); color: white;">
+        <i class="fas fa-plus-circle me-2"></i>
+        {% if lang.get_direction() == 'rtl' %}إضافة مادة جديدة{% else %}Add New Subject{% endif %}
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('classes.add_subject', class_id=class_obj.class_id) }}" class="row g-3 align-items-end" id="addSubjectForm">
+            <div class="col-md-5">
+                <label class="form-label">
+                    <i class="fas fa-tag me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}اختر المادة{% else %}Select Subject{% endif %}
+                </label>
+                <select name="subject_id" class="form-select modern-select" required id="subjectSelect">
+                    <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر المادة{% else %}Select Subject{% endif %} --</option>
+                    {% for subject in available_subjects %}
+                    <option value="{{ subject.subject_id }}" data-code="{{ subject.subject_code }}">
+                        {% if lang.get_direction() == 'rtl' %}{{ subject.subject_name_ar }}{% else %}{{ subject.subject_name_en }}{% endif %} ({{ subject.subject_code }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-4">
+                <label class="form-label">
+                    <i class="fas fa-chalkboard-teacher me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تعيين معلم{% else %}Assign Teacher{% endif %}
+                </label>
+                <select name="teacher_id" class="form-select modern-select" id="teacherSelect">
+                    <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر المعلم (اختياري){% else %}Select Teacher (Optional){% endif %} --</option>
+                    {% for teacher in teachers %}
+                    <option value="{{ teacher.teacher_id }}" data-specialization="{{ teacher.specialization }}">
+                        {{ teacher.first_name_ar }} {{ teacher.last_name_ar }}
+                        {% if teacher.specialization %} - {{ teacher.specialization }}{% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">
+                    <i class="fas fa-clock me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}ساعات/أسبوع{% else %}Hours/Week{% endif %}
+                </label>
+                <input type="number" name="hours_per_week" class="form-control modern-input" value="4" min="1" max="10">
+            </div>
+            
+            <div class="col-md-1">
+                <button type="submit" class="btn w-100" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%); color: white; height: 45px;">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </form>
+        
+        <!-- Subject Preview -->
+        <div class="preview-card mt-3" id="subjectPreview" style="display: none;">
+            <div class="preview-header" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%); color: white;">
+                <i class="fas fa-eye me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}معاينة المادة{% else %}Subject Preview{% endif %}
+            </div>
+            <div class="preview-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>{% if lang.get_direction() == 'rtl' %}المادة:{% else %}Subject:{% endif %}</strong> <span id="previewSubject"></span></p>
+                        <p><strong>{% if lang.get_direction() == 'rtl' %}الكود:{% else %}Code:{% endif %}</strong> <span id="previewCode"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>{% if lang.get_direction() == 'rtl' %}المعلم:{% else %}Teacher:{% endif %}</strong> <span id="previewTeacher"></span></p>
+                        <p><strong>{% if lang.get_direction() == 'rtl' %}الساعات:{% else %}Hours:{% endif %}</strong> <span id="previewHours"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Subjects List -->
+<div class="modern-card">
+    <div class="card-header-modern d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%); color: white;">
+        <span>
+            <i class="fas fa-list me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}المواد الدراسية{% else %}Class Subjects{% endif %}
+        </span>
+        <span class="badge bg-white text-dark">{{ subjects|length }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">#</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}المادة{% else %}Subject{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الكود{% else %}Code{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}المعلم{% else %}Teacher{% endif %}</th>
+                        <th style="width: 100px;">{% if lang.get_direction() == 'rtl' %}ساعات/أسبوع{% else %}Hours/Week{% endif %}</th>
+                        <th style="width: 120px;">{% if lang.get_direction() == 'rtl' %}الإجراءات{% else %}Actions{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subject in subjects %}
+                    <tr>
+                        <td><span class="badge bg-light text-dark">{{ loop.index }}</span></td>
+                        <td>
+                            <strong>{% if lang.get_direction() == 'rtl' %}{{ subject.subject_name_ar }}{% else %}{{ subject.subject_name_en }}{% endif %}</strong>
+                        </td>
+                        <td><span class="badge bg-secondary">{{ subject.subject_code }}</span></td>
+                        <td>
+                            {% if subject.teacher_name %}
+                                <div class="d-flex align-items-center">
+                                    <div class="teacher-mini-avatar me-2">
+                                        <div class="avatar-placeholder-small" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
+                                            {{ subject.teacher_name[:1] }}
+                                        </div>
+                                    </div>
+                                    <span>{{ subject.teacher_name }}</span>
+                                </div>
+                            {% else %}
+                                <span class="text-warning">
+                                    <i class="fas fa-exclamation-triangle me-1"></i>
+                                    {% if lang.get_direction() == 'rtl' %}غير معين{% else %}Not Assigned{% endif %}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info text-white">{{ subject.hours_per_week }}</span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm" style="background: linear-gradient(135deg, #FFC107 0%, #e0a800 100%); color: white; border: none;" 
+                                        onclick="assignTeacher({{ subject.class_subject_id }}, {{ subject.teacher_id or 'null' }}, {{ subject.hours_per_week }})"
+                                        title="{% if lang.get_direction() == 'rtl' %}تعيين معلم{% else %}Assign Teacher{% endif %}">
+                                    <i class="fas fa-user-plus"></i>
+                                </button>
+								<a href="{{ url_for('exams.list_exams') }}?subject_id={{ subject.subject_id }}&class_id={{ class_obj.class_id }}" 
+								   class="btn btn-sm" 
+								   style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%); color: white; border: none;"
+								   title="{% if lang.get_direction() == 'rtl' %}عرض الامتحانات{% else %}View Exams{% endif %}">
+									<i class="fas fa-file-alt"></i>
+								</a>
+                                <button class="btn btn-sm" style="background: linear-gradient(135deg, #DC3545 0%, #bd2130 100%); color: white; border: none;" 
+                                        onclick="removeSubject({{ subject.class_subject_id }})"
+                                        title="{% if lang.get_direction() == 'rtl' %}حذف{% else %}Remove{% endif %}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="fas fa-book-open fa-4x mb-3" style="color: #ccc;"></i>
+                            <h5 style="color: #666;">{% if lang.get_direction() == 'rtl' %}لا توجد مواد مضافة{% else %}No subjects added{% endif %}</h5>
+                            <p class="text-muted">{% if lang.get_direction() == 'rtl' %}استخدم النموذج أعلاه لإضافة مواد للصف{% else %}Use the form above to add subjects to this class{% endif %}</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Teacher Modal -->
+<div class="modal fade" id="assignTeacherModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FFC107 0%, #e0a800 100%); color: white; border-bottom: none;">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-white p-2 me-3" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-user-plus" style="color: #FFC107;"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0">
+                            {% if lang.get_direction() == 'rtl' %}تعيين معلم للمادة{% else %}Assign Teacher to Subject{% endif %}
+                        </h5>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <form method="POST" action="{{ url_for('classes.assign_teacher_to_subject') }}" id="assignTeacherForm">
+                <div class="modal-body p-4">
+                    <input type="hidden" name="class_subject_id" id="modal_class_subject_id">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-chalkboard-teacher me-2" style="color: #FFC107;"></i>
+                            {% if lang.get_direction() == 'rtl' %}اختر المعلم{% else %}Select Teacher{% endif %}
+                        </label>
+                        <select name="teacher_id" class="form-select modern-select" id="modal_teacher_id" required>
+                            <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر المعلم{% else %}Select Teacher{% endif %} --</option>
+                            {% for teacher in teachers %}
+                            <option value="{{ teacher.teacher_id }}" data-specialization="{{ teacher.specialization }}">
+                                {{ teacher.first_name_ar }} {{ teacher.last_name_ar }}
+                                {% if teacher.specialization %} - {{ teacher.specialization }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            <i class="fas fa-clock me-2" style="color: #FFC107;"></i>
+                            {% if lang.get_direction() == 'rtl' %}عدد الساعات الأسبوعية{% else %}Hours per Week{% endif %}
+                        </label>
+                        <input type="number" name="hours_per_week" class="form-control modern-input" id="modal_hours" value="4" min="1" max="10" required>
+                    </div>
+                    
+                    <div class="teacher-info-card p-3 mt-3" style="background: #f8f9fa; border-radius: 10px; border-right: 4px solid #FFC107;">
+                        <i class="fas fa-info-circle me-2" style="color: #FFC107;"></i>
+                        {% if lang.get_direction() == 'rtl' %}
+                            <small>تأكد من أن المعلم متخصص في هذه المادة للحصول على أفضل أداء تعليمي.</small>
+                        {% else %}
+                            <small>Make sure the teacher is specialized in this subject for best educational performance.</small>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                    </button>
+                    <button type="submit" class="btn" style="background: linear-gradient(135deg, #FFC107 0%, #e0a800 100%); color: white; border: none;">
+                        <i class="fas fa-save me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}حفظ{% else %}Save{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.info-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.info-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.info-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.info-details {
+    flex: 1;
+}
+
+.info-label {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+}
+
+.info-details h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.info-details small {
+    color: #999;
+    font-size: 0.75rem;
+}
+
+.modern-select, .modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-select:focus, .modern-input:focus {
+    border-color: #875A7B;
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.preview-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid #28A745;
+}
+
+.preview-header {
+    padding: 10px 15px;
+    font-weight: 600;
+}
+
+.preview-body {
+    padding: 15px;
+}
+
+.preview-body p {
+    margin: 5px 0;
+}
+
+.teacher-mini-avatar {
+    width: 30px;
+    height: 30px;
+}
+
+.avatar-placeholder-small {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn-group .btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px !important;
+    margin: 0 2px;
+}
+
+.btn-group .btn i {
+    font-size: 1rem;
+}
+
+.teacher-info-card {
+    font-size: 0.9rem;
+}
+
+.modern-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+.modern-table td {
+    vertical-align: middle;
+}
+</style>
+
+<script>
+// Subject preview
+document.getElementById('subjectSelect')?.addEventListener('change', updatePreview);
+document.getElementById('teacherSelect')?.addEventListener('change', updatePreview);
+document.querySelector('input[name="hours_per_week"]')?.addEventListener('input', updatePreview);
+
+function updatePreview() {
+    const subjectSelect = document.getElementById('subjectSelect');
+    const teacherSelect = document.getElementById('teacherSelect');
+    const hours = document.querySelector('input[name="hours_per_week"]').value;
+    
+    if (subjectSelect.value) {
+        const subjectText = subjectSelect.options[subjectSelect.selectedIndex].text;
+        const subjectCode = subjectSelect.options[subjectSelect.selectedIndex].dataset.code;
+        
+        let teacherText = '{% if lang.get_direction() == "rtl" %}غير معين{% else %}Not assigned{% endif %}';
+        if (teacherSelect.value) {
+            teacherText = teacherSelect.options[teacherSelect.selectedIndex].text;
+        }
+        
+        document.getElementById('previewSubject').textContent = subjectText.split('(')[0].trim();
+        document.getElementById('previewCode').textContent = subjectCode;
+        document.getElementById('previewTeacher').textContent = teacherText;
+        document.getElementById('previewHours').textContent = hours;
+        
+        document.getElementById('subjectPreview').style.display = 'block';
+    } else {
+        document.getElementById('subjectPreview').style.display = 'none';
+    }
+}
+
+// Assign teacher function
+function assignTeacher(classSubjectId, currentTeacherId, currentHours) {
+    document.getElementById('modal_class_subject_id').value = classSubjectId;
+    
+    // Set current values if available
+    if (currentTeacherId) {
+        document.getElementById('modal_teacher_id').value = currentTeacherId;
+    }
+    document.getElementById('modal_hours').value = currentHours || 4;
+    
+    new bootstrap.Modal(document.getElementById('assignTeacherModal')).show();
+}
+
+// Remove subject function
+function removeSubject(classSubjectId) {
+    if (confirm('{% if lang.get_direction() == "rtl" %}هل أنت متأكد من حذف هذه المادة من الصف؟{% else %}Are you sure you want to remove this subject from the class?{% endif %}')) {
+        fetch('{{ url_for('classes.remove_subject') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({class_subject_id: classSubjectId})
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('{% if lang.get_direction() == "rtl" %}حدث خطأ أثناء الحذف{% else %}Error removing subject{% endif %}');
+            }
+        }).catch(error => {
+            alert('Error: ' + error);
+        });
+    }
+}
+
+// Initialize preview
+updatePreview();
+</script>
+{% endblock %}

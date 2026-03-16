@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-edit me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    تعديل الصف: {{ class_obj.class_name_ar }}
+                {% else %}
+                    Edit Class: {{ class_obj.class_name_en }}
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}
+                    تعديل معلومات الصف الدراسي
+                {% else %}
+                    Edit class information
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('classes.view_class', class_id=class_obj.class_id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-school me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}نموذج تعديل الصف{% else %}Edit Class Form{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('classes.edit_class', class_id=class_obj.class_id) }}">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-layer-group me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}المرحلة الدراسية *{% else %}Grade Level *{% endif %}
+                            </label>
+                            <select name="grade_id" class="form-select modern-select" required>
+                                <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر{% else %}Select{% endif %} --</option>
+                                {% for grade in grade_levels %}
+                                <option value="{{ grade.grade_id }}" {% if grade.grade_id == class_obj.grade_id %}selected{% endif %}>
+                                    {% if lang.get_direction() == 'rtl' %}{{ grade.grade_name_ar }}{% else %}{{ grade.grade_name_en }}{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tag me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}اسم الفصل (عربي) *{% else %}Class Name (Arabic) *{% endif %}
+                            </label>
+                            <input type="text" name="class_name_ar" class="form-control modern-input" value="{{ class_obj.class_name_ar }}" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tag me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}اسم الفصل (إنجليزي){% else %}Class Name (English){% endif %}
+                            </label>
+                            <input type="text" name="class_name_en" class="form-control modern-input" value="{{ class_obj.class_name_en }}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-users me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}السعة{% else %}Capacity{% endif %}
+                            </label>
+                            <input type="number" name="capacity" class="form-control modern-input" value="{{ class_obj.capacity }}" min="1" max="50">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}مدرس الفصل{% else %}Class Teacher{% endif %}
+                        </label>
+                        <select name="class_teacher_id" class="form-select modern-select">
+                            <option value="">-- {% if lang.get_direction() == 'rtl' %}بدون مدرس فصل{% else %}No Class Teacher{% endif %} --</option>
+                            {% for teacher in teachers %}
+                            <option value="{{ teacher.teacher_id }}" {% if teacher.teacher_id == class_obj.class_teacher_id %}selected{% endif %}>
+                                {{ teacher.first_name_ar }} {{ teacher.last_name_ar }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">
+                            {% if lang.get_direction() == 'rtl' %}
+                                يمكنك تغيير مدرس الفصل أو تركه بدون تعيين
+                            {% else %}
+                                You can change the class teacher or leave it unassigned
+                            {% endif %}
+                        </small>
+                    </div>
+                    
+                    <div class="alert alert-info modern-alert mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}
+                            <strong>ملاحظة:</strong> تغيير المرحلة الدراسية سيؤثر على ترتيب الصف في القوائم.
+                        {% else %}
+                            <strong>Note:</strong> Changing the grade level will affect the class ordering in lists.
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-modern-primary px-5">
+                            <i class="fas fa-save me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}حفظ التغييرات{% else %}Save Changes{% endif %}
+                        </button>
+                        <a href="{{ url_for('classes.view_class', class_id=class_obj.class_id) }}" class="btn btn-outline-secondary px-5">
+                            {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modern-input, .modern-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus, .modern-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.modern-alert {
+    border-radius: 10px;
+    border: none;
+    background: #f8f9fa;
+    border-left: 4px solid var(--primary-color);
+}
+
+[dir="rtl"] .modern-alert {
+    border-left: none;
+    border-right: 4px solid var(--primary-color);
+}
+</style>
+{% endblock %}

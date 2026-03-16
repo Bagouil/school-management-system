@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-chart-bar me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    تقرير الصف: {{ class_obj.class_name_ar }}
+                {% else %}
+                    Class Report: {{ class_obj.class_name_en }}
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                <i class="fas fa-calendar-alt me-1"></i> {{ report_date }}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('classes.view_class', class_id=class_obj.class_id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+            <div class="btn-group">
+                <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-download me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تصدير{% else %}Export{% endif %}
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url_for('reports.export_class_report', class_id=class_obj.class_id, format='csv') }}">
+                        <i class="fas fa-file-csv me-2 text-success"></i> CSV
+                    </a></li>
+                    <li><a class="dropdown-item" href="{{ url_for('reports.export_class_report', class_id=class_obj.class_id, format='pdf') }}">
+                        <i class="fas fa-file-pdf me-2 text-danger"></i> PDF
+                    </a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي الطلاب{% else %}Total Students{% endif %}</span>
+                <h3 class="stat-value">{{ students|length }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}المواد{% else %}Subjects{% endif %}</span>
+                <h3 class="stat-value">{{ subjects|length }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%);">
+                <i class="fas fa-percent"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}متوسط الحضور{% else %}Avg Attendance{% endif %}</span>
+                <h3 class="stat-value">
+                    {% if attendance_stats %}
+                        {{ (attendance_stats|sum(attribute='present_days') / attendance_stats|sum(attribute='total_days') * 100)|round(1) if attendance_stats|sum(attribute='total_days') > 0 else 0 }}%
+                    {% else %}
+                        0%
+                    {% endif %}
+                </h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #FFC107 0%, #e0a800 100%);">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}الرسوم المستحقة{% else %}Pending Fees{% endif %}</span>
+                <h3 class="stat-value">{{ "%.0f"|format(fee_summary.balance) }} SDG</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Chart -->
+<div class="modern-card mb-4">
+    <div class="card-header-modern">
+        <i class="fas fa-chart-line me-2"></i>
+        {% if lang.get_direction() == 'rtl' %}إحصائيات الحضور (آخر 30 يوم){% else %}Attendance Statistics (Last 30 Days){% endif %}
+    </div>
+    <div class="card-body">
+        <canvas id="attendanceChart" height="100"></canvas>
+    </div>
+</div>
+
+<!-- Subjects List -->
+<div class="modern-card mb-4">
+    <div class="card-header-modern">
+        <i class="fas fa-book-open me-2"></i>
+        {% if lang.get_direction() == 'rtl' %}المواد الدراسية{% else %}Subjects{% endif %}
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}المادة{% else %}Subject{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الكود{% else %}Code{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}المعلم{% else %}Teacher{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}ساعات/أسبوع{% else %}Hours/Week{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for subject in subjects %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ subject.subject_name_ar }}</td>
+                        <td>{{ subject.subject_code }}</td>
+                        <td>{{ subject.teacher_name or 'غير معين' }}</td>
+                        <td>{{ subject.hours_per_week }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Students Attendance Table -->
+<div class="modern-card">
+    <div class="card-header-modern">
+        <i class="fas fa-users me-2"></i>
+        {% if lang.get_direction() == 'rtl' %}تفاصيل حضور الطلاب{% else %}Student Attendance Details{% endif %}
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الرقم الدراسي{% else %}Student ID{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}اسم الطالب{% else %}Student Name{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}أيام الحضور{% else %}Present{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}أيام الغياب{% else %}Absent{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}متأخر{% else %}Late{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}معذور{% else %}Excused{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}نسبة الحضور{% else %}Percentage{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in attendance_stats %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ stat.student_number }}</td>
+                        <td>{{ stat.first_name_ar }} {{ stat.last_name_ar }}</td>
+                        <td class="text-success">{{ stat.present_days }}</td>
+                        <td class="text-danger">{{ stat.absent_days }}</td>
+                        <td class="text-warning">{{ stat.late_days }}</td>
+                        <td class="text-info">{{ stat.excused_days }}</td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar {% if stat.attendance_percentage >= 75 %}bg-success{% elif stat.attendance_percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                     style="width: {{ stat.attendance_percentage }}%">
+                                    {{ stat.attendance_percentage }}%
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.stat-details {
+    flex: 1;
+}
+
+.stat-label {
+    display: block;
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Attendance Chart
+const ctx = document.getElementById('attendanceChart').getContext('2d');
+const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [{% for stat in attendance_stats %}'{{ stat.first_name_ar }}',{% endfor %}],
+        datasets: [
+            {
+                label: '{% if lang.get_direction() == "rtl" %}حضور{% else %}Present{% endif %}',
+                data: [{% for stat in attendance_stats %}{{ stat.present_days }},{% endfor %}],
+                backgroundColor: '#28A745',
+                borderRadius: 5
+            },
+            {
+                label: '{% if lang.get_direction() == "rtl" %}غياب{% else %}Absent{% endif %}',
+                data: [{% for stat in attendance_stats %}{{ stat.absent_days }},{% endfor %}],
+                backgroundColor: '#DC3545',
+                borderRadius: 5
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: { stacked: true },
+            y: { 
+                stacked: true,
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            legend: { position: 'bottom' }
+        }
+    }
+});
+</script>
+{% endblock %}

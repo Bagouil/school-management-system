@@ -1,0 +1,804 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-tags me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}فئات الرسوم{% else %}Fee Categories{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}إدارة أنواع الرسوم الدراسية وتحديد قيمتها{% else %}Manage fee types and set their amounts{% endif %}
+            </p>
+        </div>
+        <div>
+            <button class="btn btn-modern-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                <i class="fas fa-plus-circle me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}إضافة فئة جديدة{% else %}Add New Category{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="category-stat-card">
+            <div class="stat-icon total">
+                <i class="fas fa-tags"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي الفئات{% else %}Total Categories{% endif %}</span>
+                <h3 class="stat-value">{{ total_categories }}</h3>
+                <small class="stat-trend">
+                    <i class="fas fa-check-circle text-success"></i> 
+                    {{ active_categories }} {% if lang.get_direction() == 'rtl' %}نشط{% else %}active{% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="category-stat-card">
+            <div class="stat-icon mandatory">
+                <i class="fas fa-star"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}رسوم إلزامية{% else %}Mandatory Fees{% endif %}</span>
+                <h3 class="stat-value">{{ mandatory_count }}</h3>
+                <small class="stat-trend">
+                    <i class="fas fa-exclamation-circle text-warning"></i> 
+                    {% if lang.get_direction() == 'rtl' %}مطلوبة لجميع الطلاب{% else %}Required for all{% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="category-stat-card">
+            <div class="stat-icon annual">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}رسوم سنوية{% else %}Annual Fees{% endif %}</span>
+                <h3 class="stat-value">{{ annual_count }}</h3>
+                <small class="stat-trend">
+                    <i class="fas fa-sync-alt text-info"></i> 
+                    {% if lang.get_direction() == 'rtl' %}تستحق مرة سنوياً{% else %}Once per year{% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Categories Grid -->
+<div class="row">
+    {% for category in categories %}
+    <div class="col-md-4 mb-4">
+        <div class="category-card {% if not category.is_active %}inactive{% endif %}">
+            <div class="category-card-header">
+                <div class="category-icon">
+                    <i class="fas {% if category.is_annual %}fa-calendar-alt{% else %}fa-tag{% endif %}"></i>
+                </div>
+                <div class="category-title">
+                    <h5>{% if lang.get_direction() == 'rtl' %}{{ category.category_name_ar }}{% else %}{{ category.category_name_en }}{% endif %}</h5>
+                    <small class="text-muted">{{ category.category_code }}</small>
+                </div>
+                <div class="category-actions">
+                    <button class="btn btn-sm btn-outline-primary" onclick="editCategory({{ category.fee_category_id }})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory({{ category.fee_category_id }})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="category-card-body">
+                <div class="category-amount">
+                    <span class="amount-label">{% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</span>
+                    <h3 class="amount-value">{{ "%.2f"|format(category.amount) }} SDG</h3>
+                </div>
+                
+                <div class="category-badges">
+                    {% if category.is_mandatory %}
+                    <span class="badge badge-mandatory">
+                        <i class="fas fa-star me-1"></i>
+                        {% if lang.get_direction() == 'rtl' %}إلزامي{% else %}Mandatory{% endif %}
+                    </span>
+                    {% else %}
+                    <span class="badge badge-optional">
+                        <i class="fas fa-check-circle me-1"></i>
+                        {% if lang.get_direction() == 'rtl' %}اختياري{% else %}Optional{% endif %}
+                    </span>
+                    {% endif %}
+                    
+                    {% if category.is_annual %}
+                    <span class="badge badge-annual">
+                        <i class="fas fa-calendar-alt me-1"></i>
+                        {% if lang.get_direction() == 'rtl' %}سنوي{% else %}Annual{% endif %}
+                    </span>
+                    {% else %}
+                    <span class="badge badge-once">
+                        <i class="fas fa-clock me-1"></i>
+                        {% if lang.get_direction() == 'rtl' %}مرة واحدة{% else %}One-time{% endif %}
+                    </span>
+                    {% endif %}
+                    
+                    {% if not category.is_active %}
+                    <span class="badge badge-inactive">
+                        <i class="fas fa-ban me-1"></i>
+                        {% if lang.get_direction() == 'rtl' %}غير نشط{% else %}Inactive{% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                {% if category.description %}
+                <div class="category-description">
+                    <i class="fas fa-align-left me-2 text-muted"></i>
+                    <span>{{ category.description }}</span>
+                </div>
+                {% endif %}
+                
+                <div class="category-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">{% if lang.get_direction() == 'rtl' %}الطلاب المسجلين{% else %}Enrolled Students{% endif %}</span>
+                        <span class="stat-value">{{ category.student_count }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي التحصيل{% else %}Total Collected{% endif %}</span>
+                        <span class="stat-value">{{ "%.2f"|format(category.collected) }} SDG</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="category-card-footer">
+                <button class="btn btn-sm btn-outline-success" onclick="assignToStudents({{ category.fee_category_id }})">
+                    <i class="fas fa-user-plus me-1"></i>
+                    {% if lang.get_direction() == 'rtl' %}تعيين للطلاب{% else %}Assign to Students{% endif %}
+                </button>
+                <button class="btn btn-sm btn-outline-info" onclick="viewCollections({{ category.fee_category_id }})">
+                    <i class="fas fa-chart-bar me-1"></i>
+                    {% if lang.get_direction() == 'rtl' %}الإحصائيات{% else %}Statistics{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}إضافة فئة رسوم جديدة{% else %}Add New Fee Category{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('finance.add_fee_category') }}" id="addCategoryForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم (عربي) *{% else %}Name (Arabic) *{% endif %}
+                            </label>
+                            <input type="text" name="category_name_ar" class="form-control modern-input" required 
+                                   placeholder="{% if lang.get_direction() == 'rtl' %}رسوم التسجيل{% else %}Registration Fee{% endif %}">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم (إنجليزي) *{% else %}Name (English) *{% endif %}
+                            </label>
+                            <input type="text" name="category_name_en" class="form-control modern-input" required 
+                                   placeholder="Registration Fee">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-align-left me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}الوصف{% else %}Description{% endif %}
+                        </label>
+                        <textarea name="description" class="form-control modern-input" rows="2" 
+                                  placeholder="{% if lang.get_direction() == 'rtl' %}وصف تفصيلي للرسوم{% else %}Detailed fee description{% endif %}"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}المبلغ (SDG) *{% else %}Amount (SDG) *{% endif %}
+                            </label>
+                            <input type="number" name="amount" class="form-control modern-input" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tag me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}رمز الفئة{% else %}Category Code{% endif %}
+                            </label>
+                            <input type="text" name="category_code" class="form-control modern-input" 
+                                   placeholder="{% if lang.get_direction() == 'rtl' %}اختياري{% else %}Optional{% endif %}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_mandatory" id="is_mandatory" checked>
+                                <label class="form-check-label" for="is_mandatory">
+                                    <i class="fas fa-star text-warning me-1"></i>
+                                    {% if lang.get_direction() == 'rtl' %}رسوم إلزامية{% else %}Mandatory Fee{% endif %}
+                                </label>
+                                <small class="d-block text-muted">
+                                    {% if lang.get_direction() == 'rtl' %}تطبق على جميع الطلاب{% else %}Applied to all students{% endif %}
+                                </small>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_annual" id="is_annual">
+                                <label class="form-check-label" for="is_annual">
+                                    <i class="fas fa-calendar-alt text-info me-1"></i>
+                                    {% if lang.get_direction() == 'rtl' %}رسوم سنوية{% else %}Annual Fee{% endif %}
+                                </label>
+                                <small class="d-block text-muted">
+                                    {% if lang.get_direction() == 'rtl' %}تستحق مرة كل سنة دراسية{% else %}Due once per academic year{% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}حفظ الفئة{% else %}Save Category{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Category Modal -->
+<div class="modal fade" id="editCategoryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تعديل فئة الرسوم{% else %}Edit Fee Category{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="" id="editCategoryForm">
+                <div class="modal-body">
+                    <input type="hidden" name="category_id" id="edit_category_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم (عربي) *{% else %}Name (Arabic) *{% endif %}
+                            </label>
+                            <input type="text" name="category_name_ar" id="edit_name_ar" class="form-control modern-input" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم (إنجليزي) *{% else %}Name (English) *{% endif %}
+                            </label>
+                            <input type="text" name="category_name_en" id="edit_name_en" class="form-control modern-input" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-align-left me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}الوصف{% else %}Description{% endif %}
+                        </label>
+                        <textarea name="description" id="edit_description" class="form-control modern-input" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-money-bill-wave me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}المبلغ (SDG) *{% else %}Amount (SDG) *{% endif %}
+                            </label>
+                            <input type="number" name="amount" id="edit_amount" class="form-control modern-input" step="0.01" min="0" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tag me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}رمز الفئة{% else %}Category Code{% endif %}
+                            </label>
+                            <input type="text" name="category_code" id="edit_code" class="form-control modern-input">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_mandatory" id="edit_is_mandatory">
+                                <label class="form-check-label" for="edit_is_mandatory">
+                                    <i class="fas fa-star text-warning me-1"></i>
+                                    {% if lang.get_direction() == 'rtl' %}رسوم إلزامية{% else %}Mandatory Fee{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_annual" id="edit_is_annual">
+                                <label class="form-check-label" for="edit_is_annual">
+                                    <i class="fas fa-calendar-alt text-info me-1"></i>
+                                    {% if lang.get_direction() == 'rtl' %}رسوم سنوية{% else %}Annual Fee{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_active" id="edit_is_active" checked>
+                                <label class="form-check-label" for="edit_is_active">
+                                    <i class="fas fa-check-circle text-success me-1"></i>
+                                    {% if lang.get_direction() == 'rtl' %}فئة نشطة{% else %}Active Category{% endif %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}تحديث{% else %}Update{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Assign to Students Modal -->
+<div class="modal fade" id="assignModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تعيين الرسوم للطلاب{% else %}Assign Fees to Students{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}
+                        سيتم تطبيق هذه الرسوم على جميع الطلاب النشطين في السنة الدراسية الحالية.
+                    {% else %}
+                        This fee will be applied to all active students in the current academic year.
+                    {% endif %}
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <select class="form-select modern-select" id="classFilter">
+                            <option value="">{% if lang.get_direction() == 'rtl' %}جميع الفصول{% else %}All Classes{% endif %}</option>
+                            {% for class in classes %}
+                            <option value="{{ class.class_id }}">{{ class.class_name_ar }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-modern-primary w-100" onclick="filterStudents()">
+                            <i class="fas fa-filter me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}تصفية{% else %}Filter{% endif %}
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>
+                                    <input type="checkbox" id="selectAll" onclick="toggleAll()">
+                                </th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الرقم الدراسي{% else %}Student ID{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}اسم الطالب{% else %}Student Name{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الصف{% else %}Class{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody">
+                            <!-- Students will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                </button>
+                <button type="button" class="btn btn-success" onclick="assignSelected()">
+                    <i class="fas fa-check-circle me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تطبيق{% else %}Apply{% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.category-stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.category-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+.stat-icon.total { background: #f0e9ef; color: var(--primary-color); }
+.stat-icon.mandatory { background: #fff3cd; color: #FFC107; }
+.stat-icon.annual { background: #d1ecf1; color: #17A2B8; }
+
+.stat-details {
+    flex: 1;
+}
+
+.stat-label {
+    display: block;
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.stat-trend {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* Category Cards */
+.category-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+    border: 2px solid transparent;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
+}
+
+.category-card.inactive {
+    opacity: 0.7;
+    filter: grayscale(0.5);
+}
+
+.category-card-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.category-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6a4b5f 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.3rem;
+}
+
+.category-title {
+    flex: 1;
+}
+
+.category-title h5 {
+    margin: 0 0 3px;
+    font-weight: 600;
+}
+
+.category-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.category-actions .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.category-card-body {
+    padding: 20px;
+}
+
+.category-amount {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.amount-label {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+.amount-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.category-badges {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.badge-mandatory {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-optional {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.badge-annual {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.badge-once {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.category-description {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.category-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-top: 1px dashed #f0f0f0;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item .stat-label {
+    font-size: 0.7rem;
+    margin-bottom: 2px;
+}
+
+.stat-item .stat-value {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.category-card-footer {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+.category-card-footer .btn {
+    font-size: 0.8rem;
+    padding: 6px 12px;
+}
+
+.modern-input, .modern-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus, .modern-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+</style>
+
+<script>
+let currentCategoryId = null;
+let allStudents = [];
+
+function editCategory(categoryId) {
+    // Fetch category data via AJAX
+    fetch(`/finance/fee-categories/${categoryId}/data`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('edit_category_id').value = data.fee_category_id;
+            document.getElementById('edit_name_ar').value = data.category_name_ar;
+            document.getElementById('edit_name_en').value = data.category_name_en;
+            document.getElementById('edit_description').value = data.description || '';
+            document.getElementById('edit_amount').value = data.amount;
+            document.getElementById('edit_code').value = data.category_code || '';
+            document.getElementById('edit_is_mandatory').checked = data.is_mandatory;
+            document.getElementById('edit_is_annual').checked = data.is_annual;
+            document.getElementById('edit_is_active').checked = data.is_active;
+            
+            document.getElementById('editCategoryForm').action = `/finance/fee-categories/${categoryId}/edit`;
+            new bootstrap.Modal(document.getElementById('editCategoryModal')).show();
+        });
+}
+
+function deleteCategory(categoryId) {
+    if (confirm('{% if lang.get_direction() == "rtl" %}هل أنت متأكد من حذف هذه الفئة؟{% else %}Are you sure you want to delete this category?{% endif %}')) {
+        fetch(`/finance/fee-categories/${categoryId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }).then(response => {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+}
+
+function assignToStudents(categoryId) {
+    currentCategoryId = categoryId;
+    
+    // Load students
+    fetch('/api/students/active')
+        .then(response => response.json())
+        .then(data => {
+            allStudents = data;
+            displayStudents(data);
+            new bootstrap.Modal(document.getElementById('assignModal')).show();
+        });
+}
+
+function displayStudents(students) {
+    const tbody = document.getElementById('studentsTableBody');
+    tbody.innerHTML = '';
+    
+    students.forEach(student => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="checkbox" class="student-checkbox" value="${student.student_id}"></td>
+            <td>${student.student_number}</td>
+            <td>${student.first_name_ar} ${student.last_name_ar}</td>
+            <td>${student.class_name_ar}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function filterStudents() {
+    const classId = document.getElementById('classFilter').value;
+    if (classId) {
+        const filtered = allStudents.filter(s => s.class_id == classId);
+        displayStudents(filtered);
+    } else {
+        displayStudents(allStudents);
+    }
+}
+
+function toggleAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    checkboxes.forEach(cb => cb.checked = selectAll.checked);
+}
+
+function assignSelected() {
+    const selected = [];
+    document.querySelectorAll('.student-checkbox:checked').forEach(cb => {
+        selected.push(cb.value);
+    });
+    
+    if (selected.length === 0) {
+        alert('{% if lang.get_direction() == "rtl" %}الرجاء اختيار طالب على الأقل{% else %}Please select at least one student{% endif %}');
+        return;
+    }
+    
+    fetch('/finance/fee-categories/assign', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            category_id: currentCategoryId,
+            students: selected
+        })
+    }).then(response => {
+        if (response.ok) {
+            alert('{% if lang.get_direction() == "rtl" %}تم تعيين الرسوم بنجاح{% else %}Fees assigned successfully{% endif %}');
+            bootstrap.Modal.getInstance(document.getElementById('assignModal')).hide();
+        }
+    });
+}
+
+function viewCollections(categoryId) {
+    window.location.href = `/finance/fee-categories/${categoryId}/collections`;
+}
+</script>
+{% endblock %}

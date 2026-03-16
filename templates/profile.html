@@ -1,0 +1,572 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-user-circle me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}الملف الشخصي{% else %}User Profile{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}عرض وتحديث معلوماتك الشخصية{% else %}View and update your personal information{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Profile Sidebar -->
+    <div class="col-md-4 mb-4">
+        <div class="modern-card text-center">
+            <div class="card-body">
+                <!-- Profile Avatar -->
+               <!-- Profile Avatar -->
+				<div class="profile-avatar-container mb-3">
+					<div class="profile-avatar">
+						{% if user.profile_image %}
+						<img src="{{ url_for('static', filename=user.profile_image) }}" alt="{{ user.full_name_ar or user.username }}">
+						{% else %}
+						<div class="avatar-placeholder-large" style="background: linear-gradient(135deg, {{ session.theme.primary_color if session.theme else '#875A7B' }} 0%, {{ session.theme.secondary_color if session.theme else '#6a4b5f' }} 100%);">
+							{{ user.full_name_ar[:1] if user.full_name_ar else user.username[:1] }}
+						</div>
+						{% endif %}
+					</div>
+					
+					{% if session.role == 'admin' or session.user_id == user.user_id %}
+					<button class="btn btn-sm btn-primary upload-photo-btn" onclick="document.getElementById('photoInput').click();">
+						<i class="fas fa-camera"></i>
+					</button>
+					<form id="uploadPhotoForm" method="POST" enctype="multipart/form-data" 
+						  action="{{ url_for('auth.upload_profile_photo') }}" style="display: none;">
+						<input type="file" name="photo" id="photoInput" accept="image/*" onchange="uploadPhoto()">
+					</form>
+					{% endif %}
+				</div>
+                
+                <h3 class="mb-1">{{ user.full_name_ar or user.username }}</h3>
+                <p class="text-muted mb-2">{{ user.full_name_en or '' }}</p>
+                
+                <!-- Role Badge -->
+                <div class="role-badge-container mb-3">
+                    {% if user.role == 'admin' %}
+                    <span class="badge" style="background: linear-gradient(135deg, {{ session.theme.primary_color if session.theme else '#875A7B' }} 0%, {{ session.theme.secondary_color if session.theme else '#6a4b5f' }} 100%); color: white; padding: 8px 20px; border-radius: 30px;">
+                        <i class="fas fa-crown me-2"></i>{% if lang.get_direction() == 'rtl' %}مدير النظام{% else %}System Admin{% endif %}
+                    </span>
+                    {% elif user.role == 'supervisor' %}
+                    <span class="badge" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%); color: white; padding: 8px 20px; border-radius: 30px;">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>{% if lang.get_direction() == 'rtl' %}مشرف تربوي{% else %}Supervisor{% endif %}
+                    </span>
+                    {% elif user.role == 'teacher' %}
+                    <span class="badge" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%); color: white; padding: 8px 20px; border-radius: 30px;">
+                        <i class="fas fa-chalkboard-teacher me-2"></i>{% if lang.get_direction() == 'rtl' %}معلم{% else %}Teacher{% endif %}
+                    </span>
+                    {% elif user.role == 'accountant' %}
+                    <span class="badge" style="background: linear-gradient(135deg, #FFB347 0%, #ff9900 100%); color: white; padding: 8px 20px; border-radius: 30px;">
+                        <i class="fas fa-coins me-2"></i>{% if lang.get_direction() == 'rtl' %}محاسب{% else %}Accountant{% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <!-- Account Status -->
+                <div class="account-status mb-3">
+                    <div class="status-item">
+                        <i class="fas fa-circle text-success me-2" style="font-size: 0.6rem;"></i>
+                        <span>{% if lang.get_direction() == 'rtl' %}الحساب نشط{% else %}Account Active{% endif %}</span>
+                    </div>
+                    <div class="status-item mt-2">
+                        <i class="fas fa-calendar-alt me-2" style="color: #666;"></i>
+                        <span>{% if lang.get_direction() == 'rtl' %}عضو منذ: {% else %}Member since: {% endif %}{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</span>
+                    </div>
+                    <div class="status-item mt-2">
+                        <i class="fas fa-clock me-2" style="color: #666;"></i>
+                        <span>{% if lang.get_direction() == 'rtl' %}آخر دخول: {% else %}Last login: {% endif %}{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'N/A' }}</span>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="profile-actions">
+                    <button class="btn btn-outline-primary w-100 mb-2" onclick="showChangePasswordModal()">
+                        <i class="fas fa-key me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}تغيير كلمة المرور{% else %}Change Password{% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Theme Quick Switcher (if user is admin) -->
+        {% if session.role == 'admin' %}
+        <div class="modern-card mt-4">
+            <div class="card-body">
+                <h6 class="mb-3">
+                    <i class="fas fa-palette me-2" style="color: var(--primary-color);"></i>
+                    {% if lang.get_direction() == 'rtl' %}السمة الحالية{% else %}Current Theme{% endif %}
+                </h6>
+                <div class="current-theme-display mb-3">
+                    <div class="d-flex align-items-center">
+                        <div class="theme-color-dots me-3">
+                            <span class="color-dot" style="background: {{ session.theme.primary_color if session.theme else '#875A7B' }};"></span>
+                            <span class="color-dot" style="background: {{ session.theme.secondary_color if session.theme else '#6a4b5f' }};"></span>
+                            <span class="color-dot" style="background: {{ session.theme.accent_color if session.theme else '#FFB347' }};"></span>
+                        </div>
+                        <span>{{ session.theme.theme_name_ar if session.theme else 'Purple' }}</span>
+                    </div>
+                </div>
+                <a href="{{ url_for('themes.list_themes') }}" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-paint-brush me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تغيير السمة{% else %}Change Theme{% endif %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Profile Details -->
+    <div class="col-md-8">
+        <!-- Personal Information Card -->
+        <div class="modern-card mb-4">
+            <div class="card-header-modern d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-user me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}المعلومات الشخصية{% else %}Personal Information{% endif %}
+                </span>
+                <button class="btn btn-sm btn-outline-primary" onclick="toggleEdit('personal')">
+                    <i class="fas fa-edit me-1"></i>
+                    {% if lang.get_direction() == 'rtl' %}تعديل{% else %}Edit{% endif %}
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- View Mode -->
+                <div id="personalView">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-row">
+                                <span class="info-label">{% if lang.get_direction() == 'rtl' %}اسم المستخدم{% else %}Username{% endif %}</span>
+                                <span class="info-value">{{ user.username }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">{% if lang.get_direction() == 'rtl' %}البريد الإلكتروني{% else %}Email{% endif %}</span>
+                                <span class="info-value">{{ user.email }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">{% if lang.get_direction() == 'rtl' %}الاسم (عربي){% else %}Name (Arabic){% endif %}</span>
+                                <span class="info-value">{{ user.full_name_ar or '---' }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-row">
+                                <span class="info-label">{% if lang.get_direction() == 'rtl' %}الاسم (إنجليزي){% else %}Name (English){% endif %}</span>
+                                <span class="info-value">{{ user.full_name_en or '---' }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">{% if lang.get_direction() == 'rtl' %}الدور{% else %}Role{% endif %}</span>
+                                <span class="info-value">
+                                    {% if user.role == 'admin' %}
+                                        {% if lang.get_direction() == 'rtl' %}مدير{% else %}Admin{% endif %}
+                                    {% elif user.role == 'supervisor' %}
+                                        {% if lang.get_direction() == 'rtl' %}مشرف{% else %}Supervisor{% endif %}
+                                    {% elif user.role == 'teacher' %}
+                                        {% if lang.get_direction() == 'rtl' %}معلم{% else %}Teacher{% endif %}
+                                    {% elif user.role == 'accountant' %}
+                                        {% if lang.get_direction() == 'rtl' %}محاسب{% else %}Accountant{% endif %}
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Edit Mode (hidden by default) -->
+                <div id="personalEdit" style="display: none;">
+                    <form method="POST" action="{{ url_for('auth.update_profile') }}" id="personalForm">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{% if lang.get_direction() == 'rtl' %}الاسم (عربي){% else %}Name (Arabic){% endif %}</label>
+                                <input type="text" name="full_name_ar" class="form-control modern-input" value="{{ user.full_name_ar }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{% if lang.get_direction() == 'rtl' %}الاسم (إنجليزي){% else %}Name (English){% endif %}</label>
+                                <input type="text" name="full_name_en" class="form-control modern-input" value="{{ user.full_name_en }}">
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">{% if lang.get_direction() == 'rtl' %}البريد الإلكتروني{% else %}Email{% endif %}</label>
+                                <input type="email" name="email" class="form-control modern-input" value="{{ user.email }}" required>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}حفظ{% else %}Save{% endif %}
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="toggleEdit('personal')">
+                                {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Settings Card -->
+        <div class="modern-card mb-4">
+            <div class="card-header-modern">
+                <i class="fas fa-shield-alt me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}الأمان{% else %}Security{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="security-options">
+                    <div class="security-option d-flex justify-content-between align-items-center p-3" style="background: #f8f9fa; border-radius: 10px; margin-bottom: 10px;">
+                        <div>
+                            <h6 class="mb-1">{% if lang.get_direction() == 'rtl' %}المصادقة الثنائية{% else %}Two-Factor Authentication{% endif %}</h6>
+                            <small class="text-muted">{% if lang.get_direction() == 'rtl' %}تعزيز أمان حسابك{% else %}Enhance your account security{% endif %}</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="twoFactor" {% if user.two_factor_enabled %}checked{% endif %}>
+                        </div>
+                    </div>
+                    
+                    <div class="security-option d-flex justify-content-between align-items-center p-3" style="background: #f8f9fa; border-radius: 10px;">
+                        <div>
+                            <h6 class="mb-1">{% if lang.get_direction() == 'rtl' %}جلساتي النشطة{% else %}Active Sessions{% endif %}</h6>
+                            <small class="text-muted">{% if lang.get_direction() == 'rtl' %}إدارة الأجهزة المتصلة{% else %}Manage connected devices{% endif %}</small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showSessions()">
+                            <i class="fas fa-eye me-1"></i> {% if lang.get_direction() == 'rtl' %}عرض{% else %}View{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity Card -->
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-history me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}آخر النشاطات{% else %}Recent Activity{% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="timeline">
+                    {% for activity in recent_activities %}
+                    <div class="timeline-item">
+                        <div class="timeline-icon" style="background: {{ activity.color }}">
+                            <i class="fas {{ activity.icon }}"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <h6>{{ activity.title }}</h6>
+                                <span class="timeline-time">{{ activity.time }}</span>
+                            </div>
+                            <p>{{ activity.description }}</p>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-3x mb-3 text-muted"></i>
+                        <p>{% if lang.get_direction() == 'rtl' %}لا توجد نشاطات حديثة{% else %}No recent activities{% endif %}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #FFC107 0%, #e0a800 100%); color: white;">
+                <h5 class="modal-title">
+                    <i class="fas fa-key me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}تغيير كلمة المرور{% else %}Change Password{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('auth.change_password') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">{% if lang.get_direction() == 'rtl' %}كلمة المرور الحالية{% else %}Current Password{% endif %}</label>
+                        <input type="password" name="current_password" class="form-control modern-input" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% if lang.get_direction() == 'rtl' %}كلمة المرور الجديدة{% else %}New Password{% endif %}</label>
+                        <input type="password" name="new_password" class="form-control modern-input" required>
+                        <small class="text-muted">{% if lang.get_direction() == 'rtl' %}يجب أن تكون 8 أحرف على الأقل{% else %}Minimum 8 characters{% endif %}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% if lang.get_direction() == 'rtl' %}تأكيد كلمة المرور الجديدة{% else %}Confirm New Password{% endif %}</label>
+                        <input type="password" name="confirm_password" class="form-control modern-input" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                    </button>
+                    <button type="submit" class="btn" style="background: linear-gradient(135deg, #FFC107 0%, #e0a800 100%); color: white; border: none;">
+                        <i class="fas fa-save me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}تغيير{% else %}Change{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-avatar-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid var(--primary-color);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder-large {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 3rem;
+}
+
+.upload-photo-btn {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    color: white;
+    border: 2px solid white;
+}
+
+.upload-photo-btn:hover {
+    transform: scale(1.1);
+}
+
+.info-row {
+    margin-bottom: 15px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 3px;
+}
+
+.info-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.role-badge-container .badge {
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.theme-color-dots {
+    display: flex;
+    gap: 5px;
+}
+
+.color-dot {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Timeline */
+.timeline {
+    position: relative;
+    padding: 20px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 30px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #f0f0f0;
+}
+
+[dir="rtl"] .timeline::before {
+    left: auto;
+    right: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 60px;
+    margin-bottom: 25px;
+}
+
+[dir="rtl"] .timeline-item {
+    padding-left: 0;
+    padding-right: 60px;
+}
+
+.timeline-icon {
+    position: absolute;
+    left: 20px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+}
+
+[dir="rtl"] .timeline-icon {
+    left: auto;
+    right: 20px;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 12px 15px;
+    border-radius: 12px;
+}
+
+.timeline-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.timeline-header h6 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.timeline-time {
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.timeline-content p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+</style>
+
+<script>
+function toggleEdit(section) {
+    const viewMode = document.getElementById(section + 'View');
+    const editMode = document.getElementById(section + 'Edit');
+    
+    if (viewMode.style.display === 'none') {
+        viewMode.style.display = 'block';
+        editMode.style.display = 'none';
+    } else {
+        viewMode.style.display = 'none';
+        editMode.style.display = 'block';
+    }
+}
+
+function showChangePasswordModal() {
+    new bootstrap.Modal(document.getElementById('changePasswordModal')).show();
+}
+
+function uploadPhoto() {
+    const form = document.getElementById('uploadPhotoForm');
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error uploading photo: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Error uploading photo');
+    });
+}
+
+function showSessions() {
+    alert('{% if lang.get_direction() == "rtl" %}ميزة إدارة الجلسات قيد التطوير{% else %}Sessions management coming soon{% endif %}');
+}
+
+// Toggle two-factor authentication
+document.getElementById('twoFactor')?.addEventListener('change', function() {
+    fetch('/auth/toggle-twofactor', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({enabled: this.checked})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('{% if lang.get_direction() == "rtl" %}تم تحديث إعدادات الأمان{% else %}Security settings updated{% endif %}');
+        }
+    });
+});
+</script>
+{% endblock %}

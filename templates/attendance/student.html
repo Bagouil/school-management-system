@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-user-graduate me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}تسجيل حضور الطلاب{% else %}Student Attendance{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}تسجيل حضور وانصراف الطلاب لكل صف{% else %}Mark student attendance for each class{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('attendance.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Class Selection Card -->
+<!-- Class Selection Card -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-search me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}اختر الصف والتاريخ{% else %}Select Class and Date{% endif %}
+            </div>
+            <div class="card-body">
+                <!-- FIXED: Removed action attribute, will submit to same page then redirect -->
+                <form method="GET" action="{{ url_for('attendance.student_attendance') }}" class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">
+                            <i class="fas fa-school me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}الصف الدراسي{% else %}Class{% endif %}
+                        </label>
+                        <select name="class_id" class="form-select modern-select" required>
+                            <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر الصف{% else %}Select Class{% endif %} --</option>
+                            {% for class in classes %}
+                            <option value="{{ class.class_id }}">
+                                {% if lang.get_direction() == 'rtl' %}{{ class.class_name_ar }} - {{ class.grade_name_ar }}{% else %}{{ class.class_name_en }} - {{ class.grade_name_en }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}التاريخ{% else %}Date{% endif %}
+                        </label>
+                        <input type="date" name="date" class="form-control modern-input" value="{{ today }}" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-modern-primary w-100">
+                            <i class="fas fa-eye me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}عرض{% else %}View{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Access - Today's Classes -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-clock me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}فصول اليوم{% else %}Today's Classes{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for class in classes[:6] %}
+                    <div class="col-md-4 mb-3">
+                        <div class="class-quick-card" onclick="location.href='{{ url_for('attendance.view_class_attendance', class_id=class.class_id, date=today) }}'">
+                            <div class="quick-card-header">
+                                <h6>{% if lang.get_direction() == 'rtl' %}{{ class.class_name_ar }}{% else %}{{ class.class_name_en }}{% endif %}</h6>
+                                <span class="badge bg-primary">{{ class.student_count }} {% if lang.get_direction() == 'rtl' %}طالب{% else %}students{% endif %}</span>
+                            </div>
+                            <div class="quick-card-body">
+                                <small class="text-muted">
+                                    {% if lang.get_direction() == 'rtl' %}{{ class.grade_name_ar }}{% else %}{{ class.grade_name_en }}{% endif %}
+                                </small>
+                                <div class="mt-2">
+                                    <span class="badge bg-success">{% if lang.get_direction() == 'rtl' %}تسجيل{% else %}Mark{% endif %}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Card -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="alert alert-info modern-alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-info-circle fa-2x me-3"></i>
+                <div>
+                    <h6 class="mb-1">
+                        {% if lang.get_direction() == 'rtl' %}تسجيل الحضور{% else %}Attendance Marking{% endif %}
+                    </h6>
+                    <p class="mb-0 small">
+                        {% if lang.get_direction() == 'rtl' %}
+                            يمكنك تسجيل حضور الطلاب باختيار الصف والتاريخ ثم تحديد حالة كل طالب (حاضر، غائب، متأخر، معذور)
+                        {% else %}
+                            You can mark student attendance by selecting the class and date, then set the status for each student (Present, Absent, Late, Excused)
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.class-quick-card {
+    background: white;
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.class-quick-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.quick-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.quick-card-header h6 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.quick-card-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modern-alert {
+    border: none;
+    border-radius: 12px;
+    background: #f8f9fa;
+    border-left: 4px solid var(--primary-color);
+}
+
+[dir="rtl"] .modern-alert {
+    border-left: none;
+    border-right: 4px solid var(--primary-color);
+}
+
+.modern-select, .modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-select:focus, .modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+</style>
+{% endblock %}

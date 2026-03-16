@@ -1,0 +1,926 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-school me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}إدارة الفصول{% else %}Classes Management{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}عرض وإدارة الفصول الدراسية وتعيين المعلمين والمواد{% else %}View and manage classes, assign teachers and subjects{% endif %}
+            </p>
+        </div>
+        <div>
+			<button class="btn" data-bs-toggle="modal" data-bs-target="#addClassModal" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%); color: white; border: none; padding: 10px 25px; border-radius: 10px; font-weight: 500;">
+				<i class="fas fa-plus-circle me-2"></i>
+				{% if lang.get_direction() == 'rtl' %}إضافة فصل جديد{% else %}Add New Class{% endif %}
+			</button>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
+            <div class="stat-icon">
+                <i class="fas fa-school"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_classes }}</h3>
+                <p>{% if lang.get_direction() == 'rtl' %}إجمالي الفصول{% else %}Total Classes{% endif %}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
+            <div class="stat-icon">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ classes_with_teacher }}</h3>
+                <p>{% if lang.get_direction() == 'rtl' %}بمدرسي فصول{% else %}With Class Teachers{% endif %}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%);">
+            <div class="stat-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_subjects }}</h3>
+                <p>{% if lang.get_direction() == 'rtl' %}إجمالي المواد{% else %}Total Subjects{% endif %}</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card-modern" style="background: linear-gradient(135deg, #FFB347 0%, #ff9900 100%);">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_students }}</h3>
+                <p>{% if lang.get_direction() == 'rtl' %}إجمالي الطلاب{% else %}Total Students{% endif %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Classes Grid -->
+<div class="row">
+    {% for class in classes %}
+    <div class="col-md-4 mb-4">
+        <div class="class-card" onclick="location.href='{{ url_for('classes.view_class', class_id=class.class_id) }}'">
+            <div class="class-header" style="background: linear-gradient(135deg, {% if class.class_teacher_id %}#28A745{% else %}#875A7B{% endif %} 0%, #6a4b5f 100%);">
+                <div class="class-icon">
+                    <i class="fas fa-school"></i>
+                </div>
+                <div class="class-title">
+                    <h4>{% if lang.get_direction() == 'rtl' %}{{ class.class_name_ar }}{% else %}{{ class.class_name_en }}{% endif %}</h4>
+                    <span class="class-grade">{{ class.grade_name_ar }}</span>
+                </div>
+            </div>
+            <div class="class-body">
+                <div class="class-info-item">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <div>
+                        <small>{% if lang.get_direction() == 'rtl' %}مدرس الفصل{% else %}Class Teacher{% endif %}</small>
+                        <strong>
+                            {% if class.class_teacher_name %}
+                                {{ class.class_teacher_name }}
+                            {% else %}
+                                <span class="text-warning">{% if lang.get_direction() == 'rtl' %}غير معين{% else %}Not Assigned{% endif %}</span>
+                            {% endif %}
+                        </strong>
+                    </div>
+                </div>
+                
+                <div class="class-info-item">
+                    <i class="fas fa-users"></i>
+                    <div>
+                        <small>{% if lang.get_direction() == 'rtl' %}عدد الطلاب{% else %}Students{% endif %}</small>
+                        <strong>{{ class.student_count }} / {{ class.capacity }}</strong>
+                    </div>
+                </div>
+                
+                <div class="class-progress">
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: {{ (class.student_count / class.capacity * 100)|int if class.capacity > 0 else 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="class-footer">
+                <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); location.href='{{ url_for('classes.manage_subjects', class_id=class.class_id) }}'">
+                    <i class="fas fa-book me-1"></i> {% if lang.get_direction() == 'rtl' %}المواد{% else %}Subjects{% endif %}
+                </button>
+                <button class="btn btn-sm btn-outline-success" onclick="event.stopPropagation(); location.href='{{ url_for('classes.assign_teacher', class_id=class.class_id) }}'">
+                    <i class="fas fa-user-plus me-1"></i> {% if lang.get_direction() == 'rtl' %}تعيين معلم{% else %}Assign Teacher{% endif %}
+                </button>
+                <button class="btn btn-sm btn-outline-info" onclick="event.stopPropagation(); location.href='{{ url_for('classes.view_class', class_id=class.class_id) }}'">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Add Class Modal -->
+<div class="modal fade" id="addClassModal" tabindex="-1" aria-labelledby="addClassModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <!-- Modern Gradient Header -->
+            <div class="modal-header" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%); border-bottom: none; padding: 1.5rem;">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-white p-2 me-3" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-plus-circle fa-2x" style="color: #875A7B;"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title text-white fw-bold mb-0" id="addClassModalLabel">
+                            {% if lang.get_direction() == 'rtl' %}إضافة فصل جديد{% else %}Add New Class{% endif %}
+                        </h5>
+                        <p class="text-white-50 mb-0 small mt-1">
+                            {% if lang.get_direction() == 'rtl' %}أدخل معلومات الفصل الدراسي الجديد{% else %}Enter the new class information{% endif %}
+                        </p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="opacity: 1; filter: brightness(0) invert(1);"></button>
+            </div>
+            
+            <div class="modal-body p-4">
+                <!-- Progress Steps -->
+                <div class="progress-steps-container mb-4">
+                    <div class="progress-steps">
+                        <div class="step active" id="step1">
+                            <div class="step-icon"><i class="fas fa-layer-group"></i></div>
+                            <div class="step-label">{% if lang.get_direction() == 'rtl' %}المرحلة{% else %}Grade{% endif %}</div>
+                        </div>
+                        <div class="step" id="step2">
+                            <div class="step-icon"><i class="fas fa-tag"></i></div>
+                            <div class="step-label">{% if lang.get_direction() == 'rtl' %}معلومات الفصل{% else %}Class Info{% endif %}</div>
+                        </div>
+                        <div class="step" id="step3">
+                            <div class="step-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                            <div class="step-label">{% if lang.get_direction() == 'rtl' %}المشرف{% else %}Supervisor{% endif %}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('classes.add_class') }}" id="addClassForm">
+                    <!-- Step 1: Grade Selection -->
+                    <div class="form-step" id="form-step-1">
+                        <h6 class="mb-3">
+                            <i class="fas fa-layer-group me-2" style="color: #875A7B;"></i>
+                            {% if lang.get_direction() == 'rtl' %}اختر المرحلة الدراسية{% else %}Select Grade Level{% endif %}
+                        </h6>
+                        
+                        <div class="grade-selection-grid">
+                            {% for grade in grade_levels %}
+                            <div class="grade-card" onclick="selectGrade({{ grade.grade_id }})">
+                                <input type="radio" name="grade_id" value="{{ grade.grade_id }}" id="grade_{{ grade.grade_id }}" style="display: none;" required>
+                                <div class="grade-card-content">
+                                    <div class="grade-icon">
+                                        <i class="fas {% if grade.level_type == 'basic' %}fa-book-open{% else %}fa-graduation-cap{% endif %}"></i>
+                                    </div>
+                                    <h6>{{ grade.grade_name_ar }}</h6>
+                                    <small>{{ grade.grade_name_en }}</small>
+                                    <span class="grade-badge">{{ grade.academic_stage }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="text-end mt-4">
+                            <button type="button" class="btn-gradient-primary" onclick="nextStep(2)" id="nextToStep2" disabled>
+                                {% if lang.get_direction() == 'rtl' %}التالي{% else %}Next{% endif %} 
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 2: Class Information -->
+                    <div class="form-step d-none" id="form-step-2">
+                        <h6 class="mb-3">
+                            <i class="fas fa-tag me-2" style="color: #875A7B;"></i>
+                            {% if lang.get_direction() == 'rtl' %}معلومات الفصل{% else %}Class Information{% endif %}
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-signature me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}اسم الفصل (عربي) *{% else %}Class Name (Arabic) *{% endif %}
+                                </label>
+                                <input type="text" name="class_name_ar" class="form-control modern-input" 
+                                       placeholder="{% if lang.get_direction() == 'rtl' %}مثال: 3-أ{% else %}Example: 3-A{% endif %}" required>
+                                <small class="text-muted">{% if lang.get_direction() == 'rtl' %}مثال: 3-أ، 4-ب{% else %}Example: 3-A, 4-B{% endif %}</small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-signature me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}اسم الفصل (إنجليزي){% else %}Class Name (English){% endif %}
+                                </label>
+                                <input type="text" name="class_name_en" class="form-control modern-input" 
+                                       placeholder="{% if lang.get_direction() == 'rtl' %}مثال: 3-A{% else %}Example: 3-A{% endif %}">
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-users me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}السعة{% else %}Capacity{% endif %}
+                                </label>
+                                <div class="input-group">
+                                    <input type="number" name="capacity" class="form-control modern-input" value="30" min="1" max="50">
+                                    <span class="input-group-text">{% if lang.get_direction() == 'rtl' %}طالب{% else %}students{% endif %}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    {% if lang.get_direction() == 'rtl' %}السنة الدراسية{% else %}Academic Year{% endif %}
+                                </label>
+                                <select name="academic_year_id" class="form-select modern-select">
+                                    {% for year in academic_years %}
+                                    <option value="{{ year.year_id }}" {% if year.is_current %}selected{% endif %}>
+                                        {{ year.year_name_ar }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="button" class="btn btn-outline-secondary" onclick="prevStep(1)">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}السابق{% else %}Previous{% endif %}
+                            </button>
+                            <button type="button" class="btn-gradient-primary" onclick="nextStep(3)">
+                                {% if lang.get_direction() == 'rtl' %}التالي{% else %}Next{% endif %} 
+                                <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3: Class Teacher Assignment -->
+                    <div class="form-step d-none" id="form-step-3">
+                        <h6 class="mb-3">
+                            <i class="fas fa-chalkboard-teacher me-2" style="color: #875A7B;"></i>
+                            {% if lang.get_direction() == 'rtl' %}تعيين مشرف للصف{% else %}Assign Class Supervisor{% endif %}
+                        </h6>
+                        
+                        <div class="teacher-selection-container mb-3">
+                            <div class="search-box mb-3">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" class="form-control modern-input border-start-0" 
+                                           id="teacherSearch" 
+                                           placeholder="{% if lang.get_direction() == 'rtl' %}بحث عن معلم...{% else %}Search for teacher...{% endif %}">
+                                </div>
+                            </div>
+                            
+                            <div class="teachers-grid" id="teachersGrid">
+                                {% for teacher in teachers %}
+                                <div class="teacher-select-card" data-name="{{ teacher.first_name_ar }} {{ teacher.last_name_ar }} {{ teacher.first_name_en }} {{ teacher.last_name_en }}">
+                                    <input type="radio" name="class_teacher_id" value="{{ teacher.teacher_id }}" id="teacher_{{ teacher.teacher_id }}">
+                                    <div class="teacher-select-content">
+                                        <div class="teacher-avatar">
+                                            {% if teacher.teacher_image %}
+                                            <img src="{{ teacher.teacher_image }}" alt="{{ teacher.first_name_ar }}">
+                                            {% else %}
+                                            <div class="avatar-placeholder" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
+                                                {{ teacher.first_name_ar[:1] }}{{ teacher.last_name_ar[:1] }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="teacher-info">
+                                            <h6>{{ teacher.first_name_ar }} {{ teacher.last_name_ar }}</h6>
+                                            <small>{{ teacher.specialization }}</small>
+                                        </div>
+                                    </div>
+                                    <div class="teacher-select-indicator">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-chalkboard-teacher fa-3x mb-3 text-muted"></i>
+                                    <p>{% if lang.get_direction() == 'rtl' %}لا يوجد معلمون متاحون{% else %}No teachers available{% endif %}</p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info modern-alert mt-3">
+                            <i class="fas fa-info-circle me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}
+                                <strong>ملاحظة:</strong> يمكنك ترك هذا الحقل فارغاً إذا لم ترغب في تعيين مشرف الآن. يمكنك تعيينه لاحقاً من صفحة تعديل الصف.
+                            {% else %}
+                                <strong>Note:</strong> You can leave this empty if you don't want to assign a supervisor now. You can assign one later from the class edit page.
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-outline-secondary" onclick="prevStep(2)">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}السابق{% else %}Previous{% endif %}
+                            </button>
+                            <button type="submit" class="btn-gradient-success">
+                                <i class="fas fa-save me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}إضافة الفصل{% else %}Add Class{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer bg-light">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    {% if lang.get_direction() == 'rtl' %}
+                        الحقول التي تحمل علامة * إلزامية
+                    {% else %}
+                        Fields marked with * are required
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Class Cards */
+.class-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    height: 100%;
+}
+
+.class-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.class-header {
+    padding: 20px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.class-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.class-title h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.class-grade {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+.class-body {
+    padding: 20px;
+}
+
+.class-info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.class-info-item i {
+    width: 30px;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+.class-info-item small {
+    display: block;
+    color: #999;
+    font-size: 0.75rem;
+}
+
+.class-info-item strong {
+    font-size: 0.95rem;
+    color: #333;
+}
+
+.class-progress {
+    margin-top: 10px;
+}
+
+.class-footer {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    display: flex;
+    gap: 8px;
+    border-top: 1px solid #f0f0f0;
+}
+/* Progress Steps */
+.progress-steps-container {
+    padding: 10px 0;
+}
+
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 30px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #e0e0e0;
+    z-index: 1;
+}
+
+.step {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+}
+
+.step.active .step-icon {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(135, 90, 123, 0.3);
+}
+
+.step.completed .step-icon {
+    background: #28A745;
+    color: white;
+    border-color: #28A745;
+}
+
+.step-icon {
+    width: 60px;
+    height: 60px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-size: 1.5rem;
+    color: #999;
+    transition: all 0.3s ease;
+}
+
+.step-label {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.step.active .step-label {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Grade Selection Grid */
+.grade-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+.grade-card {
+    background: white;
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.grade-card:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.grade-card.selected {
+    border-color: var(--primary-color);
+    background: #f8f0f6;
+}
+
+.grade-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6a4b5f 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    color: white;
+    font-size: 1.3rem;
+}
+
+.grade-card h6 {
+    margin: 0 0 3px;
+    font-weight: 600;
+}
+
+.grade-card small {
+    display: block;
+    color: #666;
+    font-size: 0.7rem;
+    margin-bottom: 8px;
+}
+
+.grade-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #f0f0f0;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    color: #666;
+}
+
+/* Teacher Selection */
+.teacher-selection-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.teachers-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.teacher-select-card {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    position: relative;
+}
+
+.teacher-select-card:hover {
+    background: #e9ecef;
+    transform: translateX(3px);
+}
+
+.teacher-select-card.selected {
+    border-color: var(--primary-color);
+    background: #f0e9ef;
+}
+
+.teacher-select-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.teacher-select-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.teacher-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.teacher-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6a4b5f 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.teacher-info h6 {
+    margin: 0 0 3px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.teacher-info small {
+    font-size: 0.7rem;
+    color: #666;
+}
+
+.teacher-select-indicator {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.teacher-select-card.selected .teacher-select-indicator {
+    opacity: 1;
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Modern Input and Select */
+.modern-input, .modern-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus, .modern-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.input-group-text {
+    border: 2px solid #e0e0e0;
+    border-left: none;
+    background: white;
+    border-radius: 0 10px 10px 0;
+}
+
+[dir="rtl"] .input-group-text {
+    border-left: 2px solid #e0e0e0;
+    border-right: none;
+    border-radius: 10px 0 0 10px;
+}
+
+.modern-alert {
+    border-radius: 10px;
+    border: none;
+    background: #f8f9fa;
+    border-left: 4px solid var(--primary-color);
+}
+
+[dir="rtl"] .modern-alert {
+    border-left: none;
+    border-right: 4px solid var(--primary-color);
+}
+
+/* Form Steps Animation */
+.form-step {
+    animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+[dir="rtl"] .form-step {
+    animation: fadeInRTL 0.5s ease;
+}
+
+@keyframes fadeInRTL {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.btn-gradient-primary {
+    background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-gradient-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(135, 90, 123, 0.3);
+}
+
+.btn-gradient-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-gradient-success {
+    background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-gradient-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+}
+/* Stat Cards */
+.stat-card-modern {
+    border-radius: 16px;
+    padding: 20px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.stat-card-modern .stat-icon {
+    font-size: 2rem;
+    opacity: 0.9;
+}
+
+.stat-card-modern .stat-details h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.stat-card-modern .stat-details p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.9rem;
+}
+
+/* Modern Form Elements */
+.modern-select, .modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-select:focus, .modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+</style>
+<script>
+// Multi-step form
+let currentStep = 1;
+
+function selectGrade(gradeId) {
+    // Update radio button
+    document.getElementById('grade_' + gradeId).checked = true;
+    
+    // Update selected class on cards
+    document.querySelectorAll('.grade-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked card
+    event.currentTarget.classList.add('selected');
+    
+    // Enable next button
+    document.getElementById('nextToStep2').disabled = false;
+}
+
+function showStep(step) {
+    // Hide all steps
+    for (let i = 1; i <= 3; i++) {
+        document.getElementById(`form-step-${i}`).classList.add('d-none');
+        document.getElementById(`step${i}`).classList.remove('active', 'completed');
+    }
+    
+    // Show current step
+    document.getElementById(`form-step-${step}`).classList.remove('d-none');
+    
+    // Update progress indicators
+    for (let i = 1; i <= step; i++) {
+        if (i < step) {
+            document.getElementById(`step${i}`).classList.add('completed');
+        } else {
+            document.getElementById(`step${i}`).classList.add('active');
+        }
+    }
+}
+
+function nextStep(step) {
+    if (validateStep(currentStep)) {
+        currentStep = step;
+        showStep(currentStep);
+    }
+}
+
+function prevStep(step) {
+    currentStep = step;
+    showStep(currentStep);
+}
+
+function validateStep(step) {
+    if (step === 1) {
+        // Check if grade is selected
+        const gradeSelected = document.querySelector('input[name="grade_id"]:checked');
+        if (!gradeSelected) {
+            alert('{% if lang.get_direction() == "rtl" %}الرجاء اختيار المرحلة الدراسية{% else %}Please select a grade level{% endif %}');
+            return false;
+        }
+    }
+    return true;
+}
+
+// Teacher selection
+document.querySelectorAll('.teacher-select-card').forEach(card => {
+    card.addEventListener('click', function() {
+        // Remove selected class from all cards
+        document.querySelectorAll('.teacher-select-card').forEach(c => {
+            c.classList.remove('selected');
+        });
+        
+        // Add selected class to clicked card
+        this.classList.add('selected');
+        
+        // Check the radio button
+        const radio = this.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.checked = true;
+        }
+    });
+});
+
+// Teacher search
+document.getElementById('teacherSearch')?.addEventListener('keyup', function() {
+    const searchText = this.value.toLowerCase();
+    const cards = document.querySelectorAll('.teacher-select-card');
+    
+    cards.forEach(card => {
+        const teacherName = card.dataset.name.toLowerCase();
+        if (teacherName.includes(searchText)) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+
+// Initialize the form
+showStep(1);
+</script>
+{% endblock %}

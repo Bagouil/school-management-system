@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-shield-alt me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}الصلاحيات والأدوار{% else %}Roles & Permissions{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}إدارة صلاحيات المستخدمين والأدوار في النظام{% else %}Manage user roles and permissions{% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    {% for role in roles %}
+    <div class="col-md-3 mb-4">
+        <div class="role-card-detailed">
+            <div class="role-header {{ role.id }}">
+                <div class="role-icon">
+                    {% if role.id == 'admin' %}
+                        <i class="fas fa-crown"></i>
+                    {% elif role.id == 'supervisor' %}
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    {% elif role.id == 'teacher' %}
+                        <i class="fas fa-user-graduate"></i>
+                    {% elif role.id == 'accountant' %}
+                        <i class="fas fa-coins"></i>
+                    {% endif %}
+                </div>
+                <h4>{% if lang.get_direction() == 'rtl' %}{{ role.name_ar }}{% else %}{{ role.name_en }}{% endif %}</h4>
+            </div>
+            <div class="role-body">
+                <p class="role-description">
+                    {% if lang.get_direction() == 'rtl' %}{{ role.description_ar }}{% else %}{{ role.description_en }}{% endif %}
+                </p>
+                
+                <h6 class="mt-3">{% if lang.get_direction() == 'rtl' %}الصلاحيات{% else %}Permissions{% endif %}:</h6>
+                <ul class="permissions-list">
+                    {% if role.id == 'admin' %}
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}إدارة المستخدمين{% else %}User Management{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}إدارة الطلاب{% else %}Student Management{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}إدارة المعلمين{% else %}Teacher Management{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}إدارة الفصول{% else %}Class Management{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}النظام المالي{% else %}Finance System{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}جميع التقارير{% else %}All Reports{% endif %}</li>
+                    {% elif role.id == 'supervisor' %}
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}عرض الطلاب{% else %}View Students{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}تسجيل الحضور{% else %}Mark Attendance{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}إدخال الدرجات{% else %}Enter Grades{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}تقارير الفصل{% else %}Class Reports{% endif %}</li>
+                        <li><i class="fas fa-times-circle text-danger me-2"></i> {% if lang.get_direction() == 'rtl' %}النظام المالي{% else %}Finance System{% endif %}</li>
+                        <li><i class="fas fa-times-circle text-danger me-2"></i> {% if lang.get_direction() == 'rtl' %}إدارة المستخدمين{% else %}User Management{% endif %}</li>
+                    {% elif role.id == 'teacher' %}
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}عرض الطلاب{% else %}View Students{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}تسجيل الحضور{% else %}Mark Attendance{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}إدخال الدرجات{% else %}Enter Grades{% endif %}</li>
+                        <li><i class="fas fa-times-circle text-danger me-2"></i> {% if lang.get_direction() == 'rtl' %}التقارير المالية{% else %}Financial Reports{% endif %}</li>
+                        <li><i class="fas fa-times-circle text-danger me-2"></i> {% if lang.get_direction() == 'rtl' %}إدارة المستخدمين{% else %}User Management{% endif %}</li>
+                    {% elif role.id == 'accountant' %}
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}إدارة الرسوم{% else %}Fee Management{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}تسديد المدفوعات{% else %}Process Payments{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}إدارة المصروفات{% else %}Expense Management{% endif %}</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i> {% if lang.get_direction() == 'rtl' %}التقارير المالية{% else %}Financial Reports{% endif %}</li>
+                        <li><i class="fas fa-times-circle text-danger me-2"></i> {% if lang.get_direction() == 'rtl' %}إدارة الطلاب{% else %}Student Management{% endif %}</li>
+                        <li><i class="fas fa-times-circle text-danger me-2"></i> {% if lang.get_direction() == 'rtl' %}الدرجات{% else %}Grades{% endif %}</li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="role-footer">
+                <span class="badge bg-light text-dark">
+                    {% if lang.get_direction() == 'rtl' %}{{ role.name_ar }}{% else %}{{ role.name_en }}{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+.role-card-detailed {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.role-card-detailed:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.role-header {
+    padding: 25px 20px;
+    text-align: center;
+    color: white;
+}
+
+.role-header.admin { background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%); }
+.role-header.supervisor { background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%); }
+.role-header.teacher { background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%); }
+.role-header.accountant { background: linear-gradient(135deg, #FFB347 0%, #ff9900 100%); }
+
+.role-icon {
+    width: 70px;
+    height: 70px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 2rem;
+}
+
+.role-header h4 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.role-body {
+    padding: 20px;
+    flex: 1;
+}
+
+.role-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.permissions-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.permissions-list li {
+    padding: 8px 0;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.permissions-list li:last-child {
+    border-bottom: none;
+}
+
+.role-footer {
+    padding: 15px 20px;
+    background: #f8f9fa;
+    text-align: center;
+}
+</style>
+{% endblock %}

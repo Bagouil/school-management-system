@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h2>
+            {% if lang.get_direction() == 'rtl' %}
+                نظام الحضور والغياب
+            {% else %}
+                Attendance System
+            {% endif %}
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Student Attendance Card -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    {% if lang.get_direction() == 'rtl' %}
+                        حضور الطلاب
+                    {% else %}
+                        Student Attendance
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    {% if lang.get_direction() == 'rtl' %}
+                        تسجيل ومتابعة حضور الطلاب يومياً. يمكنك تسجيل الحضور لكل صف وعرض التقارير.
+                    {% else %}
+                        Record and track student attendance daily. You can mark attendance for each class and view reports.
+                    {% endif %}
+                </p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('attendance.student_attendance') }}" class="btn btn-primary btn-lg">
+                        {% if lang.get_direction() == 'rtl' %}
+                            تسجيل حضور الطلاب
+                        {% else %}
+                            Mark Student Attendance
+                        {% endif %}
+                    </a>
+                    <a href="{{ url_for('attendance.student_report') }}" class="btn btn-outline-primary">
+                        {% if lang.get_direction() == 'rtl' %}
+                            تقارير الحضور
+                        {% else %}
+                            Attendance Reports
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+                <small>
+                    {% if lang.get_direction() == 'rtl' %}
+                        آخر تحديث: {{ today }}
+                    {% else %}
+                        Last updated: {{ today }}
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Teacher Attendance Card (Admin only) -->
+    {% if session.role == 'admin' %}
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    {% if lang.get_direction() == 'rtl' %}
+                        حضور المعلمين
+                    {% else %}
+                        Teacher Attendance
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    {% if lang.get_direction() == 'rtl' %}
+                        تسجيل ومتابعة حضور المعلمين يومياً وإدارة الإجازات.
+                    {% else %}
+                        Record and track teacher attendance daily and manage leaves.
+                    {% endif %}
+                </p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('attendance.teacher_attendance') }}" class="btn btn-success btn-lg">
+                        {% if lang.get_direction() == 'rtl' %}
+                            تسجيل حضور المعلمين
+                        {% else %}
+                            Mark Teacher Attendance
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer text-muted">
+                <small>
+                    {% if lang.get_direction() == 'rtl' %}
+                        متاح للمدير فقط
+                    {% else %}
+                        Admin only
+                    {% endif %}
+                </small>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Stats -->
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    {% if lang.get_direction() == 'rtl' %}
+                        روابط سريعة
+                    {% else %}
+                        Quick Links
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('attendance.student_attendance') }}?date={{ today }}" class="btn btn-outline-primary w-100 mb-2">
+                            {% if lang.get_direction() == 'rtl' %}
+                                اليوم
+                            {% else %}
+                                Today
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('attendance.student_report') }}" class="btn btn-outline-success w-100 mb-2">
+                            {% if lang.get_direction() == 'rtl' %}
+                                التقرير الشهري
+                            {% else %}
+                                Monthly Report
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('students.list_students') }}" class="btn btn-outline-info w-100 mb-2">
+                            {% if lang.get_direction() == 'rtl' %}
+                                قائمة الطلاب
+                            {% else %}
+                                Student List
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

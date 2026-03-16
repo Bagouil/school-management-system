@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-exclamation-triangle me-2" style="color: #dc3545;"></i>
+                {% if lang.get_direction() == 'rtl' %}حذف المعلم{% else %}Delete Teacher{% endif %}
+            </h2>
+            <p class="text-muted">
+                {{ teacher.first_name_ar }} {{ teacher.last_name_ar }} - {{ teacher.teacher_number }}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('teachers.list_teachers', status='inactive') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="modern-card">
+            <div class="card-header-modern bg-danger text-white">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}تأكيد الحذف{% else %}Confirm Deletion{% endif %}
+            </div>
+            <div class="card-body">
+                
+                {% if class_assignments or subject_assignments %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}
+                        <strong>لا يمكن حذف هذا المعلم</strong> لأنه لا يزال مرتبطاً بالعناصر التالية:
+                    {% else %}
+                        <strong>Cannot delete this teacher</strong> because they are still assigned to:
+                    {% endif %}
+                </div>
+                
+                {% if class_assignments %}
+                <h6 class="mt-3">
+                    <i class="fas fa-school me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}الفصول المخصصة{% else %}Class Assignments{% endif %}
+                </h6>
+                <ul class="list-group mb-3">
+                    {% for ca in class_assignments %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ ca.class_name }}
+                        {% if ca.is_class_teacher %}
+                        <span class="badge bg-primary">{% if lang.get_direction() == 'rtl' %}مدرس فصل{% else %}Class Teacher{% endif %}</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                
+                {% if subject_assignments %}
+                <h6 class="mt-3">
+                    <i class="fas fa-book-open me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}المواد المخصصة{% else %}Subject Assignments{% endif %}
+                </h6>
+                <ul class="list-group mb-3">
+                    {% for sa in subject_assignments %}
+                    <li class="list-group-item">
+                        {{ sa.subject }} - {{ sa.class }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                
+                <div class="alert alert-info mt-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}
+                        لإزالة هذه التعيينات، قم بزيارة صفحة تعديل المعلم واستخدم خيار "إدارة الفصول والمواد".
+                    {% else %}
+                        To remove these assignments, visit the teacher edit page and use the "Manage Classes and Subjects" option.
+                    {% endif %}
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="{{ url_for('teachers.edit_teacher', teacher_id=teacher.teacher_id) }}" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}تعديل المعلم{% else %}Edit Teacher{% endif %}
+                    </a>
+                    <a href="{{ url_for('teachers.list_teachers', status='inactive') }}" class="btn btn-secondary">
+                        {% if lang.get_direction() == 'rtl' %}رجوع{% else %}Back{% endif %}
+                    </a>
+                </div>
+                
+                {% else %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}
+                        <strong>يمكن حذف هذا المعلم</strong> - لا توجد تعيينات مرتبطة به.
+                    {% else %}
+                        <strong>Teacher can be deleted</strong> - No assignments found.
+                    {% endif %}
+                </div>
+                
+                <div class="text-center mt-4">
+                    <form method="POST" action="{{ url_for('teachers.permanent_delete_teacher', teacher_id=teacher.teacher_id) }}" 
+                          onsubmit="return confirm('{% if lang.get_direction() == "rtl" %}هل أنت متأكد من الحذف النهائي؟ لا يمكن التراجع عن هذا الإجراء.{% else %}Are you sure you want to permanently delete? This action cannot be undone.{% endif %}')">
+                        <button type="submit" class="btn btn-danger btn-lg">
+                            <i class="fas fa-trash me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}حذف نهائي{% else %}Permanently Delete{% endif %}
+                        </button>
+                        <a href="{{ url_for('teachers.list_teachers', status='inactive') }}" class="btn btn-secondary btn-lg">
+                            {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                        </a>
+                    </form>
+                </div>
+                {% endif %}
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

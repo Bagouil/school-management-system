@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-users me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}طلابي{% else %}My Students{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}عرض جميع الطلاب في فصولك{% else %}View all students in your classes{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('teacher.dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي الطلاب{% else %}Total Students{% endif %}</span>
+                <h3 class="stat-value">{{ students|length }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #0077b6 0%, #023e8a 100%);">
+                <i class="fas fa-mars"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}ذكور{% else %}Male{% endif %}</span>
+                <h3 class="stat-value">{{ students|selectattr('gender', 'equalto', 'male')|list|length }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #c44569 0%, #9b4d6e 100%);">
+                <i class="fas fa-venus"></i>
+            </div>
+            <div class="stat-details">
+                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}إناث{% else %}Female{% endif %}</span>
+                <h3 class="stat-value">{{ students|selectattr('gender', 'equalto', 'female')|list|length }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Students by Class -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="modern-card">
+            <div class="card-header-modern d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-list me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}قائمة الطلاب{% else %}Students List{% endif %}
+                </span>
+                <div class="input-group" style="width: 300px;">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control modern-input border-start-0" id="searchInput" 
+                           placeholder="{% if lang.get_direction() == 'rtl' %}بحث عن طالب...{% else %}Search student...{% endif %}">
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="modern-table" id="studentsTable">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الرقم الدراسي{% else %}Student ID{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}اسم الطالب{% else %}Student Name{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الصف{% else %}Class{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الجنس{% else %}Gender{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}تاريخ الميلاد{% else %}Birth Date{% endif %}</th>
+                                <th style="width: 120px;">{% if lang.get_direction() == 'rtl' %}الإجراءات{% else %}Actions{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr class="student-row" data-name="{{ student.first_name_ar }} {{ student.last_name_ar }} {{ student.student_number }}">
+                                <td>{{ loop.index }}</td>
+                                <td><span class="badge bg-light text-dark">{{ student.student_number }}</span></td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="student-avatar me-2">
+                                            <div class="avatar-placeholder" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+                                                {{ student.first_name_ar[:1] }}{{ student.last_name_ar[:1] }}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <strong>{{ student.first_name_ar }} {{ student.last_name_ar }}</strong>
+                                            {% if student.first_name_en %}
+                                            <small class="d-block text-muted">{{ student.first_name_en }} {{ student.last_name_en }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ student.class_name_ar }}</td>
+                                <td>
+                                    {% if student.gender == 'male' %}
+                                    <span class="badge" style="background: #0077b6; color: white;">
+                                        <i class="fas fa-mars me-1"></i> {% if lang.get_direction() == 'rtl' %}ذكر{% else %}Male{% endif %}
+                                    </span>
+                                    {% else %}
+                                    <span class="badge" style="background: #c44569; color: white;">
+                                        <i class="fas fa-venus me-1"></i> {% if lang.get_direction() == 'rtl' %}أنثى{% else %}Female{% endif %}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ student.birth_date }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('students.view_student_profile', student_id=student.student_id) }}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="{% if lang.get_direction() == 'rtl' %}عرض الملف{% else %}View Profile{% endif %}">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('attendance.view_class_attendance', class_id=student.class_id) }}" 
+                                           class="btn btn-sm btn-outline-success"
+                                           title="{% if lang.get_direction() == 'rtl' %}تسجيل حضور{% else %}Attendance{% endif %}">
+                                            <i class="fas fa-calendar-check"></i>
+                                        </a>
+                                        <a href="{{ url_for('exams.student_results', student_id=student.student_id) }}" 
+                                           class="btn btn-sm btn-outline-info"
+                                           title="{% if lang.get_direction() == 'rtl' %}نتائج الامتحانات{% else %}Exam Results{% endif %}">
+                                            <i class="fas fa-file-alt"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                {% if not students %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-4x mb-3 text-muted"></i>
+                    <h5>{% if lang.get_direction() == 'rtl' %}لا يوجد طلاب في فصولك{% else %}No students in your classes{% endif %}</h5>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.stat-details {
+    flex: 1;
+}
+
+.stat-label {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.student-avatar {
+    width: 40px;
+    height: 40px;
+}
+
+.avatar-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 8px 12px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.btn-group .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-group .btn i {
+    font-size: 1rem;
+}
+</style>
+
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const searchText = this.value.toLowerCase();
+    const rows = document.querySelectorAll('.student-row');
+    
+    rows.forEach(row => {
+        const studentName = row.dataset.name?.toLowerCase() || '';
+        if (studentName.includes(searchText)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

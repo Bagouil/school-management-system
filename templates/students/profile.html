@@ -1,0 +1,553 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-user-graduate me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}ملف الطالب{% else %}Student Profile{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}
+                    عرض وتحرير معلومات الطالب
+                {% else %}
+                    View and edit student information
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('students.list_students') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+            {% if session.role == 'admin' %}
+            <a href="{{ url_for('students.edit_student', student_id=student.student_id) }}" class="btn btn-warning">
+                <i class="fas fa-edit me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}تعديل{% else %}Edit{% endif %}
+            </a>
+            {% endif %}
+			<a href="{{ url_for('exams.student_results', student_id=student.student_id) }}" class="btn btn-info">
+				<i class="fas fa-chart-line me-2"></i>
+				{% if lang.get_direction() == 'rtl' %}نتائج الامتحانات{% else %}Exam Results{% endif %}
+			</a>
+        </div>
+    </div>
+</div>
+
+<!-- Student Profile Main Card -->
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <!-- Profile Photo Card -->
+        <div class="modern-card text-center">
+            <div class="card-body">
+                <div class="profile-photo-container mb-3">
+                    {% if student.student_image %}
+                    <img src="{{ url_for('static', filename=student.student_image) }}" 
+                         alt="{{ student.first_name_ar }}" 
+                         class="profile-photo"
+                         id="profilePhoto">
+                    {% else %}
+                    <div class="profile-photo-placeholder">
+                        <i class="fas fa-user-graduate fa-4x"></i>
+                    </div>
+                    {% endif %}
+                    
+                    {% if session.role == 'admin' %}
+                    <button class="btn btn-sm btn-primary upload-photo-btn" onclick="document.getElementById('photoInput').click();">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    <form id="uploadPhotoForm" method="POST" enctype="multipart/form-data" 
+                          action="{{ url_for('students.upload_photo', student_id=student.student_id) }}" style="display: none;">
+                        <input type="file" name="photo" id="photoInput" accept="image/*" onchange="uploadPhoto()">
+                    </form>
+                    {% endif %}
+                </div>
+                
+                <h3 class="mb-1">{{ student.first_name_ar }} {{ student.last_name_ar }}</h3>
+                <p class="text-muted mb-2">{{ student.first_name_en }} {{ student.last_name_en }}</p>
+                <span class="badge bg-primary mb-3">{{ student.student_number }}</span>
+                
+                <div class="student-status">
+                    {% if student.status == 'active' %}
+                    <span class="badge bg-success">
+                        <i class="fas fa-check-circle me-1"></i>
+                        {% if lang.get_direction() == 'rtl' %}نشط{% else %}Active{% endif %}
+                    </span>
+                    {% elif student.status == 'graduated' %}
+                    <span class="badge bg-info">
+                        <i class="fas fa-graduation-cap me-1"></i>
+                        {% if lang.get_direction() == 'rtl' %}متخرج{% else %}Graduated{% endif %}
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary">
+                        <i class="fas fa-pause-circle me-1"></i>
+                        {% if lang.get_direction() == 'rtl' %}منقول{% else %}Transferred{% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="modern-card mt-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}إحصائيات سريعة{% else %}Quick Stats{% endif %}
+                </h5>
+                <div class="stat-item">
+                    <span class="stat-label">{% if lang.get_direction() == 'rtl' %}نسبة الحضور{% else %}Attendance Rate{% endif %}</span>
+                    <div class="progress mb-2" style="height: 8px;">
+                        <div class="progress-bar bg-success" style="width: {{ attendance_summary.attendance_percentage }}%"></div>
+                    </div>
+                    <span class="stat-value">{{ attendance_summary.attendance_percentage }}%</span>
+                </div>
+                <div class="stat-item mt-3">
+                    <span class="stat-label">{% if lang.get_direction() == 'rtl' %}الرصيد المالي{% else %}Fee Balance{% endif %}</span>
+                    <h4 class="{% if fee_summary.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ "%.2f"|format(fee_summary.balance) }} SDG
+                    </h4>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <!-- Personal Information Card -->
+        <div class="modern-card mb-4">
+            <div class="card-header-modern">
+                <i class="fas fa-user me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}المعلومات الشخصية{% else %}Personal Information{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="info-table">
+                            <tr>
+                                <th>{% if lang.get_direction() == 'rtl' %}تاريخ الميلاد{% else %}Date of Birth{% endif %}</th>
+                                <td>{{ student.birth_date }}</td>
+                            </tr>
+                            <tr>
+                                <th>{% if lang.get_direction() == 'rtl' %}الجنس{% else %}Gender{% endif %}</th>
+                                <td>
+                                    {% if student.gender == 'male' %}
+                                        <i class="fas fa-mars text-primary me-1"></i>
+                                        {% if lang.get_direction() == 'rtl' %}ذكر{% else %}Male{% endif %}
+                                    {% else %}
+                                        <i class="fas fa-venus text-danger me-1"></i>
+                                        {% if lang.get_direction() == 'rtl' %}أنثى{% else %}Female{% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>{% if lang.get_direction() == 'rtl' %}الجنسية{% else %}Nationality{% endif %}</th>
+                                <td>{{ student.nationality or 'Sudanese' }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="info-table">
+                            <tr>
+                                <th>{% if lang.get_direction() == 'rtl' %}رقم الهاتف{% else %}Phone{% endif %}</th>
+                                <td>{{ student.phone }}</td>
+                            </tr>
+                            <tr>
+                                <th>{% if lang.get_direction() == 'rtl' %}البريد الإلكتروني{% else %}Email{% endif %}</th>
+                                <td>{{ student.email or '---' }}</td>
+                            </tr>
+                            <tr>
+                                <th>{% if lang.get_direction() == 'rtl' %}العنوان{% else %}Address{% endif %}</th>
+                                <td>{{ student.address }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Academic Information Card -->
+        <div class="modern-card mb-4">
+            <div class="card-header-modern">
+                <i class="fas fa-graduation-cap me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}المعلومات الدراسية{% else %}Academic Information{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="info-box">
+                            <span class="info-label">{% if lang.get_direction() == 'rtl' %}الصف الحالي{% else %}Current Class{% endif %}</span>
+                            <span class="info-value">{{ student.class_name_ar }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-box">
+                            <span class="info-label">{% if lang.get_direction() == 'rtl' %}تاريخ التسجيل{% else %}Enrollment Date{% endif %}</span>
+                            <span class="info-value">{{ student.enrollment_date }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-box">
+                            <span class="info-label">{% if lang.get_direction() == 'rtl' %}المرحلة{% else %}Grade Level{% endif %}</span>
+                            <span class="info-value">{{ student.grade_name_ar }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Guardian Information Card -->
+        <div class="modern-card mb-4">
+            <div class="card-header-modern d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-users me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}معلومات ولي الأمر{% else %}Guardian Information{% endif %}
+                </span>
+                {% if session.role == 'admin' %}
+                <button class="btn btn-sm btn-outline-primary" onclick="showAddGuardianModal()">
+                    <i class="fas fa-plus me-1"></i>
+                    {% if lang.get_direction() == 'rtl' %}إضافة{% else %}Add{% endif %}
+                </button>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if guardians %}
+                <div class="row">
+                    {% for guardian in guardians %}
+                    <div class="col-md-6 mb-3">
+                        <div class="guardian-card">
+                            <div class="guardian-header">
+                                <div class="guardian-avatar">
+                                    {% if loop.first %}
+                                    <i class="fas fa-star text-warning"></i>
+                                    {% endif %}
+                                    <i class="fas fa-user-tie fa-2x"></i>
+                                </div>
+                                <div class="guardian-name">
+                                    <h6>{{ guardian.full_name_ar }}</h6>
+                                    <small>{{ guardian.full_name_en }}</small>
+                                </div>
+                            </div>
+                            <div class="guardian-body">
+                                <p><i class="fas fa-heart me-2"></i> {{ guardian.relationship_ar }}</p>
+                                <p><i class="fas fa-phone me-2"></i> {{ guardian.phone }}</p>
+                                {% if guardian.phone2 %}
+                                <p><i class="fas fa-phone-alt me-2"></i> {{ guardian.phone2 }}</p>
+                                {% endif %}
+                                {% if guardian.occupation %}
+                                <p><i class="fas fa-briefcase me-2"></i> {{ guardian.occupation }}</p>
+                                {% endif %}
+                                {% if guardian.email %}
+                                <p><i class="fas fa-envelope me-2"></i> {{ guardian.email }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-user-slash fa-3x mb-3 text-muted"></i>
+                    <p>{% if lang.get_direction() == 'rtl' %}لا يوجد معلومات ولي أمر{% else %}No guardian information{% endif %}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Fee Summary Card -->
+        <div class="modern-card">
+            <div class="card-header-modern d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-coins me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}ملخص الرسوم{% else %}Fee Summary{% endif %}
+                </span>
+                <a href="{{ url_for('finance.student_fees_detail', student_id=student.student_id) }}" class="btn btn-sm btn-outline-primary">
+                    {% if lang.get_direction() == 'rtl' %}عرض التفاصيل{% else %}View Details{% endif %}
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="fee-stat">
+                            <span class="stat-label">{% if lang.get_direction() == 'rtl' %}الإجمالي{% else %}Total{% endif %}</span>
+                            <h4>{{ "%.2f"|format(fee_summary.total_amount) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fee-stat">
+                            <span class="stat-label">{% if lang.get_direction() == 'rtl' %}المدفوع{% else %}Paid{% endif %}</span>
+                            <h4 class="text-success">{{ "%.2f"|format(fee_summary.total_paid) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="fee-stat">
+                            <span class="stat-label">{% if lang.get_direction() == 'rtl' %}المتبقي{% else %}Balance{% endif %}</span>
+                            <h4 class="{% if fee_summary.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ "%.2f"|format(fee_summary.balance) }}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height: 8px;">
+                    {% set paid_percentage = (fee_summary.total_paid / fee_summary.total_amount * 100) if fee_summary.total_amount > 0 else 0 %}
+                    <div class="progress-bar bg-success" style="width: {{ paid_percentage }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Guardian Modal -->
+<div class="modal fade" id="addGuardianModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}إضافة ولي أمر{% else %}Add Guardian{% endif %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('students.add_guardian', student_id=student.student_id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">{% if lang.get_direction() == 'rtl' %}الاسم الكامل (عربي){% else %}Full Name (Arabic){% endif %}</label>
+                        <input type="text" name="full_name_ar" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% if lang.get_direction() == 'rtl' %}الاسم الكامل (إنجليزي){% else %}Full Name (English){% endif %}</label>
+                        <input type="text" name="full_name_en" class="form-control">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{% if lang.get_direction() == 'rtl' %}الصلة (عربي){% else %}Relationship (Arabic){% endif %}</label>
+                            <select name="relationship_ar" class="form-select" required>
+                                <option value="أب">أب</option>
+                                <option value="أم">أم</option>
+                                <option value="أخ">أخ</option>
+                                <option value="أخت">أخت</option>
+                                <option value="جد">جد</option>
+                                <option value="جدة">جدة</option>
+                                <option value="وصي">وصي</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{% if lang.get_direction() == 'rtl' %}الصلة (إنجليزي){% else %}Relationship (English){% endif %}</label>
+                            <select name="relationship_en" class="form-select">
+                                <option value="Father">Father</option>
+                                <option value="Mother">Mother</option>
+                                <option value="Brother">Brother</option>
+                                <option value="Sister">Sister</option>
+                                <option value="Grandfather">Grandfather</option>
+                                <option value="Grandmother">Grandmother</option>
+                                <option value="Guardian">Guardian</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{% if lang.get_direction() == 'rtl' %}رقم الهاتف{% else %}Phone{% endif %}</label>
+                            <input type="tel" name="phone" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">{% if lang.get_direction() == 'rtl' %}رقم هاتف آخر{% else %}Alternative Phone{% endif %}</label>
+                            <input type="tel" name="phone2" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% if lang.get_direction() == 'rtl' %}المهنة{% else %}Occupation{% endif %}</label>
+                        <input type="text" name="occupation" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{% if lang.get_direction() == 'rtl' %}البريد الإلكتروني{% else %}Email{% endif %}</label>
+                        <input type="email" name="email" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}حفظ{% else %}Save{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-photo-container {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+}
+
+.profile-photo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--primary-color);
+}
+
+.profile-photo-placeholder {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6a4b5f 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 3rem;
+    margin: 0 auto;
+    border: 4px solid rgba(255,255,255,0.3);
+}
+
+.upload-photo-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-table {
+    width: 100%;
+}
+
+.info-table th {
+    width: 40%;
+    color: #666;
+    font-weight: 500;
+    padding: 8px 0;
+}
+
+.info-table td {
+    width: 60%;
+    padding: 8px 0;
+}
+
+.info-box {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.info-label {
+    display: block;
+    color: #666;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.info-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.guardian-card {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    height: 100%;
+}
+
+.guardian-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.guardian-avatar {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6a4b5f 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.guardian-avatar .fa-star {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    font-size: 0.8rem;
+}
+
+.guardian-name h6 {
+    margin: 0 0 3px;
+    font-weight: 600;
+}
+
+.guardian-name small {
+    color: #666;
+    font-size: 0.75rem;
+}
+
+.guardian-body p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+}
+
+.fee-stat {
+    padding: 10px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-item .stat-label {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 3px;
+}
+
+.stat-item .stat-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+</style>
+
+<script>
+function uploadPhoto() {
+    const form = document.getElementById('uploadPhotoForm');
+    const formData = new FormData(form);
+    
+    fetch(form.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error uploading photo: ' + data.error);
+        }
+    })
+    .catch(error => {
+        alert('Error uploading photo');
+    });
+}
+
+function showAddGuardianModal() {
+    new bootstrap.Modal(document.getElementById('addGuardianModal')).show();
+}
+</script>
+{% endblock %}

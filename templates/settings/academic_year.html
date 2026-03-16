@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-calendar-alt me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}إعدادات السنة الدراسية{% else %}Academic Year Settings{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}إدارة السنوات الدراسية وتحديد السنة الحالية{% else %}Manage academic years and set current year{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('settings.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="modern-card mb-4">
+            <div class="card-header-modern">
+                <i class="fas fa-plus-circle me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}إضافة سنة دراسية جديدة{% else %}Add New Academic Year{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('settings.add_academic_year') }}" class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            {% if lang.get_direction() == 'rtl' %}اسم السنة (عربي){% else %}Year Name (Arabic){% endif %}
+                        </label>
+                        <input type="text" name="year_name_ar" class="form-control modern-input" required placeholder="مثال: ٢٠٢٤-٢٠٢٥">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            {% if lang.get_direction() == 'rtl' %}اسم السنة (إنجليزي){% else %}Year Name (English){% endif %}
+                        </label>
+                        <input type="text" name="year_name_en" class="form-control modern-input" required placeholder="Example: 2024-2025">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">
+                            {% if lang.get_direction() == 'rtl' %}تاريخ البداية{% else %}Start Date{% endif %}
+                        </label>
+                        <input type="date" name="start_date" class="form-control modern-input" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">
+                            {% if lang.get_direction() == 'rtl' %}تاريخ النهاية{% else %}End Date{% endif %}
+                        </label>
+                        <input type="date" name="end_date" class="form-control modern-input" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-list me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}السنوات الدراسية{% else %}Academic Years{% endif %}
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}السنة (عربي){% else %}Year (Arabic){% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}السنة (إنجليزي){% else %}Year (English){% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}تاريخ البداية{% else %}Start Date{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}تاريخ النهاية{% else %}End Date{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}</th>
+                                <th>{% if lang.get_direction() == 'rtl' %}الإجراءات{% else %}Actions{% endif %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for year in academic_years %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ year.year_name_ar }}</td>
+                                <td>{{ year.year_name_en }}</td>
+                                <td>{{ year.start_date }}</td>
+                                <td>{{ year.end_date }}</td>
+                                <td>
+                                    {% if year.is_current %}
+                                    <span class="badge bg-success">{% if lang.get_direction() == 'rtl' %}حالية{% else %}Current{% endif %}</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{% if lang.get_direction() == 'rtl' %}سابقة{% else %}Past{% endif %}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if not year.is_current %}
+                                    <form method="POST" action="{{ url_for('settings.set_current_year', year_id=year.year_id) }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary" title="{% if lang.get_direction() == 'rtl' %}تعيين كسنة حالية{% else %}Set as Current{% endif %}">
+                                            <i class="fas fa-check-circle"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modern-input {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-cog me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}الإعدادات{% else %}Settings{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}إعدادات النظام والشعار والمعلومات الأساسية{% else %}System settings, logo, and basic information{% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="settings-card" onclick="location.href='{{ url_for('settings.logo') }}'">
+            <div class="settings-icon">
+                <i class="fas fa-image"></i>
+            </div>
+            <div class="settings-info">
+                <h5>{% if lang.get_direction() == 'rtl' %}شعار المدرسة{% else %}School Logo{% endif %}</h5>
+                <p class="text-muted">
+                    {% if lang.get_direction() == 'rtl' %}تحديث شعار المدرسة للإيصالات والتقارير{% else %}Update school logo for receipts and reports{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="settings-card" onclick="location.href='{{ url_for('settings.school_info') }}'">
+            <div class="settings-icon">
+                <i class="fas fa-school"></i>
+            </div>
+            <div class="settings-info">
+                <h5>{% if lang.get_direction() == 'rtl' %}معلومات المدرسة{% else %}School Information{% endif %}</h5>
+                <p class="text-muted">
+                    {% if lang.get_direction() == 'rtl' %}اسم المدرسة، العنوان، رقم الهاتف{% else %}School name, address, phone number{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="settings-card" onclick="location.href='{{ url_for('settings.academic_year') }}'">
+            <div class="settings-icon">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
+            <div class="settings-info">
+                <h5>{% if lang.get_direction() == 'rtl' %}السنة الدراسية{% else %}Academic Year{% endif %}</h5>
+                <p class="text-muted">
+                    {% if lang.get_direction() == 'rtl' %}تحديد السنة الدراسية الحالية{% else %}Set current academic year{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.settings-card {
+    background: white;
+    border-radius: 16px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    height: 100%;
+}
+
+.settings-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    border: 2px solid var(--primary-color);
+}
+
+.settings-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6a4b5f 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.8rem;
+}
+
+.settings-info {
+    flex: 1;
+}
+
+.settings-info h5 {
+    margin: 0 0 5px;
+    font-weight: 600;
+}
+
+.settings-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-chart-line me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    نتائج الطالب: {{ student.first_name_ar }} {{ student.last_name_ar }}
+                {% else %}
+                    Student Results: {{ student.first_name_en or student.first_name_ar }} {{ student.last_name_en or student.last_name_ar }}
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                <i class="fas fa-id-card me-1"></i> {{ student.student_number }} | 
+                <i class="fas fa-school me-1 ms-2"></i> {{ student.class_name_ar }}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('students.view_student_profile', student_id=student.student_id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Student Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="summary-card">
+            <div class="summary-icon" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}إجمالي الامتحانات{% else %}Total Exams{% endif %}</span>
+                <h3>{{ results|length }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="summary-card">
+            <div class="summary-icon" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}متوسط الدرجات{% else %}Average Marks{% endif %}</span>
+                <h3>{{ "%.1f"|format(results|map(attribute='marks_obtained')|sum / results|length) if results else 0 }}</h3>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="summary-card">
+            <div class="summary-icon" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%);">
+                <i class="fas fa-percent"></i>
+            </div>
+            <div class="summary-details">
+                <span class="summary-label">{% if lang.get_direction() == 'rtl' %}متوسط النسبة{% else %}Average Percentage{% endif %}</span>
+                <h3>{{ "%.1f"|format(results|map(attribute='percentage')|sum / results|length) if results else 0 }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results by Subject -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-table me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}النتائج حسب المادة{% else %}Results by Subject{% endif %}
+            </div>
+            <div class="card-body">
+                {% for subject_name, subject_results in subjects.items() %}
+                <div class="subject-section mb-4">
+                    <h6 class="subject-title">
+                        <i class="fas fa-book-open me-2" style="color: var(--primary-color);"></i>
+                        {{ subject_name }}
+                    </h6>
+                    
+                    <div class="table-responsive">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>{% if lang.get_direction() == 'rtl' %}الامتحان{% else %}Exam{% endif %}</th>
+                                    <th>{% if lang.get_direction() == 'rtl' %}النوع{% else %}Type{% endif %}</th>
+                                    <th class="text-center">{% if lang.get_direction() == 'rtl' %}التاريخ{% else %}Date{% endif %}</th>
+                                    <th class="text-center">{% if lang.get_direction() == 'rtl' %}الدرجة{% else %}Marks{% endif %}</th>
+                                    <th class="text-center">{% if lang.get_direction() == 'rtl' %}النسبة{% else %}Percentage{% endif %}</th>
+                                    <th class="text-center">{% if lang.get_direction() == 'rtl' %}التقدير{% else %}Grade{% endif %}</th>
+                                    <th>{% if lang.get_direction() == 'rtl' %}الملاحظات{% else %}Remarks{% endif %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for result in subject_results %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ result.exam_name_ar }}</strong>
+                                        <small class="d-block text-muted">{{ result.exam_name_en }}</small>
+                                    </td>
+                                    <td>{{ result.type_name_ar }}</td>
+                                    <td class="text-center">{{ result.exam_date }}</td>
+                                    <td class="text-center fw-bold">{{ "%.1f"|format(result.marks_obtained) }}</td>
+                                    <td class="text-center">
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar {% if result.percentage >= 75 %}bg-success{% elif result.percentage >= 50 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                 style="width: {{ result.percentage }}%"></div>
+                                        </div>
+                                        <small>{{ "%.1f"|format(result.percentage) }}%</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge {% if result.grade_letter in ['A+', 'A', 'B+', 'B'] %}bg-success{% elif result.grade_letter in ['C+', 'C', 'D+', 'D'] %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ result.grade_letter }}
+                                        </span>
+                                    </td>
+                                    <td><small class="text-muted">{{ result.remarks or '---' }}</small></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot style="background: #f8f9fa;">
+                                <tr>
+                                    <th colspan="3" class="text-end">{% if lang.get_direction() == 'rtl' %}المجموع / المتوسط{% else %}Total / Average{% endif %}</th>
+                                    <th class="text-center">{{ "%.1f"|format(subject_results|map(attribute='marks_obtained')|sum) }}</th>
+                                    <th class="text-center">{{ "%.1f"|format(subject_results|map(attribute='percentage')|sum / subject_results|length) }}%</th>
+                                    <th colspan="2"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-file-alt fa-4x mb-3 text-muted"></i>
+                    <h5>{% if lang.get_direction() == 'rtl' %}لا توجد نتائج لهذا الطالب{% else %}No results for this student{% endif %}</h5>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performance Chart -->
+{% if results %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-chart-line me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}تطور الأداء{% else %}Performance Trend{% endif %}
+            </div>
+            <div class="card-body">
+                <canvas id="performanceChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.summary-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.summary-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.summary-details {
+    flex: 1;
+}
+
+.summary-label {
+    display: block;
+    color: #666;
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+}
+
+.summary-details h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.subject-section {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.subject-title {
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if results %}
+const ctx = document.getElementById('performanceChart').getContext('2d');
+const sortedResults = {{ results|sort(attribute='exam_date')|tojson }};
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: sortedResults.map(r => r.exam_name_ar),
+        datasets: [{
+            label: '{% if lang.get_direction() == "rtl" %}الدرجة{% else %}Marks{% endif %}',
+            data: sortedResults.map(r => r.marks_obtained),
+            borderColor: '#875A7B',
+            backgroundColor: 'rgba(135, 90, 123, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

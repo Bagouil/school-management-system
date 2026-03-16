@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-cog me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}إعدادات الشعار{% else %}Logo Settings{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}تخصيص حجم ومكان الشعار في الإيصالات{% else %}Customize logo size and position on receipts{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('settings.logo') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-sliders-h me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}خيارات تخصيص الشعار{% else %}Logo Customization Options{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('settings.save_logo_settings') }}">
+                    <!-- Logo Preview -->
+                    <div class="text-center mb-4">
+                        <h6>{% if lang.get_direction() == 'rtl' %}معاينة الشعار{% else %}Logo Preview{% endif %}</h6>
+                        <div class="preview-container" style="border: 2px dashed #e0e0e0; padding: 20px; border-radius: 10px;">
+                            {% if logo_exists %}
+                            <img src="{{ url_for('static', filename='images/school_logo.png') }}?v={{ cache_buster }}" 
+                                 alt="School Logo" 
+                                 class="img-fluid mb-3"
+                                 style="max-height: 150px; max-width: 150px; border-radius: 10px;">
+                            {% else %}
+                            <div class="no-logo mb-3">
+                                <i class="fas fa-school fa-4x text-muted"></i>
+                                <p class="mt-2">{% if lang.get_direction() == 'rtl' %}لا يوجد شعار{% else %}No logo{% endif %}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Size Options -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="fas fa-arrows-alt me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}حجم الشعار{% else %}Logo Size{% endif %}
+                        </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text">{% if lang.get_direction() == 'rtl' %}العرض (بوصة){% else %}Width (inches){% endif %}</span>
+                                    <input type="number" name="logo_width" class="form-control" step="0.1" min="0.5" max="3" value="{{ logo_config.width / 72 }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group mb-2">
+                                    <span class="input-group-text">{% if lang.get_direction() == 'rtl' %}الارتفاع (بوصة){% else %}Height (inches){% endif %}</span>
+                                    <input type="number" name="logo_height" class="form-control" step="0.1" min="0.5" max="3" value="{{ logo_config.height / 72 }}">
+                                </div>
+                            </div>
+                        </div>
+                        <small class="text-muted">
+                            {% if lang.get_direction() == 'rtl' %}بوصة واحدة = 72 نقطة. القيم المقترحة: 1.0 - 1.5 بوصة{% else %}1 inch = 72 points. Recommended: 1.0 - 1.5 inches{% endif %}
+                        </small>
+                    </div>
+                    
+                    <!-- Alignment Options -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="fas fa-align-left me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}محاذاة الشعار{% else %}Logo Alignment{% endif %}
+                        </label>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="logo_alignment" id="alignLeft" value="left" {% if logo_config.alignment == 'left' %}checked{% endif %}>
+                                    <label class="form-check-label" for="alignLeft">
+                                        <i class="fas fa-align-left me-1"></i> {% if lang.get_direction() == 'rtl' %}يسار{% else %}Left{% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="logo_alignment" id="alignCenter" value="center" {% if logo_config.alignment == 'center' %}checked{% endif %}>
+                                    <label class="form-check-label" for="alignCenter">
+                                        <i class="fas fa-align-center me-1"></i> {% if lang.get_direction() == 'rtl' %}وسط{% else %}Center{% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="logo_alignment" id="alignRight" value="right" {% if logo_config.alignment == 'right' %}checked{% endif %}>
+                                    <label class="form-check-label" for="alignRight">
+                                        <i class="fas fa-align-right me-1"></i> {% if lang.get_direction() == 'rtl' %}يمين{% else %}Right{% endif %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Border Options -->
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="logo_border" id="logoBorder" {% if logo_config.border %}checked{% endif %}>
+                            <label class="form-check-label" for="logoBorder">
+                                <i class="fas fa-border-all me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}إضافة حدود حول الشعار{% else %}Add border around logo{% endif %}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Preview Button -->
+                    <div class="text-center mb-4">
+                        <button type="button" class="btn btn-info" onclick="previewReceipt()">
+                            <i class="fas fa-eye me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}معاينة الإيصال{% else %}Preview Receipt{% endif %}
+                        </button>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-modern-primary px-5">
+                            <i class="fas fa-save me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}حفظ الإعدادات{% else %}Save Settings{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewReceipt() {
+    // Get form values
+    const width = document.querySelector('input[name="logo_width"]').value;
+    const height = document.querySelector('input[name="logo_height"]').value;
+    const alignment = document.querySelector('input[name="logo_alignment"]:checked').value;
+    const border = document.querySelector('input[name="logo_border"]').checked;
+    
+    // Build preview URL
+    let url = "{{ url_for('finance.preview_receipt_with_settings') }}?";
+    url += `width=${width}&height=${height}&alignment=${alignment}&border=${border}`;
+    
+    // Open preview in new window
+    window.open(url, '_blank');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-md-8">
+        <h2>
+            {% if lang.get_direction() == 'rtl' %}
+                قائمة الدخل
+            {% else %}
+                Income Statement
+            {% endif %}
+        </h2>
+    </div>
+    <div class="col-md-4 text-end">
+        <button onclick="window.print()" class="btn btn-primary">
+            {% if lang.get_direction() == 'rtl' %}طباعة{% else %}Print{% endif %}
+        </button>
+    </div>
+</div>
+
+<!-- Date Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row">
+            <div class="col-md-4">
+                <label class="form-label">
+                    {% if lang.get_direction() == 'rtl' %}من تاريخ{% else %}From Date{% endif %}
+                </label>
+                <input type="date" name="start_date" class="form-control" value="{{ start_date or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">
+                    {% if lang.get_direction() == 'rtl' %}إلى تاريخ{% else %}To Date{% endif %}
+                </label>
+                <input type="date" name="end_date" class="form-control" value="{{ end_date or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">&nbsp;</label>
+                <button type="submit" class="btn btn-primary w-100">
+                    {% if lang.get_direction() == 'rtl' %}تصفية{% else %}Filter{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Summary -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6>{% if lang.get_direction() == 'rtl' %}إجمالي الإيرادات{% else %}Total Revenue{% endif %}</h6>
+                <h4>{{ "%.2f"|format(summary.total_collected) }} SDG</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <h6>{% if lang.get_direction() == 'rtl' %}إجمالي المصروفات{% else %}Total Expenses{% endif %}</h6>
+                <h4>{{ "%.2f"|format(summary.total_expenses) }} SDG</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6>{% if lang.get_direction() == 'rtl' %}صافي الدخل{% else %}Net Income{% endif %}</h6>
+                <h4>{{ "%.2f"|format(summary.net_income) }} SDG</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <h6>{% if lang.get_direction() == 'rtl' %}الرسوم المستحقة{% else %}Pending Fees{% endif %}</h6>
+                <h4>{{ "%.2f"|format(summary.pending_fees) }} SDG</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payments Detail -->
+<div class="card mb-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            {% if lang.get_direction() == 'rtl' %}
+                تفاصيل المدفوعات
+            {% else %}
+                Payment Details
+            {% endif %}
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>{% if lang.get_direction() == 'rtl' %}التاريخ{% else %}Date{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}الطالب{% else %}Student{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}نوع الرسوم{% else %}Fee Type{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</th>
+                        <th>{% if lang.get_direction() == 'rtl' %}رقم الإيصال{% else %}Receipt{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in payments %}
+                    <tr>
+                        <td>{{ payment[0] }}</td>
+                        <td>{{ payment[1] }} {{ payment[2] }}</td>
+                        <td>{{ payment[3] }}</td>
+                        <td>{{ "%.2f"|format(payment[4]) }} SDG</td>
+                        <td>{{ payment[5] }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            {% if lang.get_direction() == 'rtl' %}
+                                لا توجد مدفوعات في هذه الفترة
+                            {% else %}
+                                No payments in this period
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-success">
+                        <th colspan="3" class="text-end">
+                            {% if lang.get_direction() == 'rtl' %}الإجمالي{% else %}Total{% endif %}:
+                        </th>
+                        <th>{{ "%.2f"|format(payments|sum(attribute=4)) }} SDG</th>
+                        <th></th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

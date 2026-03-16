@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-user-plus me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}إضافة مستخدم جديد{% else %}Add New User{% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}إنشاء حساب مستخدم جديد وتحديد الصلاحيات{% else %}Create a new user account and set permissions{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <i class="fas fa-user-cog me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}معلومات المستخدم{% else %}User Information{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="POST" id="addUserForm">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-user me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}اسم المستخدم *{% else %}Username *{% endif %}
+                            </label>
+                            <input type="text" name="username" class="form-control modern-input" required 
+                                   placeholder="{% if lang.get_direction() == 'rtl' %}أدخل اسم المستخدم{% else %}Enter username{% endif %}">
+                            <small class="text-muted">{% if lang.get_direction() == 'rtl' %}سيكون هذا الاسم المستخدم لتسجيل الدخول{% else %}This will be used for login{% endif %}</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-envelope me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}البريد الإلكتروني *{% else %}Email *{% endif %}
+                            </label>
+                            <input type="email" name="email" class="form-control modern-input" required 
+                                   placeholder="{% if lang.get_direction() == 'rtl' %}example@school.edu{% else %}example@school.edu{% endif %}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم الكامل (عربي) *{% else %}Full Name (Arabic) *{% endif %}
+                            </label>
+                            <input type="text" name="full_name_ar" class="form-control modern-input" required 
+                                   placeholder="{% if lang.get_direction() == 'rtl' %}الاسم كما سيظهر في النظام{% else %}Name as it will appear in system{% endif %}">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-signature me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الاسم الكامل (إنجليزي){% else %}Full Name (English){% endif %}
+                            </label>
+                            <input type="text" name="full_name_en" class="form-control modern-input" 
+                                   placeholder="{% if lang.get_direction() == 'rtl' %}للإستخدام في التقارير الإنجليزية{% else %}For English reports{% endif %}">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-lock me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}كلمة المرور{% else %}Password{% endif %}
+                            </label>
+                            <div class="input-group">
+                                <input type="text" name="password" id="password" class="form-control modern-input" 
+                                       value="{{ generated_password if generated_password else '' }}"
+                                       placeholder="{% if lang.get_direction() == 'rtl' %}اترك فارغاً لإنشاء تلقائي{% else %}Leave empty for auto-generate{% endif %}">
+                                <button class="btn btn-outline-secondary" type="button" onclick="generatePassword()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">
+                                {% if lang.get_direction() == 'rtl' %}
+                                    إذا تركت الحقل فارغاً، سيتم إنشاء كلمة مرور تلقائية
+                                {% else %}
+                                    If left empty, a random password will be generated
+                                {% endif %}
+                            </small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">
+                                <i class="fas fa-tag me-2"></i>
+                                {% if lang.get_direction() == 'rtl' %}الدور *{% else %}Role *{% endif %}
+                            </label>
+                            <select name="role" class="form-select modern-select" required>
+                                <option value="">-- {% if lang.get_direction() == 'rtl' %}اختر الدور{% else %}Select Role{% endif %} --</option>
+                                <option value="admin">{% if lang.get_direction() == 'rtl' %}مدير (صلاحية كاملة){% else %}Admin (Full Access){% endif %}</option>
+                                <option value="supervisor">{% if lang.get_direction() == 'rtl' %}مشرف تربوي{% else %}Supervisor{% endif %}</option>
+                                <option value="teacher">{% if lang.get_direction() == 'rtl' %}معلم{% else %}Teacher{% endif %}</option>
+                                <option value="accountant">{% if lang.get_direction() == 'rtl' %}محاسب{% else %}Accountant{% endif %}</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info modern-alert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}
+                            <strong>ملاحظة:</strong> سيتمكن المستخدم من تسجيل الدخول فوراً باستخدام اسم المستخدم وكلمة المرور المحددة.
+                        {% else %}
+                            <strong>Note:</strong> The user will be able to login immediately using the username and password.
+                        {% endif %}
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-modern-primary px-5">
+                            <i class="fas fa-save me-2"></i>
+                            {% if lang.get_direction() == 'rtl' %}حفظ المستخدم{% else %}Save User{% endif %}
+                        </button>
+                        <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-secondary px-5">
+                            {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Role Description Card -->
+        <div class="modern-card mt-4">
+            <div class="card-header-modern">
+                <i class="fas fa-shield-alt me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}وصف الصلاحيات{% else %}Role Descriptions{% endif %}
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="role-mini-card">
+                            <div class="role-icon-mini admin">
+                                <i class="fas fa-crown"></i>
+                            </div>
+                            <h6>{% if lang.get_direction() == 'rtl' %}مدير{% else %}Admin{% endif %}</h6>
+                            <p class="small">{% if lang.get_direction() == 'rtl' %}صلاحية كاملة للنظام{% else %}Full system access{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="role-mini-card">
+                            <div class="role-icon-mini supervisor">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <h6>{% if lang.get_direction() == 'rtl' %}مشرف{% else %}Supervisor{% endif %}</h6>
+                            <p class="small">{% if lang.get_direction() == 'rtl' %}إدارة الفصول والطلاب{% else %}Manage classes & students{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="role-mini-card">
+                            <div class="role-icon-mini teacher">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <h6>{% if lang.get_direction() == 'rtl' %}معلم{% else %}Teacher{% endif %}</h6>
+                            <p class="small">{% if lang.get_direction() == 'rtl' %}تسجيل الحضور والدرجات{% else %}Mark attendance & grades{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="role-mini-card">
+                            <div class="role-icon-mini accountant">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <h6>{% if lang.get_direction() == 'rtl' %}محاسب{% else %}Accountant{% endif %}</h6>
+                            <p class="small">{% if lang.get_direction() == 'rtl' %}إدارة الرسوم والمصروفات{% else %}Manage fees & expenses{% endif %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.modern-input, .modern-select {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 15px;
+    transition: all 0.3s ease;
+}
+
+.modern-input:focus, .modern-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(135, 90, 123, 0.1);
+    outline: none;
+}
+
+.modern-alert {
+    border-radius: 10px;
+    border: none;
+    background: #f8f9fa;
+    border-right: 4px solid var(--primary-color);
+}
+
+[dir="rtl"] .modern-alert {
+    border-right: none;
+    border-left: 4px solid var(--primary-color);
+}
+
+.role-mini-card {
+    text-align: center;
+    padding: 15px;
+    border-radius: 10px;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.role-mini-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.role-icon-mini {
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-size: 1.3rem;
+    color: white;
+}
+
+.role-icon-mini.admin { background: #875A7B; }
+.role-icon-mini.supervisor { background: #17A2B8; }
+.role-icon-mini.teacher { background: #28A745; }
+.role-icon-mini.accountant { background: #FFB347; }
+
+.role-mini-card h6 {
+    margin: 0 0 5px;
+    font-weight: 600;
+}
+
+.role-mini-card p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+</style>
+
+<script>
+function generatePassword() {
+    var length = 8;
+    var charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    var password = "";
+    for (var i = 0; i < length; i++) {
+        password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    document.getElementById('password').value = password;
+}
+</script>
+{% endblock %}

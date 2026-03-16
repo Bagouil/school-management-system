@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    {% if lang.get_direction() == 'rtl' %}
+                        إضافة فئة رسوم جديدة
+                    {% else %}
+                        Add New Fee Category
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if lang.get_direction() == 'rtl' %}
+                                الاسم (عربي) *
+                            {% else %}
+                                Name (Arabic) *
+                            {% endif %}
+                        </label>
+                        <input type="text" name="category_name_ar" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if lang.get_direction() == 'rtl' %}
+                                الاسم (إنجليزي) *
+                            {% else %}
+                                Name (English) *
+                            {% endif %}
+                        </label>
+                        <input type="text" name="category_name_en" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if lang.get_direction() == 'rtl' %}
+                                الوصف
+                            {% else %}
+                                Description
+                            {% endif %}
+                        </label>
+                        <textarea name="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">
+                            {% if lang.get_direction() == 'rtl' %}
+                                المبلغ (SDG) *
+                            {% else %}
+                                Amount (SDG) *
+                            {% endif %}
+                        </label>
+                        <input type="number" name="amount" class="form-control" step="0.01" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="is_annual" class="form-check-input" id="is_annual">
+                            <label class="form-check-label" for="is_annual">
+                                {% if lang.get_direction() == 'rtl' %}
+                                    رسوم سنوية
+                                {% else %}
+                                    Annual Fee
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="is_mandatory" class="form-check-input" id="is_mandatory" checked>
+                            <label class="form-check-label" for="is_mandatory">
+                                {% if lang.get_direction() == 'rtl' %}
+                                    رسوم إلزامية
+                                {% else %}
+                                    Mandatory Fee
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">
+                            {% if lang.get_direction() == 'rtl' %}
+                                حفظ
+                            {% else %}
+                                Save
+                            {% endif %}
+                        </button>
+                        <a href="{{ url_for('finance.fee_categories') }}" class="btn btn-secondary">
+                            {% if lang.get_direction() == 'rtl' %}
+                                إلغاء
+                            {% else %}
+                                Cancel
+                            {% endif %}
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

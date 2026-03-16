@@ -1,0 +1,81 @@
+<div class="theme-preview-content">
+    <div class="preview-section mb-4">
+        <h6 style="color: {{ theme.primary_color }};">Primary Color Sample</h6>
+        <div class="preview-buttons">
+            <button class="btn" style="background: {{ theme.primary_color }}; color: white; margin-right: 10px;">Primary Button</button>
+            <button class="btn" style="background: {{ theme.secondary_color }}; color: white; margin-right: 10px;">Secondary Button</button>
+            <button class="btn" style="background: {{ theme.accent_color }}; color: white;">Accent Button</button>
+        </div>
+    </div>
+    
+    <div class="preview-section mb-4">
+        <h6 style="color: {{ theme.primary_color }};">Status Colors</h6>
+        <div class="preview-status">
+            <span class="badge" style="background: {{ theme.success_color }};">Success</span>
+            <span class="badge" style="background: {{ theme.danger_color }};">Danger</span>
+            <span class="badge" style="background: {{ theme.warning_color }};">Warning</span>
+            <span class="badge" style="background: {{ theme.info_color }};">Info</span>
+        </div>
+    </div>
+    
+    <div class="preview-section">
+        <h6 style="color: {{ theme.primary_color }};">Card Preview</h6>
+        <div class="card">
+            <div class="card-header" style="background: linear-gradient(135deg, {{ theme.primary_color }} 0%, {{ theme.secondary_color }} 100%); color: white;">
+                Sample Card
+            </div>
+            <div class="card-body">
+                <p>This is how cards will look with this theme.</p>
+                <div class="progress">
+                    <div class="progress-bar" style="background: {{ theme.primary_color }}; width: 75%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.preview-section {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.preview-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.preview-status {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.preview-status .badge {
+    padding: 8px 15px;
+    font-size: 0.9rem;
+}
+
+.card {
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 15px;
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 15px;
+    background: white;
+}
+
+.progress {
+    height: 10px;
+    border-radius: 5px;
+}
+</style>

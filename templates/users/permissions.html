@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">
+                <i class="fas fa-shield-alt me-2" style="color: var(--primary-color);"></i>
+                {% if lang.get_direction() == 'rtl' %}
+                    إدارة صلاحيات المستخدم: {{ user.full_name_ar }}
+                {% else %}
+                    Manage User Permissions: {{ user.full_name_en }}
+                {% endif %}
+            </h2>
+            <p class="text-muted">
+                {% if lang.get_direction() == 'rtl' %}
+                    تحكم في صلاحيات الوصول للمستخدم بشكل دقيق
+                {% else %}
+                    Fine-tune access permissions for this user
+                {% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>
+                {% if lang.get_direction() == 'rtl' %}عودة{% else %}Back{% endif %}
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- User Info Card -->
+<div class="modern-card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}اسم المستخدم{% else %}Username{% endif %}</small>
+                <strong>{{ user.username }}</strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}الاسم{% else %}Name{% endif %}</small>
+                <strong>{{ user.full_name_ar }} / {{ user.full_name_en }}</strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}البريد الإلكتروني{% else %}Email{% endif %}</small>
+                <strong>{{ user.email }}</strong>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted d-block">{% if lang.get_direction() == 'rtl' %}الدور الأساسي{% else %}Base Role{% endif %}</small>
+                <span class="badge bg-primary">
+                    {% if user.role == 'admin' %}مدير
+                    {% elif user.role == 'supervisor' %}مشرف
+                    {% elif user.role == 'teacher' %}معلم
+                    {% elif user.role == 'accountant' %}محاسب
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Info Alert -->
+<div class="alert alert-info modern-alert mb-4">
+    <i class="fas fa-info-circle me-2"></i>
+    {% if lang.get_direction() == 'rtl' %}
+        <strong>معلومات:</strong> الصلاحيات المحددة أدناه هي صلاحيات إضافية تتجاوز صلاحيات الدور الأساسي. 
+        يمكنك منح أو سحب صلاحيات محددة للمستخدم دون التأثير على المستخدمين الآخرين.
+    {% else %}
+        <strong>Info:</strong> The permissions below are additional permissions that override the base role permissions.
+        You can grant or revoke specific permissions without affecting other users.
+    {% endif %}
+</div>
+
+<!-- Permissions Form -->
+<form method="POST" action="{{ url_for('users.save_permissions', user_id=user.user_id) }}" id="permissionsForm">
+    {% for category in categories %}
+    <div class="modern-card mb-4">
+        <div class="card-header-modern">
+            <i class="fas {{ category.icon }} me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}{{ category.category_name_ar }}{% else %}{{ category.category_name_en }}{% endif %}
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th style="width: 40%">{% if lang.get_direction() == 'rtl' %}المورد{% else %}Resource{% endif %}</th>
+                            <th style="width: 15%" class="text-center">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           onclick="toggleCategoryAccess('{{ category.category_id }}', this.checked)">
+                                    <label class="form-check-label">
+                                        {% if lang.get_direction() == 'rtl' %}وصول{% else %}Access{% endif %}
+                                    </label>
+                                </div>
+                            </th>
+                            <th style="width: 15%" class="text-center">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           onclick="toggleCategoryCreate('{{ category.category_id }}', this.checked)">
+                                    <label class="form-check-label">
+                                        {% if lang.get_direction() == 'rtl' %}إضافة{% else %}Create{% endif %}
+                                    </label>
+                                </div>
+                            </th>
+                            <th style="width: 15%" class="text-center">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           onclick="toggleCategoryEdit('{{ category.category_id }}', this.checked)">
+                                    <label class="form-check-label">
+                                        {% if lang.get_direction() == 'rtl' %}تعديل{% else %}Edit{% endif %}
+                                    </label>
+                                </div>
+                            </th>
+                            <th style="width: 15%" class="text-center">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" 
+                                           onclick="toggleCategoryDelete('{{ category.category_id }}', this.checked)">
+                                    <label class="form-check-label">
+                                        {% if lang.get_direction() == 'rtl' %}حذف{% else %}Delete{% endif %}
+                                    </label>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for resource in category.resources %}
+                        <tr>
+                            <td>
+                                <div class="resource-info">
+                                    <i class="fas {{ resource.icon }} me-2 text-muted"></i>
+                                    <span>
+                                        {% if lang.get_direction() == 'rtl' %}
+                                            {{ resource.resource_name_ar }}
+                                        {% else %}
+                                            {{ resource.resource_name_en }}
+                                        {% endif %}
+                                    </span>
+                                    <small class="d-block text-muted">{{ resource.resource_code }}</small>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="form-check">
+                                    <input class="form-check-input category-{{ category.category_id }}-access" 
+                                           type="checkbox" 
+                                           name="access_{{ resource.resource_id }}" 
+                                           id="access_{{ resource.resource_id }}"
+                                           {% if user_perms[resource.resource_code].can_access %}checked{% endif %}>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="form-check">
+                                    <input class="form-check-input category-{{ category.category_id }}-create" 
+                                           type="checkbox" 
+                                           name="create_{{ resource.resource_id }}" 
+                                           id="create_{{ resource.resource_id }}"
+                                           {% if user_perms[resource.resource_code].can_create %}checked{% endif %}>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="form-check">
+                                    <input class="form-check-input category-{{ category.category_id }}-edit" 
+                                           type="checkbox" 
+                                           name="edit_{{ resource.resource_id }}" 
+                                           id="edit_{{ resource.resource_id }}"
+                                           {% if user_perms[resource.resource_code].can_edit %}checked{% endif %}>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="form-check">
+                                    <input class="form-check-input category-{{ category.category_id }}-delete" 
+                                           type="checkbox" 
+                                           name="delete_{{ resource.resource_id }}" 
+                                           id="delete_{{ resource.resource_id }}"
+                                           {% if user_perms[resource.resource_code].can_delete %}checked{% endif %}>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    <!-- Expiry Date and Submit -->
+    <div class="modern-card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}تاريخ انتهاء الصلاحية (اختياري){% else %}Expiry Date (Optional){% endif %}
+                    </label>
+                    <input type="date" name="expiry_date" class="form-control modern-input" id="expiryDate">
+                    <small class="text-muted">
+                        {% if lang.get_direction() == 'rtl' %}
+                            إذا تم تحديد تاريخ، ستنتهي هذه الصلاحيات في هذا التاريخ
+                        {% else %}
+                            If set, these permissions will expire on this date
+                        {% endif %}
+                    </small>
+                </div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="resetToRole" onclick="resetToRolePermissions()">
+                        <label class="form-check-label" for="resetToRole">
+                            {% if lang.get_direction() == 'rtl' %}
+                                إعادة تعيين إلى صلاحيات الدور الأساسي
+                            {% else %}
+                                Reset to base role permissions
+                            {% endif %}
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="text-center mb-4">
+        <button type="submit" class="btn btn-modern-primary btn-lg px-5">
+            <i class="fas fa-save me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}حفظ الصلاحيات{% else %}Save Permissions{% endif %}
+        </button>
+        <a href="{{ url_for('users.list_users') }}" class="btn btn-outline-secondary btn-lg px-5">
+            <i class="fas fa-times me-2"></i>
+            {% if lang.get_direction() == 'rtl' %}إلغاء{% else %}Cancel{% endif %}
+        </a>
+    </div>
+</form>
+
+<style>
+.resource-info {
+    padding: 5px 0;
+}
+
+.resource-info small {
+    font-size: 0.7rem;
+    margin-top: 2px;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.modern-alert {
+    border-radius: 10px;
+    border: none;
+    background: #f8f9fa;
+    border-left: 4px solid var(--primary-color);
+}
+
+[dir="rtl"] .modern-alert {
+    border-left: none;
+    border-right: 4px solid var(--primary-color);
+}
+</style>
+
+<script>
+function toggleCategoryAccess(categoryId, checked) {
+    document.querySelectorAll(`.category-${categoryId}-access`).forEach(cb => {
+        cb.checked = checked;
+    });
+}
+
+function toggleCategoryCreate(categoryId, checked) {
+    document.querySelectorAll(`.category-${categoryId}-create`).forEach(cb => {
+        cb.checked = checked;
+    });
+}
+
+function toggleCategoryEdit(categoryId, checked) {
+    document.querySelectorAll(`.category-${categoryId}-edit`).forEach(cb => {
+        cb.checked = checked;
+    });
+}
+
+function toggleCategoryDelete(categoryId, checked) {
+    document.querySelectorAll(`.category-${categoryId}-delete`).forEach(cb => {
+        cb.checked = checked;
+    });
+}
+
+function resetToRolePermissions() {
+    if (confirm('{% if lang.get_direction() == "rtl" %}هل أنت متأكد من إعادة تعيين جميع الصلاحيات؟{% else %}Are you sure you want to reset all permissions?{% endif %}')) {
+        document.getElementById('permissionsForm').reset();
+        document.getElementById('expiryDate').value = '';
+    }
+}
+
+// Set default expiry date to 1 year from now
+let nextYear = new Date();
+nextYear.setFullYear(nextYear.getFullYear() + 1);
+document.getElementById('expiryDate').valueAsDate = nextYear;
+</script>
+{% endblock %}
