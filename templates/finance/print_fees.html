@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en" dir="{% if lang and lang.get_direction() == 'rtl' %}rtl{% else %}ltr{% endif %}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Fees Report - Print View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            color: #333;
+            line-height: 1.6;
+            padding: 30px;
+        }
+        
+        .print-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Header */
+        .report-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #667eea;
+        }
+        
+        .school-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .report-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .report-date {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        /* Filter Info */
+        .filter-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .filter-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        /* Summary Cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .summary-card:nth-child(2) {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .summary-card:nth-child(3) {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        }
+        
+        .summary-card:nth-child(4) {
+            background: linear-gradient(135deg, #17a2b8 0%, #6c757d 100%);
+        }
+        
+        .summary-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .summary-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        /* Table */
+        .fees-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .fees-table th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: {% if lang and lang.get_direction() == 'rtl' %}right{% else %}left{% endif %};
+            font-weight: 600;
+        }
+        
+        .fees-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .fees-table tbody tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .fees-table tbody tr:last-child td {
+            border-bottom: 2px solid #667eea;
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-paid {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-partial {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-pending {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        
+        .status-overdue {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* Amount Colors */
+        .amount-positive {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .amount-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        
+        .amount-neutral {
+            color: #007bff;
+            font-weight: 600;
+        }
+        
+        /* Footer */
+        .report-footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .signature-line {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .signature {
+            text-align: center;
+            width: 200px;
+        }
+        
+        .signature-line .line {
+            border-top: 1px solid #333;
+            margin-top: 30px;
+            padding-top: 5px;
+        }
+        
+        /* RTL Support */
+        [dir="rtl"] .fees-table th {
+            text-align: right;
+        }
+        
+        [dir="rtl"] .summary-cards {
+            direction: rtl;
+        }
+        
+        /* Print Styles */
+        @media print {
+            body {
+                padding: 0;
+            }
+            
+            .no-print {
+                display: none;
+            }
+            
+            .fees-table th {
+                background: #667eea !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .summary-card {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .status-badge {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-container">
+        <!-- Header -->
+        <div class="report-header">
+            <div class="school-name">{% if lang and lang.get_direction() == 'rtl' %}نظام إدارة المدرسة{% else %}School Management System{% endif %}</div>
+            <div class="report-title">{% if lang and lang.get_direction() == 'rtl' %}تقرير رسوم الطلاب{% else %}Student Fees Report{% endif %}</div>
+            <div class="report-date">
+                {% if lang and lang.get_direction() == 'rtl' %}تاريخ التقرير:{% else %}Report Date:{% endif %} 
+                {{ now().strftime('%Y-%m-%d %H:%M') if now else '' }}
+            </div>
+        </div>
+        
+        <!-- Filter Information -->
+        <div class="filter-info">
+            <div class="filter-item">
+                <div class="filter-label">{% if lang and lang.get_direction() == 'rtl' %}الصف{% else %}Class{% endif %}</div>
+                <div class="filter-value">{{ class_name }}</div>
+            </div>
+            <div class="filter-item">
+                <div class="filter-label">{% if lang and lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}</div>
+                <div class="filter-value">
+                    {% if status %}
+                        {% if status == 'paid' %}
+                            {% if lang and lang.get_direction() == 'rtl' %}مدفوع{% else %}Paid{% endif %}
+                        {% elif status == 'partial' %}
+                            {% if lang and lang.get_direction() == 'rtl' %}مدفوع جزئياً{% else %}Partial{% endif %}
+                        {% elif status == 'pending' %}
+                            {% if lang and lang.get_direction() == 'rtl' %}غير مدفوع{% else %}Pending{% endif %}
+                        {% elif status == 'overdue' %}
+                            {% if lang and lang.get_direction() == 'rtl' %}متأخر{% else %}Overdue{% endif %}
+                        {% else %}
+                            {{ status }}
+                        {% endif %}
+                    {% else %}
+                        {% if lang and lang.get_direction() == 'rtl' %}الكل{% else %}All{% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="filter-item">
+                <div class="filter-label">{% if lang and lang.get_direction() == 'rtl' %}بحث{% else %}Search{% endif %}</div>
+                <div class="filter-value">{{ search if search else '-' }}</div>
+            </div>
+            <div class="filter-item">
+                <div class="filter-label">{% if lang and lang.get_direction() == 'rtl' %}إجمالي السجلات{% else %}Total Records{% endif %}</div>
+                <div class="filter-value">{{ fees|length }}</div>
+            </div>
+        </div>
+        
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <span class="summary-label">{% if lang and lang.get_direction() == 'rtl' %}إجمالي الرسوم{% else %}Total Fees{% endif %}</span>
+                <div class="summary-value">{{ "%.0f"|format(total_fees) }} SDG</div>
+            </div>
+            <div class="summary-card">
+                <span class="summary-label">{% if lang and lang.get_direction() == 'rtl' %}إجمالي المدفوع{% else %}Total Paid{% endif %}</span>
+                <div class="summary-value">{{ "%.0f"|format(total_paid) }} SDG</div>
+            </div>
+            <div class="summary-card">
+                <span class="summary-label">{% if lang and lang.get_direction() == 'rtl' %}المتبقي{% else %}Balance{% endif %}</span>
+                <div class="summary-value">{{ "%.0f"|format(total_balance) }} SDG</div>
+            </div>
+            <div class="summary-card">
+                <span class="summary-label">{% if lang and lang.get_direction() == 'rtl' %}نسبة التحصيل{% else %}Collection Rate{% endif %}</span>
+                <div class="summary-value">{{ "%.1f"|format((total_paid/total_fees*100) if total_fees > 0 else 0) }}%</div>
+            </div>
+        </div>
+        
+        <!-- Fees Table -->
+        <table class="fees-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>{% if lang and lang.get_direction() == 'rtl' %}الرقم الدراسي{% else %}Student ID{% endif %}</th>
+                    <th>{% if lang and lang.get_direction() == 'rtl' %}اسم الطالب{% else %}Student Name{% endif %}</th>
+                    <th>{% if lang and lang.get_direction() == 'rtl' %}الصف{% else %}Class{% endif %}</th>
+                    <th>{% if lang and lang.get_direction() == 'rtl' %}نوع الرسوم{% else %}Fee Type{% endif %}</th>
+                    <th>{% if lang and lang.get_direction() == 'rtl' %}المبلغ{% else %}Amount{% endif %}</th>
+                    <th>{% if lang and lang.get_direction() == 'rtl' %}الخصم{% else %}Discount{% endif %}</th>
+                    <th>{% if lang and lang.get_direction() == 'rtl' %}المدفوع{% else %}Paid{% endif %}</th>
+                    <th>{% if lang and lang.get_direction() == 'rtl' %}المتبقي{% else %}Balance{% endif %}</th>
+                    <th>{% if lang and lang.get_direction() == 'rtl' %}تاريخ الاستحقاق{% else %}Due Date{% endif %}</th>
+                    <th>{% if lang and lang.get_direction() == 'rtl' %}الحالة{% else %}Status{% endif %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fee in fees %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ fee.student_number }}</td>
+                    <td>
+                        <strong>{{ fee.student_name_ar }}</strong><br>
+                        <small>{{ fee.student_name_en }}</small>
+                    </td>
+                    <td>{{ fee.class_name }}</td>
+                    <td>{{ fee.fee_type }}</td>
+                    <td class="amount-neutral">{{ "%.0f"|format(fee.amount) }}</td>
+                    <td class="amount-positive">{{ "%.0f"|format(fee.discount) }}</td>
+                    <td class="amount-positive">{{ "%.0f"|format(fee.paid) }}</td>
+                    <td class="{% if fee.balance > 0 %}amount-negative{% else %}amount-positive{% endif %}">
+                        {{ "%.0f"|format(fee.balance) }}
+                    </td>
+                    <td>{{ fee.due_date }}</td>
+                    <td>
+                        {% if fee.is_overdue and fee.status != 'paid' %}
+                        <span class="status-badge status-overdue">
+                            {% if lang and lang.get_direction() == 'rtl' %}متأخر{% else %}Overdue{% endif %}
+                        </span>
+                        {% elif fee.status == 'paid' %}
+                        <span class="status-badge status-paid">
+                            {% if lang and lang.get_direction() == 'rtl' %}مدفوع{% else %}Paid{% endif %}
+                        </span>
+                        {% elif fee.status == 'partial' %}
+                        <span class="status-badge status-partial">
+                            {% if lang and lang.get_direction() == 'rtl' %}جزئي{% else %}Partial{% endif %}
+                        </span>
+                        {% else %}
+                        <span class="status-badge status-pending">
+                            {% if lang and lang.get_direction() == 'rtl' %}غير مدفوع{% else %}Pending{% endif %}
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Summary Footer -->
+        <div class="report-footer">
+            <div>
+                <strong>{% if lang and lang.get_direction() == 'rtl' %}إجمالي الرسوم:{% else %}Total Fees:{% endif %}</strong> 
+                {{ "%.0f"|format(total_fees) }} SDG
+            </div>
+            <div>
+                <strong>{% if lang and lang.get_direction() == 'rtl' %}إجمالي المدفوع:{% else %}Total Paid:{% endif %}</strong> 
+                {{ "%.0f"|format(total_paid) }} SDG
+            </div>
+            <div>
+                <strong>{% if lang and lang.get_direction() == 'rtl' %}المتبقي:{% else %}Balance:{% endif %}</strong> 
+                {{ "%.0f"|format(total_balance) }} SDG
+            </div>
+        </div>
+        
+        <!-- Signatures -->
+        <div class="signature-line">
+            <div class="signature">
+                <div class="line">{% if lang and lang.get_direction() == 'rtl' %}توقيع المحاسب{% else %}Accountant Signature{% endif %}</div>
+            </div>
+            <div class="signature">
+                <div class="line">{% if lang and lang.get_direction() == 'rtl' %}توقيع المدير{% else %}Principal Signature{% endif %}</div>
+            </div>
+        </div>
+        
+        <!-- Print Button (hidden when printing) -->
+        <div class="no-print" style="text-align: center; margin-top: 30px;">
+            <button onclick="window.print()" style="padding: 10px 30px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                <i class="fas fa-print"></i> 
+                {% if lang and lang.get_direction() == 'rtl' %}طباعة{% else %}Print{% endif %}
+            </button>
+            <button onclick="window.close()" style="padding: 10px 30px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-left: 10px;">
+                <i class="fas fa-times"></i> 
+                {% if lang and lang.get_direction() == 'rtl' %}إغلاق{% else %}Close{% endif %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Add Font Awesome for icons (optional) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
+    
+    <script>
+        // Auto-trigger print dialog when page loads (optional)
+        window.onload = function() {
+            // Uncomment the line below if you want the print dialog to appear automatically
+            // window.print();
+        };
+    </script>
+</body>
+</html>

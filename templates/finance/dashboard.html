@@ -1,247 +1,291 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="content-header">
-    <div class="d-flex justify-align-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-1">
-                <i class="fas fa-coins me-2" style="color: var(--primary-color);"></i>
-                {% if lang.get_direction() == 'rtl' %}لوحة التحكم المالية{% else %}Finance Dashboard{% endif %}
-            </h2>
-            <p class="text-muted">
-                {% if lang.get_direction() == 'rtl' %}إدارة الرسوم والمدفوعات والمصروفات{% else %}Manage fees, payments and expenses{% endif %}
-            </p>
-        </div>
-        <div class="finance-period">
-            <select class="form-select modern-select" id="periodSelect">
-                <option value="today">{% if lang.get_direction() == 'rtl' %}اليوم{% else %}Today{% endif %}</option>
-                <option value="week" selected>{% if lang.get_direction() == 'rtl' %}هذا الأسبوع{% else %}This Week{% endif %}</option>
-                <option value="month">{% if lang.get_direction() == 'rtl' %}هذا الشهر{% else %}This Month{% endif %}</option>
-                <option value="year">{% if lang.get_direction() == 'rtl' %}هذه السنة{% else %}This Year{% endif %}</option>
-            </select>
+<div class="finance-dashboard">
+    <!-- Header Section -->
+    <div class="dashboard-header mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h2 class="dashboard-title">
+                    <i class="fas fa-coins me-2" style="color: var(--primary-color);"></i>
+                    {% if lang.get_direction() == 'rtl' %}لوحة التحكم المالية{% else %}Finance Dashboard{% endif %}
+                </h2>
+                <p class="dashboard-subtitle text-muted">
+                    {% if lang.get_direction() == 'rtl' %}نظرة شاملة على الإيرادات والمصروفات والمدفوعات{% else %}Comprehensive overview of revenues, expenses and payments{% endif %}
+                </p>
+            </div>
+            <div class="period-selector">
+                <div class="btn-group" role="group">
+                    <button type="button" class="period-btn {% if period == 'today' %}active{% endif %}" onclick="changePeriod('today')">
+                        <i class="fas fa-calendar-day me-1"></i> {% if lang.get_direction() == 'rtl' %}اليوم{% else %}Today{% endif %}
+                    </button>
+                    <button type="button" class="period-btn {% if period == 'week' %}active{% endif %}" onclick="changePeriod('week')">
+                        <i class="fas fa-calendar-week me-1"></i> {% if lang.get_direction() == 'rtl' %}هذا الأسبوع{% else %}This Week{% endif %}
+                    </button>
+                    <button type="button" class="period-btn {% if period == 'month' %}active{% endif %}" onclick="changePeriod('month')">
+                        <i class="fas fa-calendar-alt me-1"></i> {% if lang.get_direction() == 'rtl' %}هذا الشهر{% else %}This Month{% endif %}
+                    </button>
+                    <button type="button" class="period-btn {% if period == 'year' %}active{% endif %}" onclick="changePeriod('year')">
+                        <i class="fas fa-calendar me-1"></i> {% if lang.get_direction() == 'rtl' %}هذه السنة{% else %}This Year{% endif %}
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Financial Stats Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="finance-stat-card" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
-            <div class="stat-content">
-                <div class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي التحصيل{% else %}Total Collected{% endif %}</div>
-                <div class="stat-value">{{ total_collected }} SDG</div>
-                <div class="stat-trend positive">
-                    <i class="fas fa-arrow-up"></i> +{{ collection_growth }}%
+    <!-- Stats Cards Row -->
+    <div class="stats-grid mb-4">
+        <div class="stat-card income">
+            <div class="stat-card-inner">
+                <div class="stat-icon-wrapper">
+                    <i class="fas fa-hand-holding-usd"></i>
                 </div>
-            </div>
-            <div class="stat-icon">
-                <i class="fas fa-hand-holding-usd"></i>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="finance-stat-card" style="background: linear-gradient(135deg, #DC3545 0%, #bd2130 100%);">
-            <div class="stat-content">
-                <div class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي المصروفات{% else %}Total Expenses{% endif %}</div>
-                <div class="stat-value">{{ total_expenses }} SDG</div>
-                <div class="stat-trend negative">
-                    <i class="fas fa-arrow-down"></i> +{{ expense_growth }}%
-                </div>
-            </div>
-            <div class="stat-icon">
-                <i class="fas fa-file-invoice-dollar"></i>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="finance-stat-card" style="background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);">
-            <div class="stat-content">
-                <div class="stat-label">{% if lang.get_direction() == 'rtl' %}صافي الدخل{% else %}Net Income{% endif %}</div>
-                <div class="stat-value">{{ net_income }} SDG</div>
-                <div class="stat-trend {% if net_income|replace(',', '')|float >= 0 %}positive{% else %}negative{% endif %}">
-                      <i class="fas fa-arrow-{% if net_income|replace(',', '')|float >= 0 %}up{% else %}down{% endif %}"></i>
-                      {{ income_percentage }}%
-                </div>
-            </div>
-            <div class="stat-icon">
-                <i class="fas fa-chart-line"></i>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="finance-stat-card" style="background: linear-gradient(135deg, #FFB347 0%, #ff9900 100%);">
-            <div class="stat-content">
-                <div class="stat-label">{% if lang.get_direction() == 'rtl' %}الرسوم المستحقة{% else %}Pending Fees{% endif %}</div>
-                <div class="stat-value">{{ pending_fees }} SDG</div>
-                <div class="stat-trend warning">
-                    <i class="fas fa-exclamation-triangle"></i> {{ pending_count }} {% if lang.get_direction() == 'rtl' %}طالب{% else %}students{% endif %}
-                </div>
-            </div>
-            <div class="stat-icon">
-                <i class="fas fa-clock"></i>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Main Finance Content -->
-<div class="row">
-    <div class="col-md-8">
-        <!-- Income vs Expenses Chart -->
-        <div class="modern-card mb-4">
-            <div class="card-header-modern d-flex justify-content-between align-items-center">
-                <span>
-                    <i class="fas fa-chart-bar me-2"></i>
-                    {% if lang.get_direction() == 'rtl' %}الإيرادات vs المصروفات{% else %}Income vs Expenses{% endif %}
-                </span>
-                <div class="chart-legend">
-                    <span class="legend-item">
-                        <span class="color-dot" style="background: #28A745;"></span>
-                        {% if lang.get_direction() == 'rtl' %}الإيرادات{% else %}Income{% endif %}
-                    </span>
-                    <span class="legend-item">
-                        <span class="color-dot" style="background: #DC3545;"></span>
-                        {% if lang.get_direction() == 'rtl' %}المصروفات{% else %}Expenses{% endif %}
+                <div class="stat-info">
+                    <span class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي التحصيل{% else %}Total Collected{% endif %}</span>
+                    <h3 class="stat-value">{{ total_collected }} <small>SDG</small></h3>
+                    <span class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> {{ collection_growth }}%
                     </span>
                 </div>
             </div>
-            <div class="card-body">
-                <canvas id="incomeExpenseChart" height="300"></canvas>
+        </div>
+        
+        <div class="stat-card expense">
+            <div class="stat-card-inner">
+                <div class="stat-icon-wrapper">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي المصروفات{% else %}Total Expenses{% endif %}</span>
+                    <h3 class="stat-value">{{ total_expenses }} <small>SDG</small></h3>
+                    <span class="stat-trend negative">
+                        <i class="fas fa-arrow-up"></i> {{ expense_growth }}%
+                    </span>
+                </div>
             </div>
         </div>
         
-        <!-- Recent Transactions -->
-        <div class="modern-card">
-            <div class="card-header-modern d-flex justify-content-between align-items-center">
-                <span>
-                    <i class="fas fa-history me-2"></i>
-                    {% if lang.get_direction() == 'rtl' %}آخر المعاملات{% else %}Recent Transactions{% endif %}
-                </span>
-                <a href="{{ url_for('finance.student_fees') }}" class="btn btn-sm btn-outline-primary">
-                    {% if lang.get_direction() == 'rtl' %}عرض الكل{% else %}View All{% endif %}
-                </a>
+        <div class="stat-card net">
+            <div class="stat-card-inner">
+                <div class="stat-icon-wrapper">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">{% if lang.get_direction() == 'rtl' %}صافي الدخل{% else %}Net Income{% endif %}</span>
+                    <h3 class="stat-value">{{ net_income }} <small>SDG</small></h3>
+                    <span class="stat-trend {% if net_income_raw >= 0 %}positive{% else %}negative{% endif %}">
+                        <i class="fas fa-arrow-{% if net_income_raw >= 0 %}up{% else %}down{% endif %}"></i> {{ income_percentage }}%
+                    </span>
+                </div>
             </div>
-            <div class="card-body p-0">
-                <div class="transactions-list">
-                    {% for transaction in recent_transactions %}
-                    <div class="transaction-item">
-                        <div class="transaction-icon {{ transaction.type }}">
-                            <i class="fas {{ transaction.icon }}"></i>
-                        </div>
-                        <div class="transaction-info">
-                            <div class="transaction-title">
-                                <strong>{{ transaction.description }}</strong>
-                                <span class="transaction-date">{{ transaction.date }}</span>
-                            </div>
-                            <div class="transaction-meta">
-                                <span class="transaction-user">
-                                    <i class="fas fa-user me-1"></i> {{ transaction.user }}
-                                </span>
-                                <span class="transaction-ref">
-                                    <i class="fas fa-hashtag me-1"></i> {{ transaction.reference }}
-                                </span>
-                            </div>
-                        </div>
-                        <div class="transaction-amount {{ transaction.type }}">
-                            {{ transaction.amount }} SDG
-                        </div>
-                    </div>
-                    {% endfor %}
+        </div>
+        
+        <div class="stat-card pending">
+            <div class="stat-card-inner">
+                <div class="stat-icon-wrapper">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">{% if lang.get_direction() == 'rtl' %}الرسوم المستحقة{% else %}Pending Fees{% endif %}</span>
+                    <h3 class="stat-value">{{ pending_fees }} <small>SDG</small></h3>
+                    <span class="stat-trend warning">
+                        <i class="fas fa-users"></i> {{ pending_count }} {% if lang.get_direction() == 'rtl' %}طالب{% else %}students{% endif %}
+                    </span>
                 </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-4">
-        <!-- Fee Collection Progress -->
-        <div class="modern-card mb-4">
-            <div class="card-header-modern">
-                <i class="fas fa-chart-pie me-2"></i>
-                {% if lang.get_direction() == 'rtl' %}نسبة تحصيل الرسوم{% else %}Fee Collection{% endif %}
-            </div>
-            <div class="card-body text-center">
-                <div class="collection-circle">
-                    <div class="circle-progress" data-percent="{{ collection_percentage |float }}">
-                        <span class="percent">{{ collection_percentage }}%</span>
+
+    <!-- Main Content Grid -->
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-lg-7">
+            <!-- Chart Card -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-chart-bar me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}تحليل الإيرادات والمصروفات{% else %}Revenue vs Expenses Analysis{% endif %}
+                    </span>
+                    <div class="chart-legend">
+                        <span class="legend-badge income">
+                            <i class="fas fa-circle"></i> {% if lang.get_direction() == 'rtl' %}الإيرادات{% else %}Income{% endif %}
+                        </span>
+                        <span class="legend-badge expense">
+                            <i class="fas fa-circle"></i> {% if lang.get_direction() == 'rtl' %}المصروفات{% else %}Expenses{% endif %}
+                        </span>
                     </div>
                 </div>
-                <div class="collection-stats mt-3">
-                    <div class="row">
-                        <div class="col-6">
-                            <div class="stat-mini">
-                                <span class="label">{% if lang.get_direction() == 'rtl' %}مدفوع{% else %}Paid{% endif %}</span>
-                                <span class="value text-success">{{ total_collected }} SDG</span>
+                <div class="card-body">
+                    <canvas id="incomeExpenseChart" height="320"></canvas>
+                </div>
+            </div>
+            
+            <!-- Recent Transactions Card -->
+            <div class="modern-card">
+                <div class="card-header-modern d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-history me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}آخر المعاملات{% else %}Recent Transactions{% endif %}
+                    </span>
+                    <a href="{{ url_for('finance.student_fees') }}" class="btn-view-all">
+                        {% if lang.get_direction() == 'rtl' %}عرض الكل{% else %}View All{% endif %} <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_transactions %}
+                        {% for transaction in recent_transactions %}
+                        <div class="transaction-row">
+                            <div class="transaction-icon-wrapper {{ transaction.type }}">
+                                <i class="fas {{ transaction.icon }}"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <div class="transaction-header">
+                                    <strong class="transaction-title">{{ transaction.description }}</strong>
+                                    <span class="transaction-amount {{ transaction.type }}">
+                                        {{ transaction.amount }} SDG
+                                    </span>
+                                </div>
+                                <div class="transaction-footer">
+                                    <span class="transaction-meta">
+                                        <i class="fas fa-user"></i> {{ transaction.user }}
+                                    </span>
+                                    <span class="transaction-meta">
+                                        <i class="fas fa-hashtag"></i> {{ transaction.reference }}
+                                    </span>
+                                    <span class="transaction-date">
+                                        <i class="fas fa-calendar-alt"></i> {{ transaction.date }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-6">
-                            <div class="stat-mini">
-                                <span class="label">{% if lang.get_direction() == 'rtl' %}متبقي{% else %}Pending{% endif %}</span>
-                                <span class="value text-danger">{{ pending_fees }} SDG</span>
-                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state text-center py-5">
+                            <i class="fas fa-receipt fa-3x mb-3 text-muted"></i>
+                            <p class="text-muted">{% if lang.get_direction() == 'rtl' %}لا توجد معاملات حديثة{% else %}No recent transactions{% endif %}</p>
                         </div>
-                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
         
-			   <!-- Quick Actions -->
-		<div class="modern-card mb-4">
-			<div class="card-header-modern">
-				<i class="fas fa-bolt me-2"></i>
-				{% if lang.get_direction() == 'rtl' %}إجراءات سريعة{% else %}Quick Actions{% endif %}
-			</div>
-			<div class="card-body">
-				<div class="quick-actions">
-					<button class="quick-action-btn" onclick="location.href='{{ url_for('finance.add_fee_category') }}'">
-						<i class="fas fa-tags"></i>
-						<span>{% if lang.get_direction() == 'rtl' %}فئة رسوم{% else %}Fee Category{% endif %}</span>
-					</button>
-					<button class="quick-action-btn" onclick="location.href='{{ url_for('finance.add_expense') }}'">
-						<i class="fas fa-minus-circle"></i>
-						<span>{% if lang.get_direction() == 'rtl' %}مصروف{% else %}Expense{% endif %}</span>
-					</button>
-					<button class="quick-action-btn" onclick="showPaymentModal()">
-						<i class="fas fa-credit-card"></i>
-						<span>{% if lang.get_direction() == 'rtl' %}دفعة{% else %}Payment{% endif %}</span>
-					</button>
-					<button class="quick-action-btn" onclick="location.href='{{ url_for('finance.reports') }}'">
-						<i class="fas fa-file-pdf"></i>
-						<span>{% if lang.get_direction() == 'rtl' %}تقرير{% else %}Report{% endif %}</span>
-					</button>
-					<!-- ADDED: Receipt Archive Button -->
-					<button class="quick-action-btn" onclick="location.href='{{ url_for('finance.receipt_archive') }}'">
-						<i class="fas fa-archive"></i>
-						<span>{% if lang.get_direction() == 'rtl' %}أرشيف الإيصالات{% else %}Receipt Archive{% endif %}</span>
-					</button>
-				</div>
-			</div>
-		</div>
-        
-        <!-- Top Debtors -->
-        <div class="modern-card">
-            <div class="card-header-modern">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                {% if lang.get_direction() == 'rtl' %}أعلى المديونيات{% else %}Top Debtors{% endif %}
-            </div>
-            <div class="card-body p-0">
-                <div class="debtors-list">
-                    {% for debtor in top_debtors %}
-                    <div class="debtor-item" onclick="location.href='{{ url_for('finance.student_fees_detail', student_id=debtor.id) }}'">
-                        <div class="debtor-avatar">
-                            <div class="avatar-placeholder">{{ debtor.name[:1] }}</div>
-                        </div>
-                        <div class="debtor-info">
-                            <strong>{{ debtor.name }}</strong>
-                            <small>{{ debtor.class }}</small>
-                        </div>
-                        <div class="debtor-amount text-danger">
-                            {{ debtor.amount }} SDG
+        <!-- Right Column -->
+        <div class="col-lg-5">
+            <!-- Collection Progress Card -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <i class="fas fa-chart-pie me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}نسبة تحصيل الرسوم{% else %}Fee Collection Rate{% endif %}
+                </div>
+                <div class="card-body text-center">
+                    <div class="collection-circle">
+                        <div class="circle-progress" data-percent="{{ collection_percentage|float }}">
+                            <span class="percent">{{ collection_percentage }}%</span>
                         </div>
                     </div>
-                    {% endfor %}
+                    <div class="collection-breakdown mt-4">
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <span>{% if lang.get_direction() == 'rtl' %}المدفوع{% else %}Paid{% endif %}</span>
+                            </div>
+                            <div class="breakdown-value">{{ total_collected }} SDG</div>
+                            <div class="progress-bar-custom">
+                                <div class="progress-fill bg-success" style="width: {{ collection_percentage }}%"></div>
+                            </div>
+                        </div>
+                        <div class="breakdown-item">
+                            <div class="breakdown-label">
+                                <i class="fas fa-clock text-warning"></i>
+                                <span>{% if lang.get_direction() == 'rtl' %}المتبقي{% else %}Pending{% endif %}</span>
+                            </div>
+                            <div class="breakdown-value">{{ pending_fees }} SDG</div>
+                            <div class="progress-bar-custom">
+                                <div class="progress-fill bg-warning" style="width: {{ 100 - collection_percentage|float }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions Card -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <i class="fas fa-bolt me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}إجراءات سريعة{% else %}Quick Actions{% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="actions-grid">
+                        <button class="quick-action" onclick="location.href='{{ url_for('finance.fee_categories') }}'">
+                            <div class="action-icon" style="background: #e3f2fd; color: #1976d2;">
+                                <i class="fas fa-tags"></i>
+                            </div>
+                            <span class="action-label">{% if lang.get_direction() == 'rtl' %}فئات الرسوم{% else %}Fee Categories{% endif %}</span>
+                        </button>
+                        <button class="quick-action" onclick="location.href='{{ url_for('finance.expenses') }}'">
+                            <div class="action-icon" style="background: #ffebee; color: #d32f2f;">
+                                <i class="fas fa-minus-circle"></i>
+                            </div>
+                            <span class="action-label">{% if lang.get_direction() == 'rtl' %}المصروفات{% else %}Expenses{% endif %}</span>
+                        </button>
+                        <button class="quick-action" onclick="showPaymentModal()">
+                            <div class="action-icon" style="background: #e8f5e9; color: #388e3c;">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <span class="action-label">{% if lang.get_direction() == 'rtl' %}تسجيل دفعة{% else %}Record Payment{% endif %}</span>
+                        </button>
+                        <button class="quick-action" onclick="location.href='{{ url_for('finance.reports') }}'">
+                            <div class="action-icon" style="background: #fff3e0; color: #f57c00;">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <span class="action-label">{% if lang.get_direction() == 'rtl' %}التقارير{% else %}Reports{% endif %}</span>
+                        </button>
+                        <button class="quick-action" onclick="location.href='{{ url_for('finance.receipt_archive') }}'">
+                            <div class="action-icon" style="background: #f3e5f5; color: #7b1fa2;">
+                                <i class="fas fa-archive"></i>
+                            </div>
+                            <span class="action-label">{% if lang.get_direction() == 'rtl' %}أرشيف الإيصالات{% else %}Receipt Archive{% endif %}</span>
+                        </button>
+                        <button class="quick-action" onclick="location.href='{{ url_for('finance.student_fees') }}'">
+                            <div class="action-icon" style="background: #e0f7fa; color: #0097a7;">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                            <span class="action-label">{% if lang.get_direction() == 'rtl' %}رسوم الطلاب{% else %}Student Fees{% endif %}</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Top Debtors Card -->
+            <div class="modern-card">
+                <div class="card-header-modern">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}أعلى المديونيات{% else %}Top Debtors{% endif %}
+                </div>
+                <div class="card-body p-0">
+                    {% if top_debtors %}
+                        {% for debtor in top_debtors %}
+                        <div class="debtor-row" onclick="location.href='{{ url_for('finance.student_fees_detail', student_id=debtor.id) }}'">
+                            <div class="debtor-avatar">
+                                <div class="avatar-initial">{{ debtor.name[:1] }}</div>
+                            </div>
+                            <div class="debtor-info">
+                                <div class="debtor-name">{{ debtor.name }}</div>
+                                <div class="debtor-class">{{ debtor.class }}</div>
+                            </div>
+                            <div class="debtor-amount">
+                                <span class="amount-value">{{ debtor.amount }} SDG</span>
+                                <i class="fas fa-chevron-left"></i>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state text-center py-4">
+                            <i class="fas fa-users fa-2x mb-2 text-muted"></i>
+                            <p class="text-muted small">{% if lang.get_direction() == 'rtl' %}لا توجد مديونيات{% else %}No debts recorded{% endif %}</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -249,216 +293,127 @@
 </div>
 
 <style>
-/* Finance Stat Cards */
-.finance-stat-card {
-    border-radius: 16px;
-    padding: 25px;
+/* Dashboard Container */
+.finance-dashboard {
+    padding: 0 16px;
+}
+
+/* Header */
+.dashboard-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0;
+    color: #1a1a2e;
+}
+
+.dashboard-subtitle {
+    font-size: 0.85rem;
+    margin: 4px 0 0;
+}
+
+/* Period Selector */
+.period-selector .btn-group {
+    background: #f0f0f0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.period-btn {
+    padding: 8px 18px;
+    border: none;
+    background: transparent;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #666;
+}
+
+.period-btn.active {
+    background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);
     color: white;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.period-btn:hover:not(.active) {
+    background: #e0e0e0;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
     transition: all 0.3s ease;
 }
 
-.finance-stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.stat-card.income .stat-icon-wrapper { background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%); }
+.stat-card.expense .stat-icon-wrapper { background: linear-gradient(135deg, #DC3545 0%, #bd2130 100%); }
+.stat-card.net .stat-icon-wrapper { background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%); }
+.stat-card.pending .stat-icon-wrapper { background: linear-gradient(135deg, #FFB347 0%, #ff9900 100%); }
+
+.stat-card-inner {
+    padding: 20px;
+    display: flex;
+    gap: 15px;
+}
+
+.stat-icon-wrapper {
+    width: 55px;
+    height: 55px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.4rem;
+}
+
+.stat-info {
+    flex: 1;
 }
 
 .stat-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
+    display: block;
+    font-size: 0.75rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     margin-bottom: 5px;
 }
 
 .stat-value {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 700;
-    margin-bottom: 5px;
+    margin: 0;
+    color: #1a1a2e;
+}
+
+.stat-value small {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: #999;
 }
 
 .stat-trend {
-    font-size: 0.85rem;
-    opacity: 0.9;
+    font-size: 0.7rem;
+    display: inline-block;
+    margin-top: 5px;
 }
 
-.stat-trend.positive { color: #fff; }
-.stat-trend.negative { color: #fff; }
-.stat-trend.warning { color: #fff; }
-
-.stat-icon {
-    font-size: 3rem;
-    opacity: 0.3;
-}
-
-/* Transactions List */
-.transactions-list {
-    max-height: 400px;
-    overflow-y: auto;
-}
-
-.transaction-item {
-    display: flex;
-    align-items: center;
-    padding: 15px 20px;
-    border-bottom: 1px solid #f0f0f0;
-    transition: all 0.3s ease;
-}
-
-.transaction-item:hover {
-    background: #f8f9fa;
-}
-
-.transaction-icon {
-    width: 45px;
-    height: 45px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 15px;
-    color: white;
-}
-
-[dir="rtl"] .transaction-icon {
-    margin-right: 0;
-    margin-left: 15px;
-}
-
-.transaction-icon.income { background: #28A745; }
-.transaction-icon.expense { background: #DC3545; }
-.transaction-icon.payment { background: #875A7B; }
-
-.transaction-info {
-    flex: 2;
-}
-
-.transaction-title {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-}
-
-.transaction-title strong {
-    font-size: 0.95rem;
-}
-
-.transaction-date {
-    font-size: 0.8rem;
-    color: #999;
-}
-
-.transaction-meta {
-    display: flex;
-    gap: 15px;
-    font-size: 0.75rem;
-    color: #999;
-}
-
-.transaction-amount {
-    font-weight: 700;
-    font-size: 1.1rem;
-    min-width: 100px;
-    text-align: right;
-}
-
-.transaction-amount.income { color: #28A745; }
-.transaction-amount.expense { color: #DC3545; }
-
-/* Quick Actions */
-.quick-actions {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-}
-
-.quick-action-btn {
-    padding: 15px;
-    border: 2px solid #f0f0f0;
-    border-radius: 12px;
-    background: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-align: center;
-}
-
-.quick-action-btn:hover {
-    border-color: var(--primary-color);
-    background: #f8f9fa;
-    transform: translateY(-2px);
-}
-
-.quick-action-btn i {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    margin-bottom: 5px;
-}
-
-.quick-action-btn span {
-    display: block;
-    font-size: 0.8rem;
-    color: #666;
-}
-
-/* Debtors List */
-.debtors-list {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.debtor-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 15px;
-    border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.debtor-item:hover {
-    background: #f8f9fa;
-}
-
-.debtor-avatar {
-    margin-right: 12px;
-}
-
-[dir="rtl"] .debtor-avatar {
-    margin-right: 0;
-    margin-left: 12px;
-}
-
-.avatar-placeholder {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #FFB347 0%, #ff9900 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-weight: 600;
-}
-
-.debtor-info {
-    flex: 2;
-}
-
-.debtor-info strong {
-    display: block;
-    font-size: 0.9rem;
-}
-
-.debtor-info small {
-    color: #999;
-    font-size: 0.75rem;
-}
-
-.debtor-amount {
-    font-weight: 700;
-    font-size: 1rem;
-}
+.stat-trend.positive { color: #28A745; }
+.stat-trend.negative { color: #DC3545; }
+.stat-trend.warning { color: #FFB347; }
 
 /* Chart Legend */
 .chart-legend {
@@ -466,29 +421,136 @@
     gap: 15px;
 }
 
-.legend-item {
+.legend-badge {
     display: flex;
     align-items: center;
-    font-size: 0.85rem;
+    gap: 6px;
+    font-size: 0.75rem;
     color: #666;
 }
 
-.color-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-right: 5px;
+.legend-badge i {
+    font-size: 0.6rem;
 }
 
-[dir="rtl"] .color-dot {
-    margin-right: 0;
-    margin-left: 5px;
+.legend-badge.income i { color: #28A745; }
+.legend-badge.expense i { color: #DC3545; }
+
+/* Transaction Row */
+.transaction-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s ease;
+}
+
+.transaction-row:hover {
+    background: #f8f9fa;
+}
+
+.transaction-icon-wrapper {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.transaction-icon-wrapper.income { background: #28A745; }
+.transaction-icon-wrapper.expense { background: #DC3545; }
+.transaction-icon-wrapper.payment { background: #875A7B; }
+
+.transaction-details {
+    flex: 1;
+}
+
+.transaction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.transaction-title {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.transaction-amount {
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.transaction-amount.income { color: #28A745; }
+.transaction-amount.expense { color: #DC3545; }
+
+.transaction-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.transaction-meta {
+    font-size: 0.7rem;
+    color: #999;
+}
+
+.transaction-date {
+    font-size: 0.7rem;
+    color: #999;
+}
+
+/* Actions Grid */
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.quick-action {
+    padding: 15px 10px;
+    border: none;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.quick-action:hover {
+    background: #f8f9fa;
+    transform: translateY(-2px);
+}
+
+.action-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    font-size: 1.3rem;
+}
+
+.action-label {
+    display: block;
+    font-size: 0.7rem;
+    color: #666;
 }
 
 /* Collection Circle */
 .collection-circle {
-    width: 150px;
-    height: 150px;
+    width: 160px;
+    height: 160px;
     margin: 0 auto;
     position: relative;
 }
@@ -507,8 +569,8 @@
 .circle-progress::before {
     content: '';
     position: absolute;
-    width: 110px;
-    height: 110px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
     background: white;
 }
@@ -520,9 +582,197 @@
     font-weight: 700;
     color: #28A745;
 }
+
+/* Collection Breakdown */
+.collection-breakdown {
+    max-width: 280px;
+    margin: 0 auto;
+}
+
+.breakdown-item {
+    margin-bottom: 15px;
+}
+
+.breakdown-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.breakdown-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.progress-bar-custom {
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+/* Debtor Row */
+.debtor-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.debtor-row:hover {
+    background: #f8f9fa;
+}
+
+.debtor-avatar {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.avatar-initial {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #FFB347 0%, #ff9900 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.debtor-info {
+    flex: 1;
+}
+
+.debtor-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.debtor-class {
+    font-size: 0.7rem;
+    color: #999;
+}
+
+.debtor-amount {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.amount-value {
+    font-weight: 700;
+    color: #DC3545;
+    font-size: 0.9rem;
+}
+
+.debtor-amount i {
+    font-size: 0.7rem;
+    color: #999;
+}
+
+/* Module Card */
+.modern-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+}
+
+.card-header-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 14px 20px;
+    font-weight: 600;
+}
+
+.btn-view-all {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.btn-view-all:hover {
+    background: rgba(255,255,255,0.3);
+    color: white;
+}
+
+/* Empty State */
+.empty-state {
+    padding: 40px 20px;
+}
+
+/* RTL Support */
+[dir="rtl"] .debtor-amount i {
+    transform: rotate(180deg);
+}
+
+[dir="rtl"] .btn-view-all i {
+    transform: rotate(180deg);
+}
+
+[dir="rtl"] .transaction-header {
+    direction: rtl;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .stat-card-inner {
+        padding: 15px;
+    }
+    
+    .stat-icon-wrapper {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .period-btn {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+    
+    .dashboard-title {
+        font-size: 1.3rem;
+    }
+}
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
 <script>
 // Income vs Expenses Chart
 var ctx = document.getElementById('incomeExpenseChart').getContext('2d');
@@ -535,13 +785,15 @@ var financeChart = new Chart(ctx, {
                 label: '{% if lang.get_direction() == "rtl" %}الإيرادات{% else %}Income{% endif %}',
                 data: {{ income_data|tojson }},
                 backgroundColor: '#28A745',
-                borderRadius: 8
+                borderRadius: 8,
+                barPercentage: 0.7
             },
             {
                 label: '{% if lang.get_direction() == "rtl" %}المصروفات{% else %}Expenses{% endif %}',
                 data: {{ expense_data|tojson }},
                 backgroundColor: '#DC3545',
-                borderRadius: 8
+                borderRadius: 8,
+                barPercentage: 0.7
             }
         ]
     },
@@ -551,6 +803,13 @@ var financeChart = new Chart(ctx, {
         plugins: {
             legend: {
                 display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.dataset.label + ': ' + context.raw.toFixed(2) + ' SDG';
+                    }
+                }
             }
         },
         scales: {
@@ -561,7 +820,7 @@ var financeChart = new Chart(ctx, {
                 },
                 ticks: {
                     callback: function(value) {
-                        return value + ' SDG';
+                        return value.toLocaleString() + ' SDG';
                     }
                 }
             },
@@ -576,19 +835,18 @@ var financeChart = new Chart(ctx, {
 
 // Update circle progress
 document.querySelectorAll('.circle-progress').forEach(function(el) {
-    var percent = el.getAttribute('data-percent');
+    var percent = parseFloat(el.getAttribute('data-percent')) || 0;
     var angle = (percent / 100) * 360;
     el.style.background = `conic-gradient(#28A745 ${angle}deg, #f0f0f0 ${angle}deg)`;
 });
 
 function showPaymentModal() {
-    alert('Payment recording feature coming soon!');
+    // You can implement a proper payment modal here
+    alert('{% if lang.get_direction() == "rtl" %}سيتم إضافة نافذة تسجيل الدفعة قريباً{% else %}Payment recording feature coming soon!{% endif %}');
 }
 
-// Period change handler
-document.getElementById('periodSelect').addEventListener('change', function() {
-    // Refresh data based on selected period
-    location.href = '?period=' + this.value;
-});
+function changePeriod(period) {
+    window.location.href = '?period=' + period;
+}
 </script>
 {% endblock %}

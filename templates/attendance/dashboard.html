@@ -1,267 +1,252 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="content-header">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-1">
-                <i class="fas fa-calendar-check me-2" style="color: var(--primary-color);"></i>
-                {% if lang.get_direction() == 'rtl' %}لوحة تحكم الحضور{% else %}Attendance Dashboard{% endif %}
-            </h2>
-            <p class="text-muted">
-                {% if lang.get_direction() == 'rtl' %}تسجيل ومتابعة حضور الطلاب والمعلمين{% else %}Track and manage attendance{% endif %}
-            </p>
-        </div>
-        <div class="attendance-date">
-            <div class="date-display modern-card p-3">
-                <i class="fas fa-calendar-alt me-2 text-primary"></i>
-                <span class="fw-bold">{{ today }}</span>
+<div class="attendance-page">
+    <div class="content-header">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="mb-1">
+                    <i class="fas fa-calendar-check me-2" style="color: var(--primary-color);"></i>
+                    {% if lang.get_direction() == 'rtl' %}لوحة تحكم الحضور{% else %}Attendance Dashboard{% endif %}
+                </h2>
+                <p class="text-muted">
+                    {% if lang.get_direction() == 'rtl' %}تسجيل ومتابعة حضور الطلاب والمعلمين{% else %}Track and manage attendance{% endif %}
+                </p>
+            </div>
+            <div class="attendance-date">
+                <div class="date-card">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    <span class="fw-bold">{{ today }}</span>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Quick Stats Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="stat-card-modern" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
-            <div class="stat-icon">
+    <!-- Stats Cards - Same style as students page -->
+    <div class="stats-row mb-4">
+        <div class="stat-card-attendance">
+            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
                 <i class="fas fa-user-check"></i>
             </div>
-            <div class="stat-details">
+            <div class="stat-info">
                 <h3>{{ present_today }}</h3>
                 <p>{% if lang.get_direction() == 'rtl' %}حاضر اليوم{% else %}Present Today{% endif %}</p>
-                <span class="trend-badge">
-                    <i class="fas fa-arrow-up"></i> {{ attendance_percentage }}%
-                </span>
+            </div>
+            <div class="stat-trend positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>{{ attendance_percentage }}%</span>
             </div>
         </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card-modern" style="background: linear-gradient(135deg, #DC3545 0%, #bd2130 100%);">
-            <div class="stat-icon">
+        
+        <div class="stat-card-attendance">
+            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #DC3545 0%, #bd2130 100%);">
                 <i class="fas fa-user-times"></i>
             </div>
-            <div class="stat-details">
+            <div class="stat-info">
                 <h3>{{ absent_today }}</h3>
                 <p>{% if lang.get_direction() == 'rtl' %}غائب اليوم{% else %}Absent Today{% endif %}</p>
-                <span class="trend-badge">
-                    <i class="fas fa-arrow-down"></i> {{ absence_percentage }}%
-                </span>
+            </div>
+            <div class="stat-trend negative">
+                <i class="fas fa-arrow-down"></i>
+                <span>{{ absence_percentage }}%</span>
             </div>
         </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card-modern" style="background: linear-gradient(135deg, #FFC107 0%, #e0a800 100%);">
-            <div class="stat-icon">
+        
+        <div class="stat-card-attendance">
+            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #FFC107 0%, #e0a800 100%);">
                 <i class="fas fa-clock"></i>
             </div>
-            <div class="stat-details">
+            <div class="stat-info">
                 <h3>{{ late_today }}</h3>
                 <p>{% if lang.get_direction() == 'rtl' %}متأخر اليوم{% else %}Late Today{% endif %}</p>
             </div>
         </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card-modern" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%);">
-            <div class="stat-icon">
+        
+        <div class="stat-card-attendance">
+            <div class="stat-icon-wrapper" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%);">
                 <i class="fas fa-chart-line"></i>
             </div>
-            <div class="stat-details">
+            <div class="stat-info">
                 <h3>{{ average_attendance }}%</h3>
                 <p>{% if lang.get_direction() == 'rtl' %}متوسط الحضور{% else %}Average Attendance{% endif %}</p>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Main Attendance Actions -->
-<div class="row mb-4">
-    <div class="col-md-6">
+    <!-- Action Cards -->
+    <div class="action-cards-row mb-4">
         <div class="action-card" onclick="location.href='{{ url_for('attendance.student_attendance') }}'">
-            <div class="action-card-content">
-                <div class="action-icon-wrapper student">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="action-text">
-                    <h4>{% if lang.get_direction() == 'rtl' %}تسجيل حضور الطلاب{% else %}Student Attendance{% endif %}</h4>
-                    <p class="text-muted">
-                        {% if lang.get_direction() == 'rtl' %}تسجيل حضور وانصراف الطلاب لكل صف{% else %}Mark student attendance for each class{% endif %}
-                    </p>
-                </div>
-                <div class="action-arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
+            <div class="action-card-icon student">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="action-card-text">
+                <h4>{% if lang.get_direction() == 'rtl' %}تسجيل حضور الطلاب{% else %}Student Attendance{% endif %}</h4>
+                <p>{% if lang.get_direction() == 'rtl' %}تسجيل حضور وانصراف الطلاب لكل صف{% else %}Mark student attendance for each class{% endif %}</p>
+            </div>
+            <div class="action-card-arrow">
+                <i class="fas fa-arrow-right"></i>
             </div>
         </div>
-    </div>
-    
-    <div class="col-md-6">
         <div class="action-card" onclick="location.href='{{ url_for('attendance.teacher_attendance') }}'">
-            <div class="action-card-content">
-                <div class="action-icon-wrapper teacher">
-                    <i class="fas fa-chalkboard-teacher"></i>
-                </div>
-                <div class="action-text">
-                    <h4>{% if lang.get_direction() == 'rtl' %}تسجيل حضور المعلمين{% else %}Teacher Attendance{% endif %}</h4>
-                    <p class="text-muted">
-                        {% if lang.get_direction() == 'rtl' %}تسجيل حضور وانصراف المعلمين{% else %}Mark teacher attendance{% endif %}
-                    </p>
-                </div>
-                <div class="action-arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
+            <div class="action-card-icon teacher">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div class="action-card-text">
+                <h4>{% if lang.get_direction() == 'rtl' %}تسجيل حضور المعلمين{% else %}Teacher Attendance{% endif %}</h4>
+                <p>{% if lang.get_direction() == 'rtl' %}تسجيل حضور وانصراف المعلمين{% else %}Mark teacher attendance{% endif %}</p>
+            </div>
+            <div class="action-card-arrow">
+                <i class="fas fa-arrow-right"></i>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row">
-    <!-- Left Column - Today's Classes -->
-    <div class="col-md-8">
-        <div class="modern-card">
-            <div class="card-header-modern d-flex justify-content-between align-items-center">
-                <span>
-                    <i class="fas fa-clock me-2"></i>
-                    {% if lang.get_direction() == 'rtl' %}حضور اليوم حسب الفصول{% else %}Today's Classes{% endif %}
-                </span>
-                <span class="badge bg-primary">{{ classes_count }} {% if lang.get_direction() == 'rtl' %}فصل{% else %}Classes{% endif %}</span>
-            </div>
-            <div class="card-body p-0">
-                <div class="classes-list">
-                    {% for class in classes_attendance %}
-                    <div class="class-item" onclick="location.href='{{ url_for('attendance.view_class_attendance', class_id=class.id, date=today) }}'">
-                        <div class="class-item-info">
-                            <div class="class-icon">
+    <div class="row">
+        <!-- Left Column - Today's Classes -->
+        <div class="col-lg-7">
+            <div class="modern-card">
+                <div class="card-header-modern d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-clock me-2"></i>
+                        {% if lang.get_direction() == 'rtl' %}حضور اليوم حسب الفصول{% else %}Today's Classes{% endif %}
+                    </span>
+                    <span class="badge bg-white text-primary">{{ classes_count }} {% if lang.get_direction() == 'rtl' %}فصل{% else %}Classes{% endif %}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="classes-list">
+                        {% for class in classes_attendance %}
+                        <div class="class-item" onclick="location.href='{{ url_for('attendance.view_class_attendance', class_id=class.id, date=today) }}'">
+                            <div class="class-icon-small">
                                 <i class="fas fa-school"></i>
                             </div>
-                            <div class="class-details">
-                                <h6>{{ class.name_ar }}</h6>
-                                <small class="text-muted">{{ class.teacher_name }}</small>
+                            <div class="class-info">
+                                <div class="class-name">
+                                    <strong>{{ class.name_ar }}</strong>
+                                    <small>{{ class.teacher_name }}</small>
+                                </div>
+                                <div class="class-stats">
+                                    <div class="stat-badge present">
+                                        <i class="fas fa-check-circle"></i>
+                                        <span>{{ class.present }}</span>
+                                    </div>
+                                    <div class="stat-badge absent">
+                                        <i class="fas fa-times-circle"></i>
+                                        <span>{{ class.absent }}</span>
+                                    </div>
+                                    <div class="stat-badge late">
+                                        <i class="fas fa-clock"></i>
+                                        <span>{{ class.late }}</span>
+                                    </div>
+                                </div>
+                                <div class="class-progress-bar">
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" style="width: {{ class.present_percentage }}%"></div>
+                                        <div class="progress-bar bg-danger" style="width: {{ class.absent_percentage }}%"></div>
+                                        <div class="progress-bar bg-warning" style="width: {{ class.late_percentage }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="class-arrow">
+                                <i class="fas fa-chevron-right"></i>
                             </div>
                         </div>
-                        <div class="class-stats">
-                            <div class="stat-item">
-                                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}حضور{% else %}Present{% endif %}</span>
-                                <span class="stat-value text-success">{{ class.present }}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}غياب{% else %}Absent{% endif %}</span>
-                                <span class="stat-value text-danger">{{ class.absent }}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-label">{% if lang.get_direction() == 'rtl' %}متأخر{% else %}Late{% endif %}</span>
-                                <span class="stat-value text-warning">{{ class.late }}</span>
-                            </div>
-                        </div>
-                        <div class="class-progress">
-                            <div class="progress" style="height: 6px; width: 150px;">
-                                <div class="progress-bar bg-success" style="width: {{ class.present_percentage }}%"></div>
-                                <div class="progress-bar bg-danger" style="width: {{ class.absent_percentage }}%"></div>
-                                <div class="progress-bar bg-warning" style="width: {{ class.late_percentage }}%"></div>
-                            </div>
-                        </div>
-                        <div class="class-action">
-                            <i class="fas fa-chevron-right"></i>
-                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Weekly Attendance Chart -->
+            <div class="modern-card mt-4">
+                <div class="card-header-modern">
+                    <i class="fas fa-chart-line me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}معدل الحضور الأسبوعي{% else %}Weekly Attendance Rate{% endif %}
+                </div>
+                <div class="card-body">
+                    <canvas id="weeklyAttendanceChart" height="280"></canvas>
                 </div>
             </div>
         </div>
         
-        <!-- Weekly Attendance Chart -->
-        <div class="modern-card mt-4">
-            <div class="card-header-modern">
-                <i class="fas fa-chart-line me-2"></i>
-                {% if lang.get_direction() == 'rtl' %}معدل الحضور الأسبوعي{% else %}Weekly Attendance Rate{% endif %}
-            </div>
-            <div class="card-body">
-                <canvas id="weeklyAttendanceChart" height="250"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Right Column - Recent Activity -->
-    <div class="col-md-4">
-        <!-- Recent Attendance Records -->
-        <div class="modern-card mb-4">
-            <div class="card-header-modern">
-                <i class="fas fa-history me-2"></i>
-                {% if lang.get_direction() == 'rtl' %}آخر عمليات التسجيل{% else %}Recent Records{% endif %}
-            </div>
-            <div class="card-body p-0">
-                <div class="recent-list">
-                    {% for record in recent_records %}
-                    <div class="recent-item">
-                        <div class="recent-icon {{ record.type }}">
-                            <i class="fas {{ record.icon }}"></i>
+        <!-- Right Column -->
+        <div class="col-lg-5">
+            <!-- Recent Attendance Records -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <i class="fas fa-history me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}آخر عمليات التسجيل{% else %}Recent Records{% endif %}
+                </div>
+                <div class="card-body p-0">
+                    <div class="recent-list">
+                        {% for record in recent_records %}
+                        <div class="recent-item">
+                            <div class="recent-icon {{ record.type }}">
+                                <i class="fas {{ record.icon }}"></i>
+                            </div>
+                            <div class="recent-info">
+                                <strong>{{ record.student_name }}</strong>
+                                <small>{{ record.class_name }}</small>
+                            </div>
+                            <div class="recent-status {{ record.status_color }}">
+                                {{ record.status }}
+                            </div>
                         </div>
-                        <div class="recent-details">
-                            <strong>{{ record.student_name }}</strong>
-                            <small>{{ record.class_name }}</small>
-                        </div>
-                        <div class="recent-status">
-                            <span class="badge bg-{{ record.status_color }}">{{ record.status }}</span>
-                            <small class="text-muted">{{ record.time }}</small>
-                        </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
-        </div>
-        
-        <!-- Quick Actions -->
-        <div class="modern-card">
-            <div class="card-header-modern">
-                <i class="fas fa-bolt me-2"></i>
-                {% if lang.get_direction() == 'rtl' %}إجراءات سريعة{% else %}Quick Actions{% endif %}
-            </div>
-            <div class="card-body">
-                <!-- Quick Actions - Update this section -->
-				<div class="quick-actions-grid">
-					<button class="quick-action-btn" onclick="location.href='{{ url_for('attendance.student_report') }}'">
-						<i class="fas fa-chart-bar"></i>
-						<span>{% if lang.get_direction() == 'rtl' %}تقارير{% else %}Reports{% endif %}</span>
-					</button>
-					<button class="quick-action-btn" onclick="exportAttendance()">
-						<i class="fas fa-file-excel"></i>
-						<span>{% if lang.get_direction() == 'rtl' %}تصدير{% else %}Export{% endif %}</span>
-					</button>
-					<button class="quick-action-btn" onclick="printReport()">
-						<i class="fas fa-print"></i>
-						<span>{% if lang.get_direction() == 'rtl' %}طباعة{% else %}Print{% endif %}</span>
-					</button>
-					<button class="quick-action-btn" onclick="refreshData()">
-						<i class="fas fa-sync-alt"></i>
-						<span>{% if lang.get_direction() == 'rtl' %}تحديث{% else %}Refresh{% endif %}</span>
-					</button>
-				</div>
-            </div>
-        </div>
-        
-        <!-- Summary Card -->
-        <div class="modern-card mt-4">
-            <div class="card-header-modern">
-                <i class="fas fa-info-circle me-2"></i>
-                {% if lang.get_direction() == 'rtl' %}ملخص اليوم{% else %}Today's Summary{% endif %}
-            </div>
-            <div class="card-body">
-                <div class="summary-stats">
-                    <div class="summary-item">
-                        <span class="summary-label">{% if lang.get_direction() == 'rtl' %}إجمالي الطلاب{% else %}Total Students{% endif %}</span>
-                        <span class="summary-value">{{ total_students }}</span>
+            
+            <!-- Quick Actions -->
+            <div class="modern-card mb-4">
+                <div class="card-header-modern">
+                    <i class="fas fa-bolt me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}إجراءات سريعة{% else %}Quick Actions{% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="quick-actions-grid">
+                        <button class="quick-action" onclick="location.href='{{ url_for('attendance.student_report') }}'">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>{% if lang.get_direction() == 'rtl' %}تقارير{% else %}Reports{% endif %}</span>
+                        </button>
+                        <button class="quick-action" onclick="exportAttendance()">
+                            <i class="fas fa-file-excel"></i>
+                            <span>{% if lang.get_direction() == 'rtl' %}تصدير{% else %}Export{% endif %}</span>
+                        </button>
+                        <button class="quick-action" onclick="printReport()">
+                            <i class="fas fa-print"></i>
+                            <span>{% if lang.get_direction() == 'rtl' %}طباعة{% else %}Print{% endif %}</span>
+                        </button>
+                        <button class="quick-action" onclick="location.reload()">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>{% if lang.get_direction() == 'rtl' %}تحديث{% else %}Refresh{% endif %}</span>
+                        </button>
                     </div>
-                    <div class="summary-item">
-                        <span class="summary-label">{% if lang.get_direction() == 'rtl' %}نسبة الحضور{% else %}Attendance Rate{% endif %}</span>
-                        <span class="summary-value">{{ attendance_percentage }}%</span>
-                    </div>
-                    <div class="summary-item">
-                        <span class="summary-label">{% if lang.get_direction() == 'rtl' %}الفصول المكتملة{% else %}Completed Classes{% endif %}</span>
-                        <span class="summary-value">{{ completed_classes }}/{{ classes_count }}</span>
+                </div>
+            </div>
+            
+            <!-- Today's Summary -->
+            <div class="modern-card">
+                <div class="card-header-modern">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {% if lang.get_direction() == 'rtl' %}ملخص اليوم{% else %}Today's Summary{% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="summary-stats">
+                        <div class="summary-row">
+                            <span>{% if lang.get_direction() == 'rtl' %}إجمالي الطلاب{% else %}Total Students{% endif %}</span>
+                            <strong>{{ total_students }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>{% if lang.get_direction() == 'rtl' %}نسبة الحضور{% else %}Attendance Rate{% endif %}</span>
+                            <strong class="text-success">{{ attendance_percentage }}%</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>{% if lang.get_direction() == 'rtl' %}الفصول المكتملة{% else %}Completed Classes{% endif %}</span>
+                            <strong>{{ completed_classes }}/{{ classes_count }}</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span>{% if lang.get_direction() == 'rtl' %}نسبة الغياب{% else %}Absence Rate{% endif %}</span>
+                            <strong class="text-danger">{{ absence_percentage }}%</strong>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -270,135 +255,186 @@
 </div>
 
 <style>
-/* Stat Cards */
-.stat-card-modern {
-    border-radius: 16px;
+/* Attendance Page Styles */
+.attendance-page {
+    padding: 0 16px;
+}
+
+/* Stats Cards - Same as students page */
+.stats-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.stat-card-attendance {
+    flex: 1;
+    min-width: 200px;
+    background: white;
+    border-radius: 20px;
     padding: 20px;
-    color: white;
     display: flex;
     align-items: center;
     gap: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
-.stat-card-modern:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+.stat-card-attendance:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
 }
 
-.stat-card-modern .stat-icon {
-    font-size: 2.5rem;
-    opacity: 0.9;
-}
-
-.stat-card-modern .stat-details h3 {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0;
-    line-height: 1.2;
-}
-
-.stat-card-modern .stat-details p {
-    margin: 5px 0 0;
-    opacity: 0.9;
-    font-size: 0.9rem;
-}
-
-.trend-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 20px;
-    font-size: 0.8rem;
-    margin-top: 5px;
-}
-
-/* Action Cards */
-.action-card {
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-}
-
-.action-card:hover {
-    transform: translateX(5px);
-    border-color: var(--primary-color);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-}
-
-[dir="rtl"] .action-card:hover {
-    transform: translateX(-5px);
-}
-
-.action-card-content {
-    padding: 25px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.action-icon-wrapper {
-    width: 70px;
-    height: 70px;
+.stat-icon-wrapper {
+    width: 55px;
+    height: 55px;
     border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
+    font-size: 1.5rem;
     color: white;
+    flex-shrink: 0;
 }
 
-.action-icon-wrapper.student {
-    background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);
-}
-
-.action-icon-wrapper.teacher {
-    background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);
-}
-
-.action-text {
+.stat-info {
     flex: 1;
 }
 
-.action-text h4 {
+.stat-info h3 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+    color: #1a1a2e;
+}
+
+.stat-info p {
+    margin: 5px 0 0;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.stat-trend {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    background: #f0f0f0;
+    color: #666;
+}
+
+.stat-trend.positive {
+    background: #d4edda;
+    color: #28a745;
+}
+
+.stat-trend.negative {
+    background: #f8d7da;
+    color: #dc3545;
+}
+
+/* Action Cards Row */
+.action-cards-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.action-card {
+    flex: 1;
+    background: white;
+    border-radius: 20px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
+}
+
+.action-card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.action-card-icon.student {
+    background: linear-gradient(135deg, #875A7B 0%, #6a4b5f 100%);
+}
+
+.action-card-icon.teacher {
+    background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);
+}
+
+.action-card-text {
+    flex: 1;
+}
+
+.action-card-text h4 {
     margin: 0 0 5px;
     font-weight: 600;
 }
 
-.action-text p {
+.action-card-text p {
     margin: 0;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    color: #666;
 }
 
-.action-arrow {
+.action-card-arrow {
     color: #ccc;
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     transition: all 0.3s ease;
 }
 
-.action-card:hover .action-arrow {
+.action-card:hover .action-card-arrow {
     color: var(--primary-color);
     transform: translateX(5px);
 }
 
-[dir="rtl"] .action-card:hover .action-arrow {
+[dir="rtl"] .action-card:hover .action-card-arrow {
     transform: translateX(-5px);
+}
+
+/* Date Card */
+.date-card {
+    background: white;
+    border-radius: 16px;
+    padding: 12px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    border: 1px solid #f0f0f0;
 }
 
 /* Classes List */
 .classes-list {
-    max-height: 400px;
+    max-height: 450px;
     overflow-y: auto;
 }
 
 .class-item {
     display: flex;
     align-items: center;
-    padding: 15px 20px;
+    padding: 16px 20px;
     border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -409,72 +445,74 @@
     background: #f8f9fa;
 }
 
-.class-item-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex: 2;
-}
-
-.class-icon {
-    width: 40px;
-    height: 40px;
+.class-icon-small {
+    width: 45px;
+    height: 45px;
     background: #f0e9ef;
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--primary-color);
+    font-size: 1.2rem;
+    flex-shrink: 0;
 }
 
-.class-details h6 {
-    margin: 0 0 3px;
-    font-weight: 600;
+.class-info {
+    flex: 1;
 }
 
-.class-details small {
-    font-size: 0.75rem;
+.class-name {
+    margin-bottom: 8px;
 }
 
-.class-stats {
-    display: flex;
-    gap: 15px;
-    flex: 2;
-}
-
-.stat-item {
-    text-align: center;
-}
-
-.stat-label {
+.class-name strong {
     display: block;
+    font-size: 1rem;
+}
+
+.class-name small {
     font-size: 0.7rem;
     color: #999;
 }
 
-.stat-value {
-    font-weight: 600;
-    font-size: 1.1rem;
+.class-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
 }
 
-.class-progress {
-    flex: 2;
+.stat-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
 }
 
-.class-action {
+.stat-badge.present { color: #28a745; }
+.stat-badge.absent { color: #dc3545; }
+.stat-badge.late { color: #ffc107; }
+
+.class-progress-bar .progress {
+    height: 4px;
+    border-radius: 4px;
+}
+
+.class-arrow {
     color: #ccc;
+    font-size: 0.9rem;
 }
 
 /* Recent List */
 .recent-list {
-    max-height: 300px;
+    max-height: 280px;
     overflow-y: auto;
 }
 
 .recent-item {
     display: flex;
     align-items: center;
-    padding: 12px 15px;
+    padding: 12px 16px;
     border-bottom: 1px solid #f0f0f0;
     gap: 12px;
 }
@@ -487,45 +525,59 @@
     align-items: center;
     justify-content: center;
     color: white;
+    font-size: 1rem;
+    flex-shrink: 0;
 }
 
 .recent-icon.present { background: #28A745; }
 .recent-icon.absent { background: #DC3545; }
 .recent-icon.late { background: #FFC107; }
 
-.recent-details {
+.recent-info {
     flex: 1;
 }
 
-.recent-details strong {
+.recent-info strong {
     display: block;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 
-.recent-details small {
-    font-size: 0.7rem;
+.recent-info small {
+    font-size: 0.65rem;
     color: #999;
 }
 
 .recent-status {
-    text-align: right;
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-weight: 500;
 }
 
-.recent-status small {
-    display: block;
-    font-size: 0.65rem;
-    margin-top: 3px;
+.recent-status.success {
+    background: #d4edda;
+    color: #28a745;
+}
+
+.recent-status.danger {
+    background: #f8d7da;
+    color: #dc3545;
+}
+
+.recent-status.warning {
+    background: #fff3cd;
+    color: #ffc107;
 }
 
 /* Quick Actions Grid */
 .quick-actions-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 12px;
 }
 
-.quick-action-btn {
-    padding: 15px;
+.quick-action {
+    padding: 14px;
     border: 2px solid #f0f0f0;
     border-radius: 12px;
     background: white;
@@ -534,21 +586,21 @@
     text-align: center;
 }
 
-.quick-action-btn:hover {
+.quick-action:hover {
     border-color: var(--primary-color);
     background: #f8f9fa;
     transform: translateY(-2px);
 }
 
-.quick-action-btn i {
-    font-size: 1.5rem;
+.quick-action i {
+    font-size: 1.3rem;
     color: var(--primary-color);
     margin-bottom: 5px;
 }
 
-.quick-action-btn span {
+.quick-action span {
     display: block;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: #666;
 }
 
@@ -559,30 +611,80 @@
     gap: 12px;
 }
 
-.summary-item {
+.summary-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
+    padding: 10px 0;
     border-bottom: 1px solid #f0f0f0;
 }
 
-.summary-item:last-child {
+.summary-row:last-child {
     border-bottom: none;
 }
 
-.summary-label {
+.summary-row span {
     color: #666;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
 }
 
-.summary-value {
+.summary-row strong {
+    font-size: 0.95rem;
     font-weight: 600;
     color: #333;
 }
+
+/* Modern Card */
+.modern-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
+    overflow: hidden;
+}
+
+.card-header-modern {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 14px 20px;
+    font-weight: 600;
+}
+
+/* RTL Support */
+[dir="rtl"] .stat-trend {
+    right: auto;
+    left: 15px;
+}
+
+[dir="rtl"] .class-arrow i {
+    transform: rotate(180deg);
+}
+
+[dir="rtl"] .action-card-arrow i {
+    transform: rotate(180deg);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-row {
+        flex-direction: column;
+    }
+    
+    .action-cards-row {
+        flex-direction: column;
+    }
+    
+    .class-item {
+        flex-wrap: wrap;
+    }
+    
+    .class-stats {
+        justify-content: space-between;
+    }
+}
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
 <script>
 // Weekly Attendance Chart
 var ctx = document.getElementById('weeklyAttendanceChart').getContext('2d');
@@ -600,7 +702,8 @@ var weeklyChart = new Chart(ctx, {
             pointBackgroundColor: '#875A7B',
             pointBorderColor: 'white',
             pointBorderWidth: 2,
-            pointRadius: 5
+            pointRadius: 5,
+            pointHoverRadius: 7
         }]
     },
     options: {
@@ -609,6 +712,13 @@ var weeklyChart = new Chart(ctx, {
         plugins: {
             legend: {
                 display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return context.parsed.y + '%';
+                    }
+                }
             }
         },
         scales: {
@@ -636,9 +746,8 @@ var weeklyChart = new Chart(ctx, {
 function exportAttendance() {
     const format = confirm('{% if lang.get_direction() == "rtl" %}هل تريد تصدير بتنسيق Excel؟\n(OK = Excel, Cancel = CSV){% else %}Export as Excel?\n(OK = Excel, Cancel = CSV){% endif %}') ? 'excel' : 'csv';
     
-    // Get current filters if any
     const classId = document.getElementById('classFilter')?.value || '';
-    const date = document.querySelector('input[name="date"]')?.value || new Date().toISOString().split('T')[0];
+    const date = '{{ today }}';
     
     let url = `/attendance/export-report/${format}?date=${date}`;
     if (classId) url += `&class_id=${classId}`;
@@ -647,15 +756,17 @@ function exportAttendance() {
 }
 
 function printReport() {
-    // Get current filters if any
     const classId = document.getElementById('classFilter')?.value || '';
-    const date = document.querySelector('input[name="date"]')?.value || new Date().toISOString().split('T')[0];
+    const date = '{{ today }}';
     
     let url = `/attendance/print-report?date=${date}`;
     if (classId) url += `&class_id=${classId}`;
     
-    // Open in new window for printing
-    window.open(url, '_blank', 'width=800,height=600,scrollbars=yes');
+    window.open(url, '_blank', 'width=900,height=700,scrollbars=yes');
+}
+
+function refreshData() {
+    location.reload();
 }
 </script>
 {% endblock %}
