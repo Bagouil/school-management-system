@@ -426,10 +426,10 @@
     
     <div class="language-selector" onclick="switchLanguage()">
         {% if session.get('language', 'ar') == 'ar' %}
-        <img src="https://flagcdn.com/24x18/gb.png" alt="English">
+        <i class="fas fa-globe" style="color: var(--primary-color);"></i>
         <span>English</span>
         {% else %}
-        <img src="https://flagcdn.com/24x18/sa.png" alt="Arabic">
+        <i class="fas fa-globe" style="color: var(--primary-color);"></i>
         <span>العربية</span>
         {% endif %}
     </div>

@@ -1,105 +1,222 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">
-        <i class="fas fa-tachometer-alt me-2"></i>
-        {% if lang.get_direction() == 'rtl' %}لوحة التحكم{% else %}Dashboard{% endif %}
-    </h2>
-    <div>
-        <span class="text-muted">
-            <i class="far fa-calendar-alt me-1"></i> {{ today }}
-        </span>
+
+<!-- Welcome Banner -->
+<div class="welcome-banner mb-4">
+    <div class="welcome-banner-inner">
+        <h4>
+            {% if lang.get_direction() == 'rtl' %}
+                مرحباً، {{ session.full_name }}
+            {% else %}
+                Welcome back, {{ session.full_name }}
+            {% endif %}
+        </h4>
+        <p>
+            {% if lang.get_direction() == 'rtl' %}
+                نظرة عامة على نشاط المدرسة اليوم &nbsp;&middot;&nbsp; {{ today }}
+            {% else %}
+                Here's your school activity overview &nbsp;&middot;&nbsp; {{ today }}
+            {% endif %}
+        </p>
     </div>
+    <i class="fas fa-graduation-cap banner-icon-bg"></i>
 </div>
 
 <!-- Stats Cards -->
-<div class="row">
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="stat-value">{{ stats.total_students }}</div>
-            <div class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي الطلاب{% else %}Total Students{% endif %}</div>
-            <i class="fas fa-users stat-icon"></i>
+<div class="row g-3 mb-4">
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, var(--primary-color) 0%, #6a4b5f 100%); color: white; padding: 22px; margin-bottom: 0;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ stats.total_students }}</div>
+                    <div class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي الطلاب{% else %}Total Students{% endif %}</div>
+                    <div class="stat-trend-badge mt-2">
+                        <i class="fas fa-users fa-sm"></i>
+                        {% if lang.get_direction() == 'rtl' %}طالب مسجل{% else %}Enrolled{% endif %}
+                    </div>
+                </div>
+                <div style="font-size: 2.5rem; opacity: 0.25;"><i class="fas fa-users"></i></div>
+            </div>
         </div>
     </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%);">
-            <div class="stat-value">{{ stats.total_teachers }}</div>
-            <div class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي المعلمين{% else %}Total Teachers{% endif %}</div>
-            <i class="fas fa-chalkboard-teacher stat-icon"></i>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #28A745 0%, #1e7b34 100%); color: white; padding: 22px; margin-bottom: 0;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ stats.total_teachers }}</div>
+                    <div class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي المعلمين{% else %}Total Teachers{% endif %}</div>
+                    <div class="stat-trend-badge mt-2">
+                        <i class="fas fa-chalkboard-teacher fa-sm"></i>
+                        {% if lang.get_direction() == 'rtl' %}معلم نشط{% else %}Active Staff{% endif %}
+                    </div>
+                </div>
+                <div style="font-size: 2.5rem; opacity: 0.25;"><i class="fas fa-chalkboard-teacher"></i></div>
+            </div>
         </div>
     </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card" style="background: linear-gradient(135deg, #FFB347 0%, #ff9900 100%);">
-            <div class="stat-value">{{ stats.total_classes }}</div>
-            <div class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي الفصول{% else %}Total Classes{% endif %}</div>
-            <i class="fas fa-school stat-icon"></i>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #FFB347 0%, #e09000 100%); color: white; padding: 22px; margin-bottom: 0;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ stats.total_classes }}</div>
+                    <div class="stat-label">{% if lang.get_direction() == 'rtl' %}إجمالي الفصول{% else %}Total Classes{% endif %}</div>
+                    <div class="stat-trend-badge mt-2">
+                        <i class="fas fa-school fa-sm"></i>
+                        {% if lang.get_direction() == 'rtl' %}فصل دراسي{% else %}Active Rooms{% endif %}
+                    </div>
+                </div>
+                <div style="font-size: 2.5rem; opacity: 0.25;"><i class="fas fa-school"></i></div>
+            </div>
         </div>
     </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%);">
-            <div class="stat-value">{{ stats.today_attendance }}%</div>
-            <div class="stat-label">{% if lang.get_direction() == 'rtl' %}نسبة الحضور اليوم{% else %}Today's Attendance{% endif %}</div>
-            <i class="fas fa-calendar-check stat-icon"></i>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card" style="background: linear-gradient(135deg, #17A2B8 0%, #117a8b 100%); color: white; padding: 22px; margin-bottom: 0;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-value">{{ stats.today_attendance }}%</div>
+                    <div class="stat-label">{% if lang.get_direction() == 'rtl' %}نسبة الحضور اليوم{% else %}Today's Attendance{% endif %}</div>
+                    <div class="stat-trend-badge mt-2">
+                        <i class="fas fa-calendar-check fa-sm"></i>
+                        {% if lang.get_direction() == 'rtl' %}تحديث لحظي{% else %}Live Update{% endif %}
+                    </div>
+                </div>
+                <div style="font-size: 2.5rem; opacity: 0.25;"><i class="fas fa-calendar-check"></i></div>
+            </div>
         </div>
     </div>
 </div>
 
-<!-- Financial Overview -->
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="modern-card">
+<!-- Quick Actions -->
+<div class="modern-card mb-4">
+    <div class="card-header-modern">
+        <i class="fas fa-bolt me-2" style="color: var(--accent-color);"></i>
+        {% if lang.get_direction() == 'rtl' %}إجراءات سريعة{% else %}Quick Actions{% endif %}
+    </div>
+    <div class="card-body p-3">
+        <div class="quick-actions-grid">
+            <a href="{{ url_for('students.register') }}" class="quick-action-btn">
+                <i class="fas fa-user-plus"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}تسجيل طالب{% else %}New Student{% endif %}</span>
+            </a>
+            <a href="{{ url_for('teachers.add_teacher') }}" class="quick-action-btn">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}إضافة معلم{% else %}Add Teacher{% endif %}</span>
+            </a>
+            <a href="{{ url_for('attendance.student_attendance') }}" class="quick-action-btn">
+                <i class="fas fa-calendar-check"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}تسجيل حضور{% else %}Attendance{% endif %}</span>
+            </a>
+            <a href="{{ url_for('exams.list_exams') }}" class="quick-action-btn">
+                <i class="fas fa-file-alt"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}الامتحانات{% else %}Exams{% endif %}</span>
+            </a>
+            <a href="{{ url_for('exams.create_exam') }}" class="quick-action-btn">
+                <i class="fas fa-plus-circle"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}امتحان جديد{% else %}New Exam{% endif %}</span>
+            </a>
+            <a href="{{ url_for('finance.student_fees') }}" class="quick-action-btn">
+                <i class="fas fa-dollar-sign"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}رسوم الطلاب{% else %}Fees{% endif %}</span>
+            </a>
+            <a href="{{ url_for('reports.student_report') }}" class="quick-action-btn">
+                <i class="fas fa-chart-bar"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}التقارير{% else %}Reports{% endif %}</span>
+            </a>
+            {% if session.role == 'admin' %}
+            <a href="{{ url_for('users.list_users') }}" class="quick-action-btn">
+                <i class="fas fa-users-cog"></i>
+                <span>{% if lang.get_direction() == 'rtl' %}المستخدمون{% else %}Users{% endif %}</span>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Financial Overview + Recent Activities -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-5">
+        <div class="modern-card h-100">
             <div class="card-header-modern">
-                <i class="fas fa-chart-pie me-2"></i>
+                <i class="fas fa-chart-pie me-2" style="color: var(--primary-color);"></i>
                 {% if lang.get_direction() == 'rtl' %}نظرة عامة مالية{% else %}Financial Overview{% endif %}
             </div>
             <div class="card-body p-4">
-                <canvas id="financeChart" height="200"></canvas>
+                <canvas id="financeChart" height="220"></canvas>
+                <!-- Financial Summary -->
+                <div class="row g-2 mt-3">
+                    <div class="col-4 text-center">
+                        <div style="font-size: 1.1rem; font-weight: 700; color: #28a745;">{{ stats.total_payments|default(0) }}</div>
+                        <div style="font-size: 0.72rem; color: #8a94a6; text-transform: uppercase; letter-spacing: 0.3px;">
+                            {% if lang.get_direction() == 'rtl' %}مدفوعات{% else %}Payments{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-4 text-center" style="border-left: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0;">
+                        <div style="font-size: 1.1rem; font-weight: 700; color: #dc3545;">{{ stats.total_expenses|default(0) }}</div>
+                        <div style="font-size: 0.72rem; color: #8a94a6; text-transform: uppercase; letter-spacing: 0.3px;">
+                            {% if lang.get_direction() == 'rtl' %}مصروفات{% else %}Expenses{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div style="font-size: 1.1rem; font-weight: 700; color: #FFB347;">{{ stats.pending_fees|default(0) }}</div>
+                        <div style="font-size: 0.72rem; color: #8a94a6; text-transform: uppercase; letter-spacing: 0.3px;">
+                            {% if lang.get_direction() == 'rtl' %}متأخرات{% else %}Pending{% endif %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    
-    <div class="col-md-6">
-        <div class="modern-card">
+
+    <div class="col-lg-7">
+        <div class="modern-card h-100">
             <div class="card-header-modern">
-                <i class="fas fa-clock me-2"></i>
+                <i class="fas fa-clock me-2" style="color: var(--primary-color);"></i>
                 {% if lang.get_direction() == 'rtl' %}النشاطات الأخيرة{% else %}Recent Activities{% endif %}
             </div>
-            <div class="card-body p-0">
+            <div class="card-body p-0" style="overflow-y: auto; max-height: 320px;">
+                {% if recent_activities %}
                 <div class="list-group list-group-flush">
                     {% for activity in recent_activities %}
-                    <div class="list-group-item border-0 py-3">
-                        <div class="d-flex align-items-center">
-                            <div class="activity-icon me-3">
+                    <div class="list-group-item border-0 py-3 px-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="activity-icon">
                                 <i class="fas {{ activity.icon }} fa-fw"></i>
                             </div>
-                            <div>
-                                <p class="mb-0">{{ activity.description }}</p>
+                            <div style="flex: 1; min-width: 0;">
+                                <p class="mb-0 text-truncate" style="font-size: 0.875rem; font-weight: 500;">{{ activity.description }}</p>
                                 <small class="text-muted">{{ activity.time }}</small>
                             </div>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-inbox fa-2x mb-2 d-block opacity-25"></i>
+                    <span style="font-size: 0.875rem;">
+                        {% if lang.get_direction() == 'rtl' %}لا توجد نشاطات حديثة{% else %}No recent activities{% endif %}
+                    </span>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
 <!-- Recent Students & Payments -->
-<div class="row mt-4">
-    <div class="col-md-6">
+<div class="row g-3">
+    <div class="col-lg-6">
         <div class="modern-card">
             <div class="card-header-modern d-flex justify-content-between align-items-center">
                 <span>
-                    <i class="fas fa-user-graduate me-2"></i>
+                    <i class="fas fa-user-graduate me-2" style="color: var(--primary-color);"></i>
                     {% if lang.get_direction() == 'rtl' %}آخر الطلاب المسجلين{% else %}Recent Students{% endif %}
                 </span>
-                <a href="{{ url_for('students.list_students') }}" class="btn btn-sm btn-outline-primary">
+                <a href="{{ url_for('students.list_students') }}" class="btn btn-sm" style="background: rgba(135,90,123,0.1); color: var(--primary-color); border-radius: 8px; font-size: 0.8rem; padding: 4px 12px;">
                     {% if lang.get_direction() == 'rtl' %}عرض الكل{% else %}View All{% endif %}
                 </a>
             </div>
@@ -116,14 +233,26 @@
                     <tbody>
                         {% for student in recent_students %}
                         <tr>
-                            <td>{{ loop.index }}</td>
                             <td>
-                                <a href="{{ url_for('students.view_student', student_id=student.student_id) }}">
+                                <span class="badge-modern badge-info">{{ loop.index }}</span>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('students.view_student', student_id=student.student_id) }}" style="color: var(--primary-color); font-weight: 500; text-decoration: none;">
                                     {{ student.first_name_ar }} {{ student.last_name_ar }}
                                 </a>
                             </td>
-                            <td>{{ student.class_name_ar }}</td>
-                            <td>{{ student.enrollment_date }}</td>
+                            <td>
+                                <span style="font-size: 0.82rem; color: #6c757d;">{{ student.class_name_ar }}</span>
+                            </td>
+                            <td>
+                                <span style="font-size: 0.82rem; color: #6c757d;">{{ student.enrollment_date }}</span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted" style="font-size: 0.875rem;">
+                                {% if lang.get_direction() == 'rtl' %}لا يوجد طلاب مسجلون{% else %}No students yet{% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -131,15 +260,15 @@
             </div>
         </div>
     </div>
-    
-    <div class="col-md-6">
+
+    <div class="col-lg-6">
         <div class="modern-card">
             <div class="card-header-modern d-flex justify-content-between align-items-center">
                 <span>
-                    <i class="fas fa-credit-card me-2"></i>
+                    <i class="fas fa-credit-card me-2" style="color: #28a745;"></i>
                     {% if lang.get_direction() == 'rtl' %}آخر المدفوعات{% else %}Recent Payments{% endif %}
                 </span>
-                <a href="{{ url_for('finance.student_fees') }}" class="btn btn-sm btn-outline-primary">
+                <a href="{{ url_for('finance.student_fees') }}" class="btn btn-sm" style="background: rgba(40,167,69,0.1); color: #28a745; border-radius: 8px; font-size: 0.8rem; padding: 4px 12px;">
                     {% if lang.get_direction() == 'rtl' %}عرض الكل{% else %}View All{% endif %}
                 </a>
             </div>
@@ -156,10 +285,26 @@
                     <tbody>
                         {% for payment in recent_payments %}
                         <tr>
-                            <td>{{ loop.index }}</td>
-                            <td>{{ payment.first_name_ar }} {{ payment.last_name_ar }}</td>
-                            <td>{{ "%.2f"|format(payment.amount_paid) }} SDG</td>
-                            <td>{{ payment.payment_date }}</td>
+                            <td>
+                                <span class="badge-modern badge-success">{{ loop.index }}</span>
+                            </td>
+                            <td style="font-weight: 500; font-size: 0.875rem;">
+                                {{ payment.first_name_ar }} {{ payment.last_name_ar }}
+                            </td>
+                            <td>
+                                <span style="font-weight: 600; color: #28a745; font-size: 0.875rem;">
+                                    {{ "%.2f"|format(payment.amount_paid) }} SDG
+                                </span>
+                            </td>
+                            <td>
+                                <span style="font-size: 0.82rem; color: #6c757d;">{{ payment.payment_date }}</span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-muted" style="font-size: 0.875rem;">
+                                {% if lang.get_direction() == 'rtl' %}لا توجد مدفوعات بعد{% else %}No payments yet{% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -167,17 +312,6 @@
             </div>
         </div>
     </div>
-</div>
-<!-- In admin_dashboard.html, add these quick action buttons -->
-<div class="quick-actions-grid">
-    <a href="{{ url_for('exams.list_exams') }}" class="quick-action-btn">
-        <i class="fas fa-file-alt"></i>
-        <span>{% if lang.get_direction() == 'rtl' %}الامتحانات{% else %}Exams{% endif %}</span>
-    </a>
-    <a href="{{ url_for('exams.create_exam') }}" class="quick-action-btn">
-        <i class="fas fa-plus-circle"></i>
-        <span>{% if lang.get_direction() == 'rtl' %}امتحان جديد{% else %}New Exam{% endif %}</span>
-    </a>
 </div>
 
 <!-- Chart.js Script -->
@@ -190,23 +324,32 @@
             labels: [
                 '{% if lang.get_direction() == "rtl" %}المدفوعات{% else %}Payments{% endif %}',
                 '{% if lang.get_direction() == "rtl" %}المصروفات{% else %}Expenses{% endif %}',
-                '{% if lang.get_direction() == "rtl" %}المتبقي{% else %}Pending{% endif %}'
+                '{% if lang.get_direction() == "rtl" %}المتأخرات{% else %}Pending{% endif %}'
             ],
             datasets: [{
                 data: [{{ stats.total_payments }}, {{ stats.total_expenses }}, {{ stats.pending_fees }}],
                 backgroundColor: ['#28A745', '#DC3545', '#FFB347'],
-                borderWidth: 0
+                borderWidth: 0,
+                hoverOffset: 6
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '68%',
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    position: 'bottom',
+                    labels: {
+                        padding: 16,
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        font: { size: 12 }
+                    }
                 }
             }
         }
     });
 </script>
+
 {% endblock %}
